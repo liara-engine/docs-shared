@@ -1,0 +1,774 @@
+/**
+ * Liara Engine — Doxygen custom styles
+ *
+ * Override Doxygen's default appearance to match the Liara design system.
+ * Loaded AFTER Doxygen's own doxygen.css and tabs.css, so all rules here
+ * take precedence over the defaults.
+ */
+
+/* ============================================================================
+ * Page foundations
+ * ========================================================================== */
+
+html, body {
+    margin: 0;
+    padding: 0;
+    background: var(--liara-bg-page);
+    color: var(--liara-text-primary);
+    font-family: var(--liara-font-sans);
+    font-size: var(--liara-text-base);
+    line-height: var(--liara-leading-normal);
+}
+
+/* The main wrapper added by our header.html */
+.liara-doxygen {
+    max-width: var(--liara-page-max-width);
+    margin: 0 auto;
+    padding: 0;
+}
+
+/* ============================================================================
+ * Typography
+ * ========================================================================== */
+
+h1, h2, h3, h4, h5, h6 {
+    font-family: var(--liara-font-sans);
+    color: var(--liara-text-primary);
+    font-weight: var(--liara-weight-medium);
+    line-height: var(--liara-leading-snug);
+    margin-top: var(--liara-space-6);
+    margin-bottom: var(--liara-space-3);
+}
+
+h1 { font-size: var(--liara-text-3xl); }
+h2 { font-size: var(--liara-text-2xl); }
+h3 { font-size: var(--liara-text-xl); }
+h4 { font-size: var(--liara-text-lg); }
+h5, h6 { font-size: var(--liara-text-base); font-weight: var(--liara-weight-semibold); }
+
+.title, .header .summary, .header .headertitle {
+    color: var(--liara-text-primary);
+    font-weight: var(--liara-weight-medium);
+    background: transparent !important;
+    border: none !important;
+}
+
+div.headertitle {
+    padding: var(--liara-space-5) var(--liara-space-5) var(--liara-space-3);
+}
+
+p, dd, li {
+    line-height: var(--liara-leading-normal);
+}
+
+a, a:link, a:visited {
+    color: var(--liara-text-link);
+    text-decoration: none;
+    transition: color var(--liara-transition-fast);
+}
+
+a:hover {
+    color: var(--liara-text-link-hover);
+    text-decoration: underline;
+    text-decoration-color: var(--liara-brand-primary);
+    text-underline-offset: 2px;
+}
+
+a.el, a.elRef, a.code, a.codeRef, a.qindex {
+    color: var(--liara-text-link);
+}
+
+/* ============================================================================
+ * Side navigation tree
+ * ========================================================================== */
+
+#side-nav {
+    background: var(--liara-bg-surface);
+    border-right: var(--liara-border-width-thin) solid var(--liara-border-default);
+    width: var(--liara-sidebar-width);
+}
+
+#nav-tree {
+    background: var(--liara-bg-surface);
+    color: var(--liara-text-primary);
+    font-family: var(--liara-font-sans);
+    font-size: var(--liara-text-sm);
+    padding: var(--liara-space-3) var(--liara-space-2);
+}
+
+#nav-tree .item {
+    padding: var(--liara-space-1) var(--liara-space-2);
+    border-radius: var(--liara-radius-sm);
+    cursor: pointer;
+    transition: background-color var(--liara-transition-fast);
+}
+
+#nav-tree .item:hover {
+    background: var(--liara-brand-primary-soft);
+}
+
+#nav-tree .selected,
+#nav-tree a.selected {
+    background: var(--liara-brand-primary-soft);
+    color: var(--liara-brand-primary-dark);
+}
+
+#nav-tree a {
+    color: var(--liara-text-primary);
+}
+
+#nav-tree a:hover {
+    color: var(--liara-brand-primary-dark);
+    text-decoration: none;
+}
+
+#nav-tree .arrow {
+    color: var(--liara-text-tertiary);
+    transition: transform var(--liara-transition-fast);
+}
+
+.ui-resizable-handle.ui-resizable-e {
+    background: transparent;
+    border-right: var(--liara-border-width-thin) solid var(--liara-border-default);
+    width: 4px;
+}
+
+.ui-resizable-handle.ui-resizable-e:hover {
+    background: var(--liara-brand-primary-soft);
+}
+
+/* ============================================================================
+ * Top tabs (Main Page, Modules, Classes, Files…)
+ * ========================================================================== */
+
+.tabs, .tabs2, .tabs3,
+#main-nav,
+.navpath {
+    background: var(--liara-bg-page);
+    border-bottom: var(--liara-border-width-thin) solid var(--liara-border-default);
+    padding: 0 var(--liara-space-5);
+}
+
+.tablist {
+    display: flex;
+    gap: var(--liara-space-1);
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    background: transparent !important;
+}
+
+.tablist li {
+    background: none !important;
+    border: none !important;
+    margin: 0;
+    padding: 0;
+}
+
+.tablist a {
+    display: inline-block;
+    padding: var(--liara-space-3) var(--liara-space-4);
+    color: var(--liara-text-secondary);
+    background: transparent !important;
+    border: none !important;
+    border-radius: var(--liara-radius-md) var(--liara-radius-md) 0 0;
+    text-decoration: none;
+    font-weight: var(--liara-weight-normal);
+    transition:
+            background-color var(--liara-transition-fast),
+            color var(--liara-transition-fast);
+    text-shadow: none !important;
+}
+
+.tablist a:hover {
+    background: var(--liara-bg-surface) !important;
+    color: var(--liara-text-primary);
+}
+
+.tablist li.current a,
+.tablist a.current {
+    background: var(--liara-brand-primary-soft) !important;
+    color: var(--liara-brand-primary-dark);
+    font-weight: var(--liara-weight-medium);
+}
+
+#MSearchBox {
+    background: var(--liara-bg-elevated);
+    border: var(--liara-border-width-thin) solid var(--liara-border-default);
+    border-radius: var(--liara-radius-md);
+    box-shadow: none;
+    padding: 4px 8px;
+}
+
+#MSearchField {
+    color: var(--liara-text-primary);
+    font-family: var(--liara-font-sans);
+    font-size: var(--liara-text-sm);
+}
+
+/* ============================================================================
+ * Content area
+ * ========================================================================== */
+
+.contents {
+    padding: var(--liara-space-5) var(--liara-space-5);
+    max-width: var(--liara-content-max-width);
+    margin: 0 auto;
+    color: var(--liara-text-primary);
+}
+
+.contents .memberdecls,
+.contents .memitem,
+.contents > table {
+    max-width: none;
+    width: 100%;
+}
+
+/* ============================================================================
+ * Tables (member declarations)
+ * ========================================================================== */
+
+table.memberdecls,
+table.memname {
+    width: 100%;
+    border-collapse: collapse;
+    margin: var(--liara-space-3) 0;
+    background: transparent;
+}
+
+table.memberdecls h2.groupheader,
+.memberdecls .heading,
+h2.groupheader {
+    margin: var(--liara-space-6) 0 var(--liara-space-3);
+    padding: var(--liara-space-3) 0;
+    color: var(--liara-text-primary);
+    font-size: var(--liara-text-xl);
+    font-weight: var(--liara-weight-medium);
+    background: transparent !important;
+    border: none;
+    border-bottom: var(--liara-border-width-thin) solid var(--liara-border-default);
+}
+
+table.memberdecls td {
+    padding: var(--liara-space-2) var(--liara-space-3);
+    border-bottom: var(--liara-border-width-thin) solid var(--liara-border-subtle);
+    vertical-align: top;
+    font-family: var(--liara-font-mono);
+    font-size: var(--liara-text-sm);
+    background: transparent !important;
+}
+
+table.memberdecls tr:hover td {
+    background: var(--liara-brand-primary-soft) !important;
+}
+
+table.memberdecls .memItemLeft,
+table.memberdecls .memTemplItemLeft {
+    color: var(--liara-brand-secondary-dark);
+    white-space: nowrap;
+    width: 30%;
+}
+
+table.memberdecls .memItemRight {
+    color: var(--liara-text-primary);
+}
+
+table.memberdecls .mdescLeft,
+table.memberdecls .mdescRight {
+    color: var(--liara-text-secondary);
+    font-family: var(--liara-font-sans);
+    font-size: var(--liara-text-sm);
+    padding: 0 var(--liara-space-3) var(--liara-space-3);
+    border: none;
+}
+
+/* ============================================================================
+ * Member items (function/method documentation blocks)
+ * ========================================================================== */
+
+.memitem {
+    background: var(--liara-bg-elevated);
+    border: var(--liara-border-width-thin) solid var(--liara-border-default);
+    border-radius: var(--liara-radius-lg);
+    margin: var(--liara-space-5) 0;
+    overflow: hidden;
+    box-shadow: none;
+}
+
+.memproto, .memname {
+    background: var(--liara-bg-surface) !important;
+    color: var(--liara-text-primary);
+    font-family: var(--liara-font-mono);
+    font-size: var(--liara-text-sm);
+    padding: var(--liara-space-3) var(--liara-space-4) !important;
+    border: none !important;
+    border-bottom: var(--liara-border-width-thin) solid var(--liara-border-default) !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    text-shadow: none !important;
+    line-height: var(--liara-leading-snug);
+}
+
+.memproto .paramname,
+.memname .paramname {
+    color: var(--liara-brand-primary-dark);
+    font-style: normal;
+    font-weight: var(--liara-weight-medium);
+}
+
+.memdoc {
+    background: var(--liara-bg-elevated) !important;
+    color: var(--liara-text-primary);
+    padding: var(--liara-space-4) !important;
+    border: none !important;
+    box-shadow: none !important;
+}
+
+.memdoc dl {
+    margin: var(--liara-space-3) 0;
+}
+
+.memdoc dt {
+    font-weight: var(--liara-weight-medium);
+    color: var(--liara-text-primary);
+    margin-top: var(--liara-space-3);
+}
+
+.memdoc dd {
+    margin-left: var(--liara-space-4);
+    color: var(--liara-text-secondary);
+}
+
+table.params, table.retval, table.exception {
+    margin: var(--liara-space-3) 0;
+    background: var(--liara-bg-surface);
+    border-radius: var(--liara-radius-md);
+    border: var(--liara-border-width-thin) solid var(--liara-border-default);
+    overflow: hidden;
+    border-collapse: separate;
+    border-spacing: 0;
+}
+
+table.params td, table.retval td, table.exception td {
+    padding: var(--liara-space-2) var(--liara-space-3);
+    border: none;
+    font-family: var(--liara-font-mono);
+    font-size: var(--liara-text-sm);
+    vertical-align: top;
+}
+
+table.params td.paramdir {
+    color: var(--liara-brand-secondary-dark);
+    font-weight: var(--liara-weight-medium);
+    width: 60px;
+    white-space: nowrap;
+}
+
+table.params td.paramname {
+    color: var(--liara-brand-primary-dark);
+    font-weight: var(--liara-weight-medium);
+    width: 140px;
+    white-space: nowrap;
+}
+
+table.params tr td:last-child,
+table.retval tr td:last-child {
+    color: var(--liara-text-primary);
+    font-family: var(--liara-font-sans);
+}
+
+/* ============================================================================
+ * Code blocks (.fragment)
+ * ========================================================================== */
+
+div.fragment, pre.fragment {
+    background: var(--liara-code-bg);
+    color: var(--liara-code-text);
+    border: var(--liara-border-width-thin) solid var(--liara-border-default);
+    border-radius: var(--liara-radius-md);
+    padding: var(--liara-space-3) var(--liara-space-4);
+    margin: var(--liara-space-3) 0;
+    font-family: var(--liara-font-mono);
+    font-size: var(--liara-text-sm);
+    line-height: var(--liara-leading-relaxed);
+    overflow-x: auto;
+}
+
+div.line {
+    color: var(--liara-code-text);
+    font-family: var(--liara-font-mono);
+    line-height: var(--liara-leading-relaxed);
+}
+
+.fragment .keyword,
+.fragment .keywordtype,
+.fragment .keywordflow {
+    color: var(--liara-code-keyword);
+    font-weight: var(--liara-weight-normal);
+}
+
+.fragment .preprocessor {
+    color: var(--liara-code-preprocessor);
+}
+
+.fragment .stringliteral {
+    color: var(--liara-code-string);
+}
+
+.fragment .charliteral {
+    color: var(--liara-code-string);
+}
+
+.fragment .comment,
+.fragment .commentliteral {
+    color: var(--liara-code-comment);
+    font-style: italic;
+}
+
+.fragment .vhdlchar {
+    color: var(--liara-code-text);
+}
+
+.fragment .vhdlkeyword {
+    color: var(--liara-code-keyword);
+}
+
+.fragment .vhdllogic {
+    color: var(--liara-code-keyword);
+}
+
+.lineno, .ttc {
+    color: var(--liara-text-tertiary);
+    background: transparent !important;
+    border-right: var(--liara-border-width-thin) solid var(--liara-border-subtle);
+    padding-right: var(--liara-space-2);
+    margin-right: var(--liara-space-3);
+    user-select: none;
+}
+
+.lineno a {
+    color: var(--liara-text-tertiary);
+}
+
+code, tt, .tt, kbd {
+    background: var(--liara-code-bg);
+    color: var(--liara-code-text);
+    padding: 1px 6px;
+    border-radius: var(--liara-radius-sm);
+    font-family: var(--liara-font-mono);
+    font-size: 0.92em;
+    border: var(--liara-border-width-thin) solid var(--liara-border-subtle);
+}
+
+/* ============================================================================
+ * Admonitions (Doxygen's @note, @warning, @attention, @bug, @todo)
+ * ========================================================================== */
+
+dl.note,
+dl.warning,
+dl.attention,
+dl.bug,
+dl.todo,
+dl.deprecated,
+dl.invariant,
+dl.pre,
+dl.post,
+dl.see,
+dl.section {
+    margin: var(--liara-space-3) 0;
+    padding: var(--liara-space-3) var(--liara-space-4);
+    border-radius: var(--liara-radius-md);
+    border-left: 3px solid;
+    background: var(--liara-bg-surface);
+}
+
+dl.note dt,
+dl.warning dt,
+dl.attention dt,
+dl.bug dt,
+dl.todo dt,
+dl.deprecated dt,
+dl.invariant dt,
+dl.pre dt,
+dl.post dt,
+dl.see dt,
+dl.section dt {
+    margin: 0 0 var(--liara-space-2) 0;
+    font-weight: var(--liara-weight-medium);
+    font-size: var(--liara-text-sm);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+dl.note dd,
+dl.warning dd,
+dl.attention dd,
+dl.bug dd,
+dl.todo dd,
+dl.deprecated dd,
+dl.invariant dd,
+dl.pre dd,
+dl.post dd,
+dl.see dd,
+dl.section dd {
+    margin-left: 0;
+}
+
+dl.note,
+dl.see,
+dl.section {
+    background: var(--liara-semantic-info-bg);
+    border-left-color: var(--liara-semantic-info-fg);
+}
+dl.note dt,
+dl.see dt,
+dl.section dt {
+    color: var(--liara-semantic-info-fg);
+}
+
+dl.warning,
+dl.attention {
+    background: var(--liara-semantic-warning-bg);
+    border-left-color: var(--liara-semantic-warning-fg);
+}
+dl.warning dt,
+dl.attention dt {
+    color: var(--liara-semantic-warning-fg);
+}
+
+dl.bug,
+dl.deprecated {
+    background: var(--liara-semantic-danger-bg);
+    border-left-color: var(--liara-semantic-danger-fg);
+}
+dl.bug dt,
+dl.deprecated dt {
+    color: var(--liara-semantic-danger-fg);
+}
+
+/* @todo — accent (cream yellow) */
+dl.todo {
+    background: var(--liara-brand-accent);
+    border-left-color: var(--liara-brand-accent-dark);
+}
+dl.todo dt {
+    color: var(--liara-brand-accent-dark);
+}
+
+dl.invariant,
+dl.pre,
+dl.post {
+    background: var(--liara-semantic-success-bg);
+    border-left-color: var(--liara-semantic-success-fg);
+}
+dl.invariant dt,
+dl.pre dt,
+dl.post dt {
+    color: var(--liara-semantic-success-fg);
+}
+
+/* ============================================================================
+ * Breadcrumbs (.navpath)
+ * ========================================================================== */
+
+#nav-path,
+.navpath {
+    background: var(--liara-bg-page) !important;
+    border-top: var(--liara-border-width-thin) solid var(--liara-border-default) !important;
+    margin-top: var(--liara-space-6);
+    padding: var(--liara-space-2) var(--liara-space-5);
+}
+
+.navpath ul {
+    background: transparent !important;
+    border: none !important;
+    height: auto !important;
+    line-height: 1.6;
+}
+
+.navpath li,
+.navpath li.navelem {
+    background: none !important;
+    border: none !important;
+    color: var(--liara-text-secondary);
+    padding: 0 var(--liara-space-2);
+    font-size: var(--liara-text-sm);
+    font-family: var(--liara-font-sans);
+}
+
+.navpath li.navelem a {
+    color: var(--liara-text-link);
+    text-shadow: none !important;
+    font-weight: var(--liara-weight-normal);
+}
+
+.navpath li.navelem a:hover {
+    color: var(--liara-text-link-hover);
+}
+
+/* ============================================================================
+ * Footer (added by our footer.html, plus Doxygen's "Generated by" line)
+ * ========================================================================== */
+
+.liara-doxygen-footer {
+    margin-top: var(--liara-space-8);
+    padding: var(--liara-space-5) var(--liara-space-5);
+    border-top: var(--liara-border-width-thin) solid var(--liara-border-default);
+    background: var(--liara-bg-page);
+}
+
+.liara-doxygen-footer__inner {
+    max-width: var(--liara-content-max-width);
+    margin: 0 auto;
+    text-align: center;
+    color: var(--liara-text-tertiary);
+    font-size: var(--liara-text-sm);
+}
+
+.liara-doxygen-footer__line {
+    margin: 0 0 var(--liara-space-2);
+}
+
+.liara-doxygen-footer__line a {
+    color: var(--liara-text-secondary);
+}
+
+.liara-doxygen-footer__generated {
+    margin: 0;
+    font-size: var(--liara-text-xs);
+    color: var(--liara-text-tertiary);
+}
+
+.liara-doxygen-footer__generated img {
+    vertical-align: middle;
+    opacity: 0.5;
+}
+
+.footer {
+    color: var(--liara-text-tertiary);
+    font-size: var(--liara-text-xs);
+    background: transparent !important;
+}
+
+/* ============================================================================
+ * Misc Doxygen elements
+ * ========================================================================== */
+
+.dyncontent img,
+.dyncontent svg {
+    background: var(--liara-bg-elevated);
+    border: var(--liara-border-width-thin) solid var(--liara-border-default);
+    border-radius: var(--liara-radius-md);
+    padding: var(--liara-space-2);
+    max-width: 100%;
+    height: auto;
+}
+
+.directory td.entry,
+.directory td.desc {
+    background: transparent !important;
+    border-bottom: var(--liara-border-width-thin) solid var(--liara-border-subtle);
+    padding: var(--liara-space-2) var(--liara-space-3);
+    font-size: var(--liara-text-sm);
+}
+
+.directory tr:hover td {
+    background: var(--liara-brand-primary-soft) !important;
+}
+
+.directory .icona,
+.directory .icondoc,
+.directory .iconfopen,
+.directory .iconfclosed {
+    color: var(--liara-text-tertiary);
+}
+
+.fieldtable {
+    border-collapse: separate;
+    border-spacing: 0;
+    border: var(--liara-border-width-thin) solid var(--liara-border-default);
+    border-radius: var(--liara-radius-md);
+    overflow: hidden;
+    margin: var(--liara-space-3) 0;
+}
+
+.fieldtable th,
+.fieldtable .fieldname,
+.fieldtable .fielddoc {
+    background: var(--liara-bg-surface) !important;
+    color: var(--liara-text-primary);
+    padding: var(--liara-space-2) var(--liara-space-3) !important;
+    border: none !important;
+    border-bottom: var(--liara-border-width-thin) solid var(--liara-border-default) !important;
+    font-family: var(--liara-font-mono);
+    font-size: var(--liara-text-sm);
+}
+
+.fieldtable th {
+    background: var(--liara-brand-primary-soft) !important;
+    color: var(--liara-brand-primary-dark);
+    font-family: var(--liara-font-sans);
+    font-weight: var(--liara-weight-medium);
+}
+
+div.ttc {
+    background: var(--liara-bg-elevated);
+    border: var(--liara-border-width-thin) solid var(--liara-border-default);
+    border-radius: var(--liara-radius-md);
+    box-shadow: var(--liara-shadow-md);
+    color: var(--liara-text-primary);
+    font-family: var(--liara-font-mono);
+    font-size: var(--liara-text-xs);
+    padding: var(--liara-space-2) var(--liara-space-3);
+    max-width: 480px;
+}
+
+#MSearchResultsWindow {
+    background: var(--liara-bg-elevated);
+    border: var(--liara-border-width-thin) solid var(--liara-border-default);
+    border-radius: var(--liara-radius-md);
+    box-shadow: var(--liara-shadow-lg);
+    color: var(--liara-text-primary);
+}
+
+* {
+    scrollbar-width: thin;
+    scrollbar-color: var(--liara-border-strong) transparent;
+}
+
+::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+}
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+::-webkit-scrollbar-thumb {
+    background: var(--liara-border-strong);
+    border-radius: var(--liara-radius-pill);
+    border: 2px solid var(--liara-bg-page);
+}
+::-webkit-scrollbar-thumb:hover {
+    background: var(--liara-brand-primary);
+}
+
+/* ============================================================================
+ * Responsive adjustments
+ * ========================================================================== */
+
+@media (max-width: 768px) {
+    .contents {
+        padding: var(--liara-space-4) var(--liara-space-3);
+    }
+
+    div.headertitle {
+        padding: var(--liara-space-4) var(--liara-space-3) var(--liara-space-2);
+    }
+
+    h1 { font-size: var(--liara-text-2xl); }
+    h2 { font-size: var(--liara-text-xl); }
+
+    #side-nav {
+        box-shadow: var(--liara-shadow-lg);
+    }
+}

@@ -1,0 +1,436 @@
+/**
+ * Liara Engine — Navbar styles
+ *
+ * Consumes design tokens from `tokens/design-tokens.css`. Always import
+ * design-tokens.css before this file in the consuming page.
+ *
+ * Block: .liara-navbar
+ * Modifiers and elements follow BEM ("__element", "--modifier").
+ */
+
+/* ============================================================================
+ * Container
+ * ========================================================================== */
+
+.liara-navbar {
+    position: sticky;
+    top: 0;
+    z-index: var(--liara-z-navbar);
+
+    width: 100%;
+    height: var(--liara-navbar-height);
+
+    background: var(--liara-bg-elevated);
+    border-bottom: var(--liara-border-width-thin) solid var(--liara-border-default);
+
+    font-family: var(--liara-font-sans);
+    font-size: var(--liara-text-sm);
+    line-height: 1;
+
+    /* Subtle shadow only when the page has scrolled — applied via JS by
+     * adding the `is-scrolled` class. Default state is shadow-less. */
+}
+
+.liara-navbar.is-scrolled {
+    box-shadow: var(--liara-shadow-sm);
+}
+
+.liara-navbar__inner {
+    max-width: var(--liara-page-max-width);
+    height: 100%;
+    margin: 0 auto;
+    padding: 0 var(--liara-space-5);
+
+    display: flex;
+    align-items: center;
+    gap: var(--liara-space-5);
+}
+
+/* ============================================================================
+ * Brand
+ * ========================================================================== */
+
+.liara-navbar__brand {
+    display: flex;
+    align-items: center;
+    gap: var(--liara-space-2);
+
+    color: var(--liara-text-primary);
+    text-decoration: none;
+    font-weight: var(--liara-weight-medium);
+
+    border-radius: var(--liara-radius-sm);
+    padding: var(--liara-space-1) var(--liara-space-2);
+    margin-left: calc(var(--liara-space-2) * -1);
+    transition: background-color var(--liara-transition-fast);
+}
+
+.liara-navbar__brand:hover {
+    background: var(--liara-brand-primary-soft);
+}
+
+.liara-navbar__logo {
+    flex-shrink: 0;
+    display: block;
+}
+
+.liara-navbar__brand-name {
+    font-size: var(--liara-text-base);
+    letter-spacing: -0.01em;
+}
+
+/* ============================================================================
+ * Module navigation
+ * ========================================================================== */
+
+.liara-navbar__modules {
+    display: flex;
+    align-items: center;
+    gap: var(--liara-space-1);
+
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.liara-navbar__module {
+    display: inline-block;
+    padding: var(--liara-space-2) var(--liara-space-3);
+
+    color: var(--liara-text-secondary);
+    text-decoration: none;
+    font-weight: var(--liara-weight-normal);
+
+    border-radius: var(--liara-radius-md);
+    transition:
+            background-color var(--liara-transition-fast),
+            color var(--liara-transition-fast);
+}
+
+.liara-navbar__module:hover {
+    background: var(--liara-bg-surface);
+    color: var(--liara-text-primary);
+}
+
+.liara-navbar__module.is-active {
+    background: var(--liara-brand-primary-soft);
+    color: var(--liara-brand-primary-dark);
+    font-weight: var(--liara-weight-medium);
+}
+
+/* ============================================================================
+ * Spacer
+ * ========================================================================== */
+
+.liara-navbar__spacer {
+    flex: 1;
+}
+
+/* ============================================================================
+ * Version selector
+ * ========================================================================== */
+
+.liara-navbar__version {
+    position: relative;
+}
+
+.liara-navbar__version-trigger {
+    display: flex;
+    align-items: center;
+    gap: var(--liara-space-2);
+
+    padding: var(--liara-space-2) var(--liara-space-3);
+
+    background: var(--liara-bg-surface);
+    border: var(--liara-border-width-thin) solid var(--liara-border-default);
+    border-radius: var(--liara-radius-md);
+
+    color: var(--liara-brand-secondary-dark);
+    font-family: inherit;
+    font-size: inherit;
+    font-weight: var(--liara-weight-medium);
+    line-height: 1;
+
+    cursor: pointer;
+    transition:
+            background-color var(--liara-transition-fast),
+            border-color var(--liara-transition-fast);
+}
+
+.liara-navbar__version-trigger:hover {
+    background: var(--liara-brand-secondary-soft);
+    border-color: var(--liara-border-strong);
+}
+
+.liara-navbar__version-trigger[aria-expanded="true"] {
+    background: var(--liara-brand-secondary-soft);
+    border-color: var(--liara-brand-secondary);
+}
+
+.liara-navbar__version-label {
+    font-family: var(--liara-font-mono);
+    font-size: var(--liara-text-xs);
+}
+
+.liara-navbar__version-caret {
+    flex-shrink: 0;
+    transition: transform var(--liara-transition-fast);
+}
+
+.liara-navbar__version-trigger[aria-expanded="true"] .liara-navbar__version-caret {
+    transform: rotate(180deg);
+}
+
+.liara-navbar__version-menu {
+    position: absolute;
+    top: calc(100% + var(--liara-space-2));
+    right: 0;
+    min-width: 160px;
+    max-height: 280px;
+    overflow-y: auto;
+
+    list-style: none;
+    margin: 0;
+    padding: var(--liara-space-1);
+
+    background: var(--liara-bg-elevated);
+    border: var(--liara-border-width-thin) solid var(--liara-border-default);
+    border-radius: var(--liara-radius-md);
+    box-shadow: var(--liara-shadow-md);
+
+    z-index: var(--liara-z-dropdown);
+}
+
+.liara-navbar__version-menu[hidden] {
+    display: none;
+}
+
+.liara-navbar__version-menu li {
+    margin: 0;
+}
+
+.liara-navbar__version-menu a {
+    display: block;
+    padding: var(--liara-space-2) var(--liara-space-3);
+
+    color: var(--liara-text-primary);
+    text-decoration: none;
+    font-family: var(--liara-font-mono);
+    font-size: var(--liara-text-xs);
+
+    border-radius: var(--liara-radius-sm);
+    transition: background-color var(--liara-transition-fast);
+}
+
+.liara-navbar__version-menu a:hover,
+.liara-navbar__version-menu a:focus-visible {
+    background: var(--liara-brand-primary-soft);
+    color: var(--liara-brand-primary-dark);
+}
+
+.liara-navbar__version-menu a.is-current {
+    background: var(--liara-brand-secondary-soft);
+    color: var(--liara-brand-secondary-dark);
+    font-weight: var(--liara-weight-medium);
+}
+
+/* ============================================================================
+ * Actions (theme toggle, a11y toggle, GitHub link)
+ * ========================================================================== */
+
+.liara-navbar__actions {
+    display: flex;
+    align-items: center;
+    gap: var(--liara-space-1);
+}
+
+.liara-navbar__action {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    width: 36px;
+    height: 36px;
+
+    background: transparent;
+    border: var(--liara-border-width-thin) solid transparent;
+    border-radius: var(--liara-radius-md);
+
+    color: var(--liara-text-secondary);
+    font-family: inherit;
+    cursor: pointer;
+    text-decoration: none;
+
+    transition:
+            background-color var(--liara-transition-fast),
+            color var(--liara-transition-fast),
+            border-color var(--liara-transition-fast);
+}
+
+.liara-navbar__action:hover {
+    background: var(--liara-bg-surface);
+    color: var(--liara-text-primary);
+    border-color: var(--liara-border-default);
+}
+
+.liara-navbar__action--text {
+    font-weight: var(--liara-weight-medium);
+    font-size: var(--liara-text-base);
+    letter-spacing: -0.02em;
+}
+
+.liara-navbar__action[aria-pressed="true"] {
+    background: var(--liara-brand-primary-soft);
+    color: var(--liara-brand-primary-dark);
+    border-color: var(--liara-brand-primary);
+}
+
+.liara-navbar__icon {
+    display: block;
+    flex-shrink: 0;
+}
+
+/* === Theme icon switching ===
+ *
+ * The three theme icons (system/light/dark) are all in the DOM. CSS shows
+ * the one that matches the current resolved theme. The `data-liara-theme`
+ * attribute is set by navbar.js based on user preference. */
+
+/* Default state: no attribute = following system preference */
+.liara-navbar__icon--system {
+    display: block;
+}
+.liara-navbar__icon--light,
+.liara-navbar__icon--dark {
+    display: none;
+}
+
+/* User chose light explicitly */
+:root[data-liara-theme="light"] .liara-navbar__icon--system,
+:root[data-liara-theme="light"] .liara-navbar__icon--dark {
+    display: none;
+}
+:root[data-liara-theme="light"] .liara-navbar__icon--light {
+    display: block;
+}
+
+/* User chose dark explicitly */
+:root[data-liara-theme="dark"] .liara-navbar__icon--system,
+:root[data-liara-theme="dark"] .liara-navbar__icon--light {
+    display: none;
+}
+:root[data-liara-theme="dark"] .liara-navbar__icon--dark {
+    display: block;
+}
+
+/* ============================================================================
+ * Mobile menu toggle (hidden on desktop)
+ * ========================================================================== */
+
+.liara-navbar__menu-toggle {
+    display: none;
+
+    width: 36px;
+    height: 36px;
+    padding: 0;
+
+    background: transparent;
+    border: var(--liara-border-width-thin) solid transparent;
+    border-radius: var(--liara-radius-md);
+
+    cursor: pointer;
+    transition:
+            background-color var(--liara-transition-fast),
+            border-color var(--liara-transition-fast);
+
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+}
+
+.liara-navbar__menu-toggle:hover {
+    background: var(--liara-bg-surface);
+    border-color: var(--liara-border-default);
+}
+
+.liara-navbar__menu-toggle-bar {
+    display: block;
+    width: 18px;
+    height: 1.5px;
+    background: var(--liara-text-secondary);
+    border-radius: 1px;
+    transition: transform var(--liara-transition-default);
+}
+
+/* ============================================================================
+ * Responsive: collapse modules into a drawer below 768px
+ * ========================================================================== */
+
+@media (max-width: 768px) {
+
+    .liara-navbar__inner {
+        padding: 0 var(--liara-space-3);
+        gap: var(--liara-space-2);
+    }
+
+    .liara-navbar__brand-name {
+        display: none;  /* logo only on small screens */
+    }
+
+    /* Modules collapse into a drawer that's hidden by default and revealed
+     * by toggling the `is-open` class on the navbar. */
+    .liara-navbar__modules {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0;
+
+        padding: var(--liara-space-2);
+
+        background: var(--liara-bg-elevated);
+        border-bottom: var(--liara-border-width-thin) solid var(--liara-border-default);
+        box-shadow: var(--liara-shadow-md);
+
+        max-height: 0;
+        overflow: hidden;
+        transition: max-height var(--liara-transition-default);
+    }
+
+    .liara-navbar.is-open .liara-navbar__modules {
+        max-height: 400px;
+    }
+
+    .liara-navbar__module {
+        padding: var(--liara-space-3);
+        border-radius: var(--liara-radius-md);
+    }
+
+    /* Hide the version selector text label on tiny screens to save space.
+     * The button remains tappable; just shows the version more compactly. */
+    @media (max-width: 480px) {
+        .liara-navbar__version {
+            display: none;
+        }
+    }
+
+    .liara-navbar__menu-toggle {
+        display: flex;
+    }
+
+    .liara-navbar.is-open .liara-navbar__menu-toggle-bar:nth-child(1) {
+        transform: translateY(5.5px) rotate(45deg);
+    }
+
+    .liara-navbar.is-open .liara-navbar__menu-toggle-bar:nth-child(2) {
+        opacity: 0;
+    }
+
+    .liara-navbar.is-open .liara-navbar__menu-toggle-bar:nth-child(3) {
+        transform: translateY(-5.5px) rotate(-45deg);
+    }
+}

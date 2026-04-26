@@ -1,0 +1,119 @@
+<!--
+    Liara Engine — Doxygen header template
+
+    This template replaces Doxygen's default <head> + opening of <body>.
+    Doxygen substitutes special tokens like $title, $relpath^, $treeview
+    when generating each page; do not remove or rename these.
+-->
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en-US">
+<head>
+    <meta charset="UTF-8"/>
+    <meta http-equiv="X-UA-Compatible" content="IE=9"/>
+    <meta name="generator" content="Doxygen $doxygenversion"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <!--BEGIN PROJECT_NAME--><title>$projectname: $title</title><!--END PROJECT_NAME-->
+    <!--BEGIN !PROJECT_NAME--><title>$title</title><!--END !PROJECT_NAME-->
+
+    <!-- Fonts: Inter for sans, JetBrains Mono for code, OpenDyslexic for a11y -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&family=JetBrains+Mono:wght@400;500&display=swap">
+    <link rel="stylesheet" href="https://fonts.cdnfonts.com/css/open-dyslexic">
+
+
+    <!-- jQuery (required by Doxygen scripts) -->
+    <script src="$relpath^jquery.js"></script>
+
+    <!-- Doxygen's own stylesheets, kept for layout fundamentals we override below -->
+    $treeview
+    $search
+    $mathjax
+    $darkmode
+    <link href="$relpath^tabs.css" rel="stylesheet" type="text/css"/>
+    <link href="$relpath^doxygen.css" rel="stylesheet" type="text/css"/>
+
+    <!-- Liara design system, applied AFTER Doxygen's own CSS so we can override -->
+    <link rel="stylesheet" href="$relpath^design-tokens.css">
+    <link rel="stylesheet" href="$relpath^navbar.css">
+    <link rel="stylesheet" href="$relpath^doxygen-custom.css">
+
+    $extrastylesheet
+
+    <!-- Apply theme/a11y prefs synchronously to prevent flash -->
+    <script>
+        (function () {
+            try {
+                const t = localStorage.getItem("liara-theme");
+                if (t === "light" || t === "dark") {
+                    document.documentElement.setAttribute("data-liara-theme", t);
+                }
+                if (localStorage.getItem("liara-a11y-dyslexia") === "true") {
+                    document.documentElement.setAttribute("data-liara-a11y-dyslexia", "true");
+                }
+            } catch (e) { /* localStorage unavailable, fall back to defaults */ }
+        })();
+    </script>
+
+    <script defer src="$relpath^navbar.js"></script>
+</head>
+<body>
+
+<!--
+    Shared navbar. The fragment below mirrors docs-shared/navbar/navbar.html.
+    TODO: Generate this part in CI instead of maintaining two separate files with identical content.
+-->
+<nav id="liara-navbar" class="liara-navbar" aria-label="Documentation navigation">
+    <div class="liara-navbar__inner">
+        <a class="liara-navbar__brand" href="https://liara-engine.github.io/" aria-label="Liara Engine home">
+            <svg class="liara-navbar__logo" width="22" height="22" viewBox="0 0 24 24" aria-hidden="true">
+                <circle cx="12" cy="12" r="10" fill="var(--liara-brand-primary)"/>
+                <circle cx="12" cy="12" r="4" fill="var(--liara-brand-primary-dark)"/>
+            </svg>
+            <span class="liara-navbar__brand-name">Liara Engine</span>
+        </a>
+        <ul class="liara-navbar__modules" role="list">
+            <li><a class="liara-navbar__module" data-liara-module="user" href="https://liara-engine.github.io/user/dev/">User guide</a></li>
+            <li><a class="liara-navbar__module" data-liara-module="interfaces" href="https://liara-engine.github.io/liara-interfaces/dev/">Interfaces</a></li>
+            <li><a class="liara-navbar__module" data-liara-module="core" href="https://liara-engine.github.io/liara-core/dev/">Core</a></li>
+            <li><a class="liara-navbar__module" data-liara-module="renderer" href="https://liara-engine.github.io/liara-renderer/dev/">Renderer</a></li>
+        </ul>
+        <div class="liara-navbar__spacer"></div>
+        <div class="liara-navbar__version">
+            <button class="liara-navbar__version-trigger" type="button"
+                    aria-haspopup="listbox" aria-expanded="false"
+                    aria-label="Switch documentation version">
+                <span class="liara-navbar__version-label" data-liara-version-label>dev</span>
+                <svg class="liara-navbar__version-caret" width="10" height="10" viewBox="0 0 10 10" aria-hidden="true">
+                    <path d="M2 4l3 3 3-3" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+            </button>
+            <ul class="liara-navbar__version-menu" role="listbox" data-liara-version-menu hidden></ul>
+        </div>
+        <div class="liara-navbar__actions">
+            <button class="liara-navbar__action" type="button" data-liara-theme-toggle aria-label="Toggle color theme" title="Toggle color theme">
+                <svg class="liara-navbar__icon liara-navbar__icon--system" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="13" rx="2" stroke="currentColor" stroke-width="1.6" fill="none"/><path d="M8 21h8M12 18v3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+                <svg class="liara-navbar__icon liara-navbar__icon--light" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4" stroke="currentColor" stroke-width="1.6" fill="none"/><path d="M12 3v2M12 19v2M3 12h2M19 12h2M5.6 5.6l1.4 1.4M17 17l1.4 1.4M5.6 18.4l1.4-1.4M17 7l1.4-1.4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+                <svg class="liara-navbar__icon liara-navbar__icon--dark" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linejoin="round"/></svg>
+            </button>
+            <button class="liara-navbar__action liara-navbar__action--text" type="button" data-liara-a11y-toggle aria-label="Toggle dyslexia-friendly mode" aria-pressed="false" title="Dyslexia-friendly mode">
+                <span aria-hidden="true">Aa</span>
+            </button>
+            <a class="liara-navbar__action" data-liara-github href="https://github.com/liara-engine/liara" aria-label="View on GitHub" title="View on GitHub" target="_blank" rel="noopener">
+                <svg class="liara-navbar__icon" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 2A10 10 0 0 0 2 12c0 4.42 2.87 8.17 6.84 9.5.5.09.66-.22.66-.48v-1.7c-2.78.6-3.37-1.34-3.37-1.34-.45-1.16-1.11-1.47-1.11-1.47-.91-.62.07-.6.07-.6 1 .07 1.53 1.03 1.53 1.03.89 1.53 2.34 1.09 2.91.83.09-.65.35-1.09.63-1.34-2.22-.25-4.55-1.11-4.55-4.94 0-1.09.39-1.98 1.03-2.68-.1-.25-.45-1.27.1-2.65 0 0 .84-.27 2.75 1.02a9.5 9.5 0 0 1 5 0c1.91-1.29 2.75-1.02 2.75-1.02.55 1.38.2 2.4.1 2.65.64.7 1.03 1.59 1.03 2.68 0 3.84-2.34 4.69-4.57 4.94.36.31.68.92.68 1.85V21c0 .27.16.58.67.48A10 10 0 0 0 22 12 10 10 0 0 0 12 2z"/></svg>
+            </a>
+        </div>
+        <button class="liara-navbar__menu-toggle" type="button" data-liara-menu-toggle aria-label="Open menu" aria-expanded="false">
+            <span class="liara-navbar__menu-toggle-bar"></span>
+            <span class="liara-navbar__menu-toggle-bar"></span>
+            <span class="liara-navbar__menu-toggle-bar"></span>
+        </button>
+    </div>
+</nav>
+
+<!--
+    Doxygen-generated content begins here. The wrapper div lets us scope our
+    custom CSS without touching Doxygen's own structure.
+-->
+<div id="top" class="liara-doxygen">
+    <!-- $generatedby -->
