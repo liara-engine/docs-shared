@@ -21,7 +21,6 @@
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&family=JetBrains+Mono:wght@400;500&display=swap">
     <link rel="stylesheet" href="https://fonts.cdnfonts.com/css/open-dyslexic">
 
-
     <!-- jQuery (required by Doxygen scripts) -->
     <script src="$relpath^jquery.js"></script>
 
@@ -32,6 +31,9 @@
     $darkmode
     <link href="$relpath^tabs.css" rel="stylesheet" type="text/css"/>
     <link href="$relpath^doxygen.css" rel="stylesheet" type="text/css"/>
+
+    <!-- Liara favicon -->
+    <link rel="icon" type="image/x-icon" href="$relpath^logo_64.ico">
 
     <!-- Liara design system, applied AFTER Doxygen's own CSS so we can override -->
     <link rel="stylesheet" href="$relpath^design-tokens.css">
@@ -66,10 +68,7 @@
 <nav id="liara-navbar" class="liara-navbar" aria-label="Documentation navigation">
     <div class="liara-navbar__inner">
         <a class="liara-navbar__brand" href="https://liara-engine.github.io/" aria-label="Liara Engine home">
-            <svg class="liara-navbar__logo" width="22" height="22" viewBox="0 0 24 24" aria-hidden="true">
-                <circle cx="12" cy="12" r="10" fill="var(--liara-brand-primary)"/>
-                <circle cx="12" cy="12" r="4" fill="var(--liara-brand-primary-dark)"/>
-            </svg>
+            <img class="liara-navbar__logo" src="$relpath^logo_24.svg" alt="" aria-hidden="true" width="24" height="24"/>
             <span class="liara-navbar__brand-name">Liara Engine</span>
         </a>
         <ul class="liara-navbar__modules" role="list">
