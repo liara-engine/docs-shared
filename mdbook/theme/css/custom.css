@@ -1,0 +1,570 @@
+/**
+ * Liara Engine — mdBook custom styles
+ *
+ * Loaded after design-tokens.css, navbar.css, and mdBook's own general.css
+ * and chrome.css. This file adds Liara-specific polish on top of mdBook's
+ * default layout.
+ *
+ * What this file does:
+ *   - Layout: room for the Liara navbar at the top (~52px tall sticky bar).
+ *   - Typography: switch to Inter / JetBrains Mono everywhere mdBook
+ *     hardcodes its own font stack.
+ *   - Code blocks: pastel syntax highlighting tuned to the palette.
+ *   - Admonitions: replace mdBook's plain "blockquote" callouts with
+ *     well-styled `> **Note:**`-style boxes (via mdbook-admonish if used,
+ *     or via a small set of conventions described in the user guide).
+ *   - Sidebar: rounded selected items, soft hover, no harsh borders.
+ *   - Search: search bar styled to match the navbar's version selector.
+ */
+
+/* ============================================================================
+ * Make room for the sticky Liara navbar
+ * mdBook's default layout assumes the page starts at top:0. The Liara
+ * navbar adds 52px of sticky height; we shift mdBook's content down so
+ * its own sticky menu-bar lands below ours.
+ * ========================================================================== */
+
+#sidebar.sidebar {
+    top: var(--liara-navbar-height);
+    height: calc(100vh - var(--liara-navbar-height));
+}
+
+#menu-bar.menu-bar {
+    top: var(--liara-navbar-height);
+    background: var(--liara-bg-page);
+    border-bottom: var(--liara-border-width-thin) solid var(--liara-border-default);
+}
+
+#menu-bar-hover-placeholder {
+    height: 0;
+}
+
+#page-wrapper.page-wrapper {
+    /* mdBook applies its own top padding for the menu bar; we leave it as is */
+}
+
+body {
+    padding-top: 0;
+    margin-top: 0;
+    background: var(--liara-bg-page);
+}
+
+/* ============================================================================
+ * Typography
+ * ========================================================================== */
+
+html, body {
+    font-family: var(--liara-font-sans);
+    font-size: var(--liara-text-base);
+    line-height: var(--liara-leading-normal);
+    color: var(--liara-text-primary);
+}
+
+#content.content {
+    font-family: var(--liara-font-sans);
+    color: var(--liara-text-primary);
+}
+
+#content.content h1,
+#content.content h2,
+#content.content h3,
+#content.content h4,
+#content.content h5,
+#content.content h6 {
+    font-family: var(--liara-font-sans);
+    color: var(--liara-text-primary);
+    font-weight: var(--liara-weight-medium);
+    line-height: var(--liara-leading-snug);
+    margin-top: var(--liara-space-6);
+    margin-bottom: var(--liara-space-3);
+}
+
+#content.content h1 { font-size: var(--liara-text-3xl); }
+#content.content h2 { font-size: var(--liara-text-2xl); }
+#content.content h3 { font-size: var(--liara-text-xl); }
+#content.content h4 { font-size: var(--liara-text-lg); }
+
+#content.content p,
+#content.content li,
+#content.content dd {
+    line-height: var(--liara-leading-normal);
+}
+
+#content.content a.header {
+    color: var(--liara-text-primary);
+    text-decoration: none;
+}
+
+#content.content a.header:hover::before {
+    color: var(--liara-brand-primary);
+    content: "#";
+    margin-left: -0.8em;
+    padding-right: 0.3em;
+    font-weight: var(--liara-weight-bold);
+}
+
+#content.content a:not(.header):not(.fa) {
+    color: var(--liara-text-link);
+    text-decoration: none;
+    transition: color var(--liara-transition-fast);
+}
+
+#content.content a:not(.header):not(.fa):hover {
+    color: var(--liara-text-link-hover);
+    text-decoration: underline;
+    text-decoration-color: var(--liara-brand-primary);
+    text-underline-offset: 2px;
+}
+
+/* ============================================================================
+ * Sidebar
+ * ========================================================================== */
+
+#sidebar.sidebar {
+    font-family: var(--liara-font-sans);
+    font-size: var(--liara-text-sm);
+    background: var(--liara-bg-surface);
+    border-right: var(--liara-border-width-thin) solid var(--liara-border-default);
+}
+
+.sidebar .sidebar-scrollbox {
+    padding: var(--liara-space-3) var(--liara-space-2);
+}
+
+.sidebar ol.chapter,
+.sidebar ol.section {
+    padding-left: 0;
+    list-style: none;
+}
+
+.sidebar ol.section {
+    padding-left: var(--liara-space-3);
+    border-left: var(--liara-border-width-thin) solid var(--liara-border-subtle);
+    margin-left: var(--liara-space-2);
+}
+
+.sidebar a {
+    display: block;
+    padding: var(--liara-space-2) var(--liara-space-3);
+    border-radius: var(--liara-radius-sm);
+    color: var(--liara-text-primary);
+    text-decoration: none;
+    transition:
+            background-color var(--liara-transition-fast),
+            color var(--liara-transition-fast);
+    line-height: var(--liara-leading-snug);
+}
+
+.sidebar a:hover {
+    background: var(--liara-brand-primary-soft);
+    color: var(--liara-brand-primary-dark);
+    text-decoration: none;
+}
+
+.sidebar .chapter li.chapter-item.active > a,
+.sidebar a.active {
+    background: var(--liara-brand-primary-soft);
+    color: var(--liara-brand-primary-dark);
+    font-weight: var(--liara-weight-medium);
+}
+
+.sidebar .part-title {
+    color: var(--liara-text-tertiary);
+    font-size: var(--liara-text-xs);
+    font-weight: var(--liara-weight-semibold);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    padding: var(--liara-space-3) var(--liara-space-3) var(--liara-space-2);
+    margin-top: var(--liara-space-3);
+}
+
+.sidebar .spacer {
+    height: 1px;
+    background: var(--liara-border-subtle);
+    margin: var(--liara-space-2) var(--liara-space-2);
+    border: none;
+}
+
+.sidebar-resize-handle {
+    background: transparent;
+    border-right: var(--liara-border-width-thin) solid var(--liara-border-default);
+}
+
+.sidebar-resize-handle:hover .sidebar-resize-indicator {
+    background: var(--liara-brand-primary);
+    width: 2px;
+}
+
+/* ============================================================================
+ * Menu bar (the second sticky bar below the Liara navbar)
+ * Shows: sidebar toggle, book title, search, GitHub edit links
+ * ========================================================================== */
+
+#menu-bar {
+    height: 44px;
+    font-family: var(--liara-font-sans);
+}
+
+#menu-bar .menu-title {
+    color: var(--liara-text-primary);
+    font-weight: var(--liara-weight-medium);
+    font-size: var(--liara-text-base);
+}
+
+#menu-bar .icon-button,
+#menu-bar a.icon-button,
+#menu-bar a:not(.icon-button) {
+    color: var(--liara-text-secondary);
+    background: transparent;
+    border: var(--liara-border-width-thin) solid transparent;
+    border-radius: var(--liara-radius-md);
+    padding: var(--liara-space-2);
+    transition:
+            background-color var(--liara-transition-fast),
+            color var(--liara-transition-fast),
+            border-color var(--liara-transition-fast);
+}
+
+#menu-bar .icon-button:hover,
+#menu-bar a:hover {
+    background: var(--liara-bg-surface);
+    color: var(--liara-text-primary);
+    border-color: var(--liara-border-default);
+    text-decoration: none;
+}
+
+#theme-toggle,
+.theme-popup {
+    display: none !important;
+}
+
+/* ============================================================================
+ * Search bar
+ * ========================================================================== */
+
+#search-wrapper {
+    background: var(--liara-bg-page);
+    border-bottom: var(--liara-border-width-thin) solid var(--liara-border-default);
+}
+
+#searchbar {
+    background: var(--liara-bg-elevated);
+    color: var(--liara-text-primary);
+    border: var(--liara-border-width-thin) solid var(--liara-border-default);
+    border-radius: var(--liara-radius-md);
+    padding: var(--liara-space-3) var(--liara-space-4);
+    font-family: var(--liara-font-sans);
+    font-size: var(--liara-text-base);
+}
+
+#searchbar:focus {
+    border-color: var(--liara-brand-primary);
+    outline: none;
+    box-shadow: var(--liara-shadow-focus);
+}
+
+#searchresults-outer {
+    background: var(--liara-bg-page);
+    border: none;
+}
+
+#searchresults li {
+    background: var(--liara-bg-elevated);
+    border: var(--liara-border-width-thin) solid var(--liara-border-default);
+    border-radius: var(--liara-radius-md);
+    padding: var(--liara-space-3) var(--liara-space-4);
+    margin: var(--liara-space-2) 0;
+    transition: background-color var(--liara-transition-fast);
+}
+
+#searchresults li:hover {
+    background: var(--liara-brand-primary-soft);
+    border-color: var(--liara-brand-primary);
+}
+
+#searchresults a {
+    color: var(--liara-text-link);
+    font-weight: var(--liara-weight-medium);
+    text-decoration: none;
+}
+
+#searchresults .breadcrumbs {
+    color: var(--liara-text-tertiary);
+    font-size: var(--liara-text-sm);
+}
+
+mark {
+    background: var(--liara-brand-accent);
+    color: var(--liara-brand-accent-dark);
+    padding: 0 2px;
+    border-radius: 2px;
+}
+
+/* ============================================================================
+ * Code blocks
+ * ========================================================================== */
+
+#content.content code,
+#content.content kbd,
+#content.content tt {
+    font-family: var(--liara-font-mono);
+    font-size: 0.92em;
+    background: var(--liara-code-bg);
+    color: var(--liara-code-text);
+    padding: 1px 6px;
+    border-radius: var(--liara-radius-sm);
+    border: var(--liara-border-width-thin) solid var(--liara-border-subtle);
+}
+
+#content.content pre {
+    background: var(--liara-code-bg);
+    color: var(--liara-code-text);
+    border: var(--liara-border-width-thin) solid var(--liara-border-default);
+    border-radius: var(--liara-radius-md);
+    padding: var(--liara-space-4);
+    margin: var(--liara-space-4) 0;
+    font-family: var(--liara-font-mono);
+    font-size: var(--liara-text-sm);
+    line-height: var(--liara-leading-relaxed);
+    overflow-x: auto;
+}
+
+#content.content pre > code {
+    background: transparent;
+    border: none;
+    padding: 0;
+    font-size: inherit;
+}
+
+.hljs {
+    background: var(--liara-code-bg) !important;
+    color: var(--liara-code-text) !important;
+}
+
+.buttons {
+    color: var(--liara-text-tertiary);
+}
+
+.buttons .clip-button,
+.buttons .fa-copy {
+    color: var(--liara-text-tertiary);
+    transition: color var(--liara-transition-fast);
+}
+
+.buttons .clip-button:hover,
+.buttons .fa-copy:hover {
+    color: var(--liara-brand-primary-dark);
+}
+
+.tooltipped::before {
+    background: var(--liara-bg-elevated);
+    color: var(--liara-text-primary);
+    border: var(--liara-border-width-thin) solid var(--liara-border-default);
+    border-radius: var(--liara-radius-sm);
+    padding: var(--liara-space-1) var(--liara-space-2);
+    font-size: var(--liara-text-xs);
+    font-family: var(--liara-font-sans);
+    box-shadow: var(--liara-shadow-sm);
+}
+
+/* ============================================================================
+ * Tables
+ * ========================================================================== */
+
+#content.content table {
+    border-collapse: separate;
+    border-spacing: 0;
+    width: 100%;
+    margin: var(--liara-space-4) 0;
+    background: var(--liara-bg-elevated);
+    border: var(--liara-border-width-thin) solid var(--liara-border-default);
+    border-radius: var(--liara-radius-md);
+    overflow: hidden;
+    font-size: var(--liara-text-sm);
+}
+
+#content.content table thead {
+    background: var(--liara-brand-primary-soft);
+}
+
+#content.content table th {
+    background: var(--liara-brand-primary-soft);
+    color: var(--liara-brand-primary-dark);
+    font-weight: var(--liara-weight-medium);
+    text-align: left;
+    padding: var(--liara-space-3) var(--liara-space-4);
+    border: none;
+    border-bottom: var(--liara-border-width-thin) solid var(--liara-border-default);
+}
+
+#content.content table td {
+    padding: var(--liara-space-3) var(--liara-space-4);
+    border: none;
+    border-bottom: var(--liara-border-width-thin) solid var(--liara-border-subtle);
+    color: var(--liara-text-primary);
+}
+
+#content.content table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+#content.content table tbody tr:hover td {
+    background: var(--liara-brand-primary-soft);
+}
+
+/* ============================================================================
+ * Blockquotes (used as informal admonitions in mdBook)
+ *
+ * Convention used by Liara user docs:
+ *   > **Note:**     -> blue (info)
+ *   > **Warning:**  -> peach (warning)
+ *   > **Tip:**      -> sage (success)
+ *   > **Danger:**   -> rose-red (danger)
+ *
+ * mdBook does not detect these automatically; the styling below is
+ * applied by JavaScript via small selectors on the `> strong:first-child`
+ * inside the blockquote.
+ *
+ * TODO :
+ *  The base style is the "info" look; specific
+ *  styles attach via CSS classes added by a small inline script in
+ *  custom.js (planned, optional).
+ *  For now, all blockquotes look like the "info" admonition — visually
+ *  pleasant and readable. The JS-augmented version comes later.
+ * ========================================================================== */
+
+#content.content blockquote {
+    background: var(--liara-semantic-info-bg);
+    border-left: 3px solid var(--liara-semantic-info-fg);
+    color: var(--liara-text-primary);
+    margin: var(--liara-space-4) 0;
+    padding: var(--liara-space-3) var(--liara-space-4);
+    border-radius: 0 var(--liara-radius-md) var(--liara-radius-md) 0;
+}
+
+#content.content blockquote > p {
+    margin: var(--liara-space-2) 0;
+}
+
+#content.content blockquote > p:first-child {
+    margin-top: 0;
+}
+
+#content.content blockquote > p:last-child {
+    margin-bottom: 0;
+}
+
+#content.content blockquote > p:first-child > strong:first-child {
+    color: var(--liara-semantic-info-fg);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    font-size: var(--liara-text-sm);
+    font-weight: var(--liara-weight-semibold);
+}
+
+/* ============================================================================
+ * Misc mdBook elements
+ * ========================================================================== */
+
+#content.content hr {
+    border: none;
+    border-top: var(--liara-border-width-thin) solid var(--liara-border-default);
+    margin: var(--liara-space-6) 0;
+}
+
+kbd {
+    display: inline-block;
+    background: var(--liara-bg-elevated);
+    border: var(--liara-border-width-thin) solid var(--liara-border-strong);
+    border-radius: var(--liara-radius-sm);
+    box-shadow: 0 1px 0 var(--liara-border-strong);
+    color: var(--liara-text-primary);
+    font-family: var(--liara-font-mono);
+    font-size: var(--liara-text-xs);
+    padding: 1px 6px;
+    line-height: 1;
+}
+
+.nav-chapters {
+    color: var(--liara-text-secondary);
+    text-decoration: none;
+    transition: color var(--liara-transition-fast);
+}
+
+.nav-chapters:hover {
+    color: var(--liara-brand-primary-dark);
+    text-decoration: none;
+}
+
+.mobile-nav-chapters {
+    background: var(--liara-bg-surface);
+    border: var(--liara-border-width-thin) solid var(--liara-border-default);
+    border-radius: var(--liara-radius-md);
+}F
+
+.mobile-nav-chapters:hover {
+    background: var(--liara-brand-primary-soft);
+    border-color: var(--liara-brand-primary);
+}
+
+* {
+    scrollbar-width: thin;
+    scrollbar-color: var(--liara-border-strong) transparent;
+}
+
+::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+}
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+::-webkit-scrollbar-thumb {
+    background: var(--liara-border-strong);
+    border-radius: var(--liara-radius-pill);
+    border: 2px solid var(--liara-bg-page);
+}
+::-webkit-scrollbar-thumb:hover {
+    background: var(--liara-brand-primary);
+}
+
+#git-edit-button {
+    display: none;
+}
+
+/* ============================================================================
+ * Print styles
+ * ========================================================================== */
+
+@media print {
+    .liara-navbar,
+    #sidebar,
+    #menu-bar,
+    .nav-chapters,
+    .mobile-nav-chapters,
+    #search-wrapper {
+        display: none !important;
+    }
+
+    #page-wrapper {
+        margin-left: 0 !important;
+    }
+
+    #content {
+        max-width: none;
+        padding: 0;
+    }
+}
+
+/* ============================================================================
+ * Responsive
+ * ========================================================================== */
+
+@media (max-width: 768px) {
+    #content.content {
+        padding: var(--liara-space-4) var(--liara-space-3);
+    }
+
+    #content.content h1 { font-size: var(--liara-text-2xl); }
+    #content.content h2 { font-size: var(--liara-text-xl); }
+}

@@ -1,0 +1,118 @@
+/**
+ * Liara Engine — mdBook variables override
+ *
+ * mdBook ships with five built-in themes (light, rust, coal, navy, ayu),
+ * each defining a set of CSS variables. We hijack the two we use
+ * (light = our light mode, navy = our dark mode) and rewrite their
+ * variables to point at our design tokens.
+ *
+ * Strategy:
+ *   - design-tokens.css is loaded first by index.hbs and defines all
+ *     --liara-* variables.
+ *   - This file maps mdBook's --variables to the corresponding --liara-*
+ *     ones, so mdBook's own stylesheets (general.css, chrome.css) end up
+ *     using our palette without modification.
+ *   - custom.css adds Liara-specific tweaks on top.
+ *
+ * If a future mdBook release adds new variables, they can be added here
+ * without affecting downstream users.
+ */
+
+/* ============================================================================
+ * LIGHT THEME — bridges mdBook's "light" theme to Liara's light palette
+ * ========================================================================== */
+
+.light, html:not(.coal):not(.navy):not(.ayu):not(.rust) {
+
+    --bg:                    var(--liara-bg-page);
+    --fg:                    var(--liara-text-primary);
+
+    --sidebar-bg:            var(--liara-bg-surface);
+    --sidebar-fg:            var(--liara-text-primary);
+    --sidebar-non-existant:  var(--liara-text-tertiary);
+    --sidebar-active:        var(--liara-brand-primary-dark);
+    --sidebar-spacer:        var(--liara-border-subtle);
+
+    --scrollbar:             var(--liara-border-strong);
+
+    --icons:                 var(--liara-text-secondary);
+    --icons-hover:           var(--liara-brand-primary-dark);
+
+    --links:                 var(--liara-text-link);
+
+    --inline-code-color:     var(--liara-code-text);
+
+    --theme-popup-bg:        var(--liara-bg-elevated);
+    --theme-popup-border:    var(--liara-border-default);
+    --theme-hover:           var(--liara-brand-primary-soft);
+
+    --quote-bg:              var(--liara-bg-surface);
+    --quote-border:          var(--liara-brand-secondary);
+
+    --warning-border:        var(--liara-semantic-warning-fg);
+
+    --table-border-color:    var(--liara-border-default);
+    --table-header-bg:       var(--liara-brand-primary-soft);
+    --table-alternate-bg:    var(--liara-bg-surface);
+
+    --searchbar-border-color:  var(--liara-border-default);
+    --searchbar-bg:            var(--liara-bg-elevated);
+    --searchbar-fg:            var(--liara-text-primary);
+    --searchbar-shadow-color:  rgba(45, 27, 46, 0.08);
+    --searchresults-header-fg: var(--liara-text-secondary);
+    --searchresults-border-color: var(--liara-border-default);
+    --searchresults-li-bg:     var(--liara-bg-surface);
+    --search-mark-bg:          var(--liara-brand-accent);
+
+    color-scheme:              light;
+}
+
+/* ============================================================================
+ * DARK THEME — mapped to mdBook's "navy" theme
+ * ========================================================================== */
+
+.navy, .coal, .ayu, .rust,
+html[data-liara-theme="dark"] {
+
+    --bg:                    var(--liara-bg-page);
+    --fg:                    var(--liara-text-primary);
+
+    --sidebar-bg:            var(--liara-bg-surface);
+    --sidebar-fg:            var(--liara-text-primary);
+    --sidebar-non-existant:  var(--liara-text-tertiary);
+    --sidebar-active:        var(--liara-brand-primary);
+    --sidebar-spacer:        var(--liara-border-subtle);
+
+    --scrollbar:             var(--liara-border-strong);
+
+    --icons:                 var(--liara-text-secondary);
+    --icons-hover:           var(--liara-brand-primary);
+
+    --links:                 var(--liara-text-link);
+
+    --inline-code-color:     var(--liara-code-text);
+
+    --theme-popup-bg:        var(--liara-bg-elevated);
+    --theme-popup-border:    var(--liara-border-default);
+    --theme-hover:           var(--liara-brand-primary-soft);
+
+    --quote-bg:              var(--liara-bg-surface);
+    --quote-border:          var(--liara-brand-secondary);
+
+    --warning-border:        var(--liara-semantic-warning-fg);
+
+    --table-border-color:    var(--liara-border-default);
+    --table-header-bg:       var(--liara-brand-primary-soft);
+    --table-alternate-bg:    var(--liara-bg-surface);
+
+    --searchbar-border-color:  var(--liara-border-default);
+    --searchbar-bg:            var(--liara-bg-elevated);
+    --searchbar-fg:            var(--liara-text-primary);
+    --searchbar-shadow-color:  rgba(0, 0, 0, 0.4);
+    --searchresults-header-fg: var(--liara-text-secondary);
+    --searchresults-border-color: var(--liara-border-default);
+    --searchresults-li-bg:     var(--liara-bg-surface);
+    --search-mark-bg:          var(--liara-brand-accent);
+
+    color-scheme:              dark;
+}

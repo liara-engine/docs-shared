@@ -1,0 +1,171 @@
+/**
+ * Liara Engine — Syntax highlighting (replaces mdBook's highlight.css)
+ *
+ * mdBook uses highlight.js to render syntax in code blocks. By default, it
+ * ships with one of several themes (e.g., "tomorrow", "atelier-dune-light").
+ * We override these with token classes mapped to the Liara design tokens,
+ * producing pastel highlighting that is consistent with the rest of the
+ * documentation.
+ *
+ * Token mapping (light theme):
+ *   - Keywords (if, return, struct, ...)         -> primary-dark (rose)
+ *   - Built-in types (int, void, ...)            -> secondary-dark (lavender)
+ *   - Strings ("hello")                          -> warning-fg (peach)
+ *   - Numbers (42, 3.14)                         -> info-fg (periwinkle)
+ *   - Comments (// ..., /* ... *\/)              -> text-tertiary (muted)
+ *   - Preprocessor (#include, #define)           -> secondary-dark (lavender)
+ *   - Constants (NULL, true, false)              -> danger-fg (rose-red)
+ *   - Functions (calls and definitions)          -> text-primary (default)
+ *   - Operators (+, ==, ::)                      -> text-secondary (muted)
+ *
+ * The .hljs root class controls the block background and default text color,
+ * which we already set in custom.css; the rules below only need to color
+ * tokens.
+ */
+
+.hljs {
+    background: var(--liara-code-bg);
+    color: var(--liara-code-text);
+}
+
+/* Keywords */
+.hljs-keyword,
+.hljs-selector-tag,
+.hljs-literal,
+.hljs-section,
+.hljs-link {
+    color: var(--liara-code-keyword);
+    font-weight: var(--liara-weight-normal);
+}
+
+/* Built-in types and identifiers */
+.hljs-built_in,
+.hljs-type,
+.hljs-class .hljs-title,
+.hljs-title.class_,
+.hljs-name {
+    color: var(--liara-code-type);
+}
+
+/* Strings and characters */
+.hljs-string,
+.hljs-meta-string,
+.hljs-template-string,
+.hljs-regexp,
+.hljs-symbol,
+.hljs-quote {
+    color: var(--liara-code-string);
+}
+
+/* Numbers */
+.hljs-number,
+.hljs-meta .hljs-number {
+    color: var(--liara-code-number);
+}
+
+/* Comments */
+.hljs-comment,
+.hljs-formula {
+    color: var(--liara-code-comment);
+    font-style: italic;
+}
+
+/* Preprocessor and meta */
+.hljs-meta,
+.hljs-meta-keyword,
+.hljs-meta .hljs-keyword,
+.hljs-doctag {
+    color: var(--liara-code-preprocessor);
+}
+
+/* Constants and special values */
+.hljs-variable.constant_,
+.hljs-variable.language_,
+.hljs-deletion {
+    color: var(--liara-code-constant);
+}
+
+/* Function names — leave at default text color but slightly emphasized */
+.hljs-title.function_,
+.hljs-function .hljs-title,
+.hljs-title {
+    color: var(--liara-code-function);
+}
+
+/* Operators and punctuation — muted */
+.hljs-operator,
+.hljs-punctuation {
+    color: var(--liara-code-operator);
+}
+
+/* Attributes (HTML/XML, struct fields) */
+.hljs-attr,
+.hljs-attribute,
+.hljs-property {
+    color: var(--liara-brand-primary-dark);
+}
+
+/* Tags (HTML/XML) */
+.hljs-tag,
+.hljs-tag .hljs-name {
+    color: var(--liara-code-keyword);
+}
+
+/* Tag attribute names inside HTML/XML */
+.hljs-tag .hljs-attr {
+    color: var(--liara-code-type);
+}
+
+/* Variables — default text color */
+.hljs-variable,
+.hljs-template-variable,
+.hljs-params {
+    color: var(--liara-code-text);
+}
+
+/* Bullet points in markdown source */
+.hljs-bullet {
+    color: var(--liara-code-keyword);
+}
+
+/* Code added/removed in diff blocks */
+.hljs-addition {
+    background: var(--liara-semantic-success-bg);
+    color: var(--liara-semantic-success-fg);
+    display: inline-block;
+    width: 100%;
+}
+
+.hljs-deletion {
+    background: var(--liara-semantic-danger-bg);
+    color: var(--liara-semantic-danger-fg);
+    display: inline-block;
+    width: 100%;
+}
+
+/* Emphasis and strong (in markdown blocks) */
+.hljs-emphasis {
+    font-style: italic;
+}
+
+.hljs-strong {
+    font-weight: var(--liara-weight-semibold);
+}
+
+/* Highlighted line (mdBook supports {{#highlight}} blocks) */
+.hljs-line.highlighted,
+.hljs-line.is-active {
+    background: var(--liara-code-line-highlight);
+    display: inline-block;
+    width: 100%;
+}
+
+/* Line numbers (if mdBook config enables them) */
+.boring {
+    opacity: 0.5;
+    transition: opacity var(--liara-transition-fast);
+}
+
+.boring:hover {
+    opacity: 1;
+}
