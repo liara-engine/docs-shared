@@ -1,0 +1,13 @@
+.idea
+.vscode
+
+build
+target
+book
+
+*.log
+*.tmp
+*.bak
+*.swp
+*.swo
+*.DS_Store
