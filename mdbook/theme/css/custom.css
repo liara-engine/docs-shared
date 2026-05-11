@@ -413,24 +413,22 @@ mark {
 }
 
 /* ============================================================================
- * Blockquotes (used as informal admonitions in mdBook)
+ * Blockquotes & Admonitions
  *
  * Convention used by Liara user docs:
- *   > **Note:**     -> blue (info)
- *   > **Warning:**  -> peach (warning)
- *   > **Tip:**      -> sage (success)
- *   > **Danger:**   -> rose-red (danger)
+ *   > **Note:**     -> blue (info)         (also: Info, See, See also)
+ *   > **Tip:**      -> sage (success)      (also: Hint, Success)
+ *   > **Warning:**  -> peach (warning)     (also: Caution, Important, Attention)
+ *   > **Danger:**   -> rose-red (danger)   (also: Error, Deprecated, Bug)
  *
- * mdBook does not detect these automatically; the styling below is
- * applied by JavaScript via small selectors on the `> strong:first-child`
- * inside the blockquote.
+ * The detection is performed by `admonitions.js`, which scans every
+ * blockquote in the rendered page, reads the leading <strong> element,
+ * and adds `.liara-admonition` plus a variant class
+ * (`.liara-admonition--info`, etc.). It also injects a small SVG icon as
+ * the first child of the strong tag.
  *
- * TODO :
- *  The base style is the "info" look; specific
- *  styles attach via CSS classes added by a small inline script in
- *  custom.js (planned, optional).
- *  For now, all blockquotes look like the "info" admonition — visually
- *  pleasant and readable. The JS-augmented version comes later.
+ * Plain blockquotes that do not start with a recognized label keep the
+ * "info" base style.
  * ========================================================================== */
 
 #content.content blockquote {
@@ -460,6 +458,56 @@ mark {
     letter-spacing: 0.04em;
     font-size: var(--liara-text-sm);
     font-weight: var(--liara-weight-semibold);
+    display: inline-flex;
+    align-items: center;
+    gap: var(--liara-space-2);
+}
+
+.liara-admonition__icon {
+    display: inline-flex;
+    align-items: center;
+    flex-shrink: 0;
+    margin-bottom: 1px;
+}
+
+.liara-admonition__icon svg {
+    display: block;
+}
+
+/* === Variant: success (Tip, Hint) — sage ====================================== */
+#content.content blockquote.liara-admonition--success {
+    background: var(--liara-semantic-success-bg);
+    border-left-color: var(--liara-semantic-success-fg);
+}
+#content.content blockquote.liara-admonition--success > p:first-child > strong:first-child {
+    color: var(--liara-semantic-success-fg);
+}
+
+/* === Variant: warning (Warning, Caution, Important) — peach =================== */
+#content.content blockquote.liara-admonition--warning {
+    background: var(--liara-semantic-warning-bg);
+    border-left-color: var(--liara-semantic-warning-fg);
+}
+#content.content blockquote.liara-admonition--warning > p:first-child > strong:first-child {
+    color: var(--liara-semantic-warning-fg);
+}
+
+/* === Variant: danger (Danger, Error, Deprecated) — rose-red =================== */
+#content.content blockquote.liara-admonition--danger {
+    background: var(--liara-semantic-danger-bg);
+    border-left-color: var(--liara-semantic-danger-fg);
+}
+#content.content blockquote.liara-admonition--danger > p:first-child > strong:first-child {
+    color: var(--liara-semantic-danger-fg);
+}
+
+/* === Variant: info (default) — already covered by the base style above ======= */
+/* The .liara-admonition--info class is added for completeness/symmetry but
+ * the base blockquote style already provides the info appearance. The
+ * declaration below is kept as a no-op for consistency and future edits. */
+#content.content blockquote.liara-admonition--info {
+    background: var(--liara-semantic-info-bg);
+    border-left-color: var(--liara-semantic-info-fg);
 }
 
 /* ============================================================================
@@ -500,7 +548,7 @@ kbd {
     background: var(--liara-bg-surface);
     border: var(--liara-border-width-thin) solid var(--liara-border-default);
     border-radius: var(--liara-radius-md);
-}F
+}
 
 .mobile-nav-chapters:hover {
     background: var(--liara-brand-primary-soft);

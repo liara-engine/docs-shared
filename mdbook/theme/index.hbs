@@ -51,18 +51,18 @@
 <link rel="stylesheet" href="{{ path_to_root }}css/print.css" media="print">
 {{/if}}
 
-<!-- Fonts: Inter, JetBrains Mono, OpenDyslexic -->
+{{!-- Fonts: Inter, JetBrains Mono, OpenDyslexic --}}
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://fonts.gstatic.com" cross origin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&family=JetBrains+Mono:wght@400;500&display=swap">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/opendyslexic@1.0.4/opendyslexic-regular.css">
 
-<!-- mdBook's built-in highlight.css (we ship our own override below) -->
+{{!-- mdBook's built-in highlight.css (we ship our own override below) --}}
 <link rel="stylesheet" href="{{ path_to_root }}highlight.css">
 <link rel="stylesheet" href="{{ path_to_root }}tomorrow-night.css">
 <link rel="stylesheet" href="{{ path_to_root }}ayu-highlight.css">
 
-<!-- Liara design system (loaded AFTER mdBook's own CSS so we override) -->
+{{!-- Liara design system (loaded AFTER mdBook's own CSS so we override) --}}
 <link rel="stylesheet" href="{{ path_to_root }}design-tokens.css">
 <link rel="stylesheet" href="{{ path_to_root }}navbar.css">
 <link rel="stylesheet" href="{{ path_to_root }}custom.css">
@@ -76,10 +76,10 @@
 {{/if}}
 </head>
 <body class="sidebar-visible">
-<!-- Provide site root and default themes for the JS to consume -->
+{{!-- Provide site root and default themes for the JS to consume --}}
 <div id="body-container">
 
-<!-- Apply theme/a11y prefs synchronously, before mdBook's own theme JS runs -->
+{{!-- Apply theme/a11y prefs synchronously, before mdBook's own theme JS runs --}}
 <script>
 (function () {
     try {
@@ -104,9 +104,9 @@
 })();
 </script>
 
-<!-- ====================================================================
+{{!-- ====================================================================
      LIARA NAVBAR — mirrors docs-shared/navbar/navbar.html
-     ==================================================================== -->
+     ==================================================================== --}}
 <nav id="liara-navbar" class="liara-navbar" aria-label="Documentation navigation">
     <div class="liara-navbar__inner">
         <a class="liara-navbar__brand" href="https://liara-engine.github.io/" aria-label="Liara Engine home">
@@ -153,25 +153,25 @@
     </div>
 </nav>
 
-<!-- Load the Liara navbar logic AFTER the navbar markup is in the DOM -->
+{{!-- Load the Liara navbar logic AFTER the navbar markup is in the DOM --}}
 <script defer src="{{ path_to_root }}navbar.js"></script>
 
-<!-- ====================================================================
+{{!-- ====================================================================
      mdBook layout — sidebar + content
-     ==================================================================== -->
+     ==================================================================== --}}
 
-<!-- Provide site root for the JS to consume -->
+{{!-- Provide site root for the JS to consume --}}
 <input type="hidden" id="MDBOOK_OUTPUT" value="{{ path_to_root }}">
 {{#if mathjax_support}}<input type="hidden" id="MathJax_Support" value="true">{{/if}}
 
-<!-- Hide / unhide sidebar before it is displayed -->
+{{!-- Hide / unhide sidebar before it is displayed --}}
 <script>
     var path_to_root = "{{ path_to_root }}";
     var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches
         ? "{{ preferred_dark_theme }}" : "{{ default_theme }}";
 </script>
 
-<!-- Set the theme before any content is loaded, prevents flash -->
+{{!-- Set the theme before any content is loaded, prevents flash --}}
 <script>
     try {
         var theme = localStorage.getItem('mdbook-theme');
@@ -187,7 +187,9 @@
     } catch (e) { }
 </script>
 
-<!-- Sidebar -->
+<input type="checkbox" id="sidebar-toggle-anchor" class="hidden">
+
+{{!-- Sidebar --}}
 <nav id="sidebar" class="sidebar" aria-label="Table of contents">
     <div class="sidebar-scrollbox">
         {{#toc}}{{/toc}}
@@ -197,7 +199,7 @@
     </div>
 </nav>
 
-<!-- Track and set sidebar scroll position -->
+{{!-- Track and set sidebar scroll position --}}
 <script>
     var sidebarScrollbox = document.querySelector('#sidebar .sidebar-scrollbox');
     sidebarScrollbox.addEventListener('click', function(e) {
@@ -267,7 +269,7 @@
         </div>
         {{/if}}
 
-        <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+        {{!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM --}}
         <script>
             document.getElementById('sidebar-toggle-anchor').addEventListener('change', function () {
                 document.getElementById('sidebar-toggle').setAttribute('aria-expanded', this.checked.toString());
@@ -314,7 +316,7 @@
 </div>
 
 {{#if live_reload_endpoint}}
-<!-- Livereload script (if served using the cli tool) -->
+{{!-- Livereload script (if served using the cli tool) --}}
 <script>
     const wsAddress = "{{{live_reload_endpoint}}}";
     const socket = new WebSocket(wsAddress);
@@ -326,7 +328,7 @@
 {{/if}}
 
 {{#if google_analytics}}
-<!-- Google Analytics Tag -->
+{{!-- Google Analytics Tag --}}
 <script>
     var localAddrs = ["localhost", "127.0.0.1", ""];
     if ((!locationProtocol.startsWith('http') || localAddrs.indexOf(window.location.hostname) === -1)) {
@@ -370,7 +372,10 @@
 <script src="{{ path_to_root }}highlight.js"></script>
 <script src="{{ path_to_root }}book.js"></script>
 
-<!-- Custom JS scripts -->
+{{!-- Liara admonition decorator: turns labeled blockquotes into colored callouts --}}
+<script defer src="{{ path_to_root }}admonitions.js"></script>
+
+{{!-- Custom JS scripts --}}
 {{#each additional_js}}
 <script src="{{ ../path_to_root }}{{this}}"></script>
 {{/each}}

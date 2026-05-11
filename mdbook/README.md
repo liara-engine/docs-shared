@@ -10,6 +10,7 @@ mdbook/
 ├── theme/
 │   ├── index.hbs                  # Replaces mdBook's default Handlebars template
 │   ├── highlight.css              # Replaces highlight.js theme
+│   ├── admonitions.js             # Decorates labeled blockquotes as callouts
 │   └── css/
 │       ├── variables.css          # Bridges mdBook variables to Liara tokens
 │       └── custom.css             # Additional Liara-specific styles
@@ -112,7 +113,11 @@ After the first generated build, verify visually that:
 - [ ] Dyslexia-friendly toggle persists and applies font + spacing
 - [ ] Sidebar items are rounded with primary-soft pink hover
 - [ ] Code blocks render with the pastel syntax highlighting
-- [ ] Blockquotes (`> Note: ...`) render as info admonition cards
+- [ ] Blockquotes labeled `**Note:**` render as info admonitions (blue)
+- [ ] Blockquotes labeled `**Tip:**` render as success admonitions (sage)
+- [ ] Blockquotes labeled `**Warning:**` render as warning admonitions (peach)
+- [ ] Blockquotes labeled `**Danger:**` render as danger admonitions (rose-red)
+- [ ] Each admonition has its appropriate icon next to the label
 - [ ] Tables have the rounded header in primary-soft pink
 - [ ] Search bar styling matches the navbar's version selector
 - [ ] On screens narrower than 768px, both navbars adapt correctly
@@ -132,8 +137,8 @@ done by default.
 
 ## Convention for admonitions in Markdown
 
-Until we add a Markdown preprocessor for proper admonitions (à la
-mdbook-admonish), the convention used in Liara user docs is:
+Labeled blockquotes are detected by `admonitions.js` and reskinned with
+the appropriate semantic color and icon. The convention is:
 
 ```markdown
 > **Note:** Standard informational callout.
@@ -145,11 +150,21 @@ mdbook-admonish), the convention used in Liara user docs is:
 > **Danger:** Something that can cause data loss or breakage.
 ```
 
-The base style (in `custom.css`) renders these as info-style callouts. A
-small JavaScript enhancement (planned, optional) detects the leading
-`**Note:**` / `**Warning:**` / etc. and re-themes the blockquote to the
-matching semantic color. Until then, all blockquotes look like info, which
-is visually fine.
+Recognized labels (case-insensitive, with or without trailing colon):
+
+| Label                                          | Variant  | Color      |
+|------------------------------------------------|----------|------------|
+| `Note`, `Info`, `See`, `See also`              | info     | periwinkle |
+| `Tip`, `Hint`, `Success`                       | success  | sage       |
+| `Warning`, `Caution`, `Important`, `Attention` | warning  | peach      |
+| `Danger`, `Error`, `Deprecated`, `Bug`         | danger   | rose-red   |
+Blockquotes that don't start with a recognized label are rendered with
+the base info style — visually pleasant, readable, and never cause
+breakage.
+
+The detection happens at runtime in the browser; source files remain
+clean Markdown that renders correctly even without the script (just with
+generic blockquote styling).
 
 ## Customizing per book
 
