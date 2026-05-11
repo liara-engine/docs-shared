@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg width="400" height="400" viewBox="0 0 400 400" version="1.1" xmlns="http://www.w3.org/2000/svg">
+
+    <defs>
+        <linearGradient id="liaraGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" style="stop-color:#FF85A2;stop-opacity:1" />
+            <stop offset="33%" style="stop-color:#B794F4;stop-opacity:1" />
+            <stop offset="66%" style="stop-color:#63B3ED;stop-opacity:1" />
+            <stop offset="100%" style="stop-color:#4FD1C5;stop-opacity:1" />
+        </linearGradient>
+
+        <filter id="softGlow" x="-20%" y="-20%" width="140%" height="140%">
+            <feGaussianBlur in="SourceAlpha" stdDeviation="3"/>
+            <feOffset dx="0" dy="2" result="offsetblur"/>
+            <feFlood flood-color="#000000" flood-opacity="0.1"/>
+            <feComposite in2="offsetblur" operator="in"/>
+            <feMerge>
+                <feMergeNode/>
+                <feMergeNode in="SourceGraphic"/>
+            </feMerge>
+        </filter>
+    </defs>
+
+    <rect width="400" height="400" fill="#FFF5F8" rx="24" ry="24"/>
+
+    <g transform="translate(135, 185)" filter="url(#softGlow)">
+        <g transform="translate(0, 0)">
+            <path d="M 0,0 L 50,-25 L 100,0 L 50,25 Z" fill="#B3E5FC"/>
+            <path d="M 0,0 L 50,25 L 50,75 L 0,50 Z" fill="#81D4FA"/>
+            <path d="M 50,25 L 100,0 L 100,50 L 50,75 Z" fill="#4FC3F7"/>
+        </g>
+
+        <g transform="translate(50, 25)">
+            <path d="M 0,0 L 50,-25 L 100,0 L 50,25 Z" fill="#C5E1A5"/>
+            <path d="M 0,0 L 50,25 L 50,75 L 0,50 Z" fill="#A8E6CF"/>
+            <path d="M 50,25 L 100,0 L 100,50 L 50,75 Z" fill="#81C784"/>
+        </g>
+
+        <g transform="translate(0, -50)">
+            <path d="M 0,0 L 50,-25 L 100,0 L 50,25 Z" fill="#FFC7DE"/>
+            <path d="M 0,0 L 50,25 L 50,75 L 0,50 Z" fill="#FFB7CE"/>
+            <path d="M 50,25 L 100,0 L 100,50 L 50,75 Z" fill="#F48FB1"/>
+        </g>
+
+        <g transform="translate(0, -100)">
+            <path d="M 0,0 L 50,-25 L 100,0 L 50,25 Z" fill="#E1BEE7"/>
+            <path d="M 0,0 L 50,25 L 50,75 L 0,50 Z" fill="#CE93D8"/>
+            <path d="M 50,25 L 100,0 L 100,50 L 50,75 Z" fill="#BA68C8"/>
+        </g>
+    </g>
+
+    <text x="200" y="350" font-family="'Quicksand', 'Segoe UI', sans-serif" font-size="44" font-weight="900" fill="url(#liaraGradient)" text-anchor="middle" letter-spacing="1.5">
+        LIARA ENGINE
+    </text>
+
+</svg>
