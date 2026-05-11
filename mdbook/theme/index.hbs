@@ -51,11 +51,7 @@
 <link rel="stylesheet" href="{{ resource "css/print.css" }}" media="print">
 {{/if}}
 
-{{!-- Fonts: Inter, JetBrains Mono, OpenDyslexic --}}
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" cross origin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&family=JetBrains+Mono:wght@400;500&display=swap">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/opendyslexic@1.0.4/opendyslexic-regular.css">
+<link rel="stylesheet" href="{{ resource "fonts/fonts.css" }}">
 
 <link rel="stylesheet" id="mdbook-highlight-css" href="{{ resource "highlight.css" }}">
 <link rel="stylesheet" id="mdbook-tomorrow-night-css" href="{{ resource "tomorrow-night.css" }}">
@@ -76,7 +72,7 @@
 </head>
 <body class="sidebar-visible">
 {{!-- Provide site root and default themes for the JS to consume --}}
-<div id="body-container">
+<div id="mdbook-body-container">
 
 {{!-- Apply theme/a11y prefs synchronously, before mdBook's own theme JS runs --}}
 <script>
@@ -110,8 +106,7 @@
     <div class="liara-navbar__inner">
         <a class="liara-navbar__brand" href="https://liara-engine.github.io/" aria-label="Liara Engine home">
             <svg class="liara-navbar__logo" width="22" height="22" viewBox="0 0 24 24" aria-hidden="true">
-                <circle cx="12" cy="12" r="10" fill="var(--liara-brand-primary)"/>
-                <circle cx="12" cy="12" r="4" fill="var(--liara-brand-primary-dark)"/>
+                <use href="{{ resource "favicon.svg" }}"></use>
             </svg>
             <span class="liara-navbar__brand-name">Liara Engine</span>
         </a>
@@ -298,15 +293,25 @@
 
             <nav class="nav-wrapper" aria-label="Page navigation">
                 {{#if previous}}
-                <a rel="prev" href="{{ ../path_to_root }}{{ link }}" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
-                    <i class="fa fa-angle-left"></i>
-                </a>
+                    <a rel="prev" href="{{ path_to_root }}{{previous.link}}" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        {{#if (eq ../text_direction "rtl")}}
+                        {{fa "solid" "angle-right"}}
+                        {{else}}
+                        {{fa "solid" "angle-left"}}
+                        {{/if}}
+                    </a>
                 {{/if}}
+
                 {{#if next}}
-                <a rel="next prefetch" href="{{ ../path_to_root }}{{ link }}" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
-                    <i class="fa fa-angle-right"></i>
-                </a>
+                    <a rel="next prefetch" href="{{ path_to_root }}{{next.link}}" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        {{#if (eq ../text_direction "rtl")}}
+                        {{fa "solid" "angle-left"}}
+                        {{else}}
+                        {{fa "solid" "angle-right"}}
+                        {{/if}}
+                    </a>
                 {{/if}}
+
                 <div style="clear: both"></div>
             </nav>
         </div>
@@ -314,14 +319,23 @@
 
     <nav class="nav-wide-wrapper" aria-label="Page navigation">
         {{#if previous}}
-        <a rel="prev" href="{{ ../path_to_root }}{{ link }}" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
-            <i class="fa fa-angle-left"></i>
-        </a>
+            <a rel="prev" href="{{ path_to_root }}{{previous.link}}" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                {{#if (eq ../text_direction "rtl")}}
+                {{fa "solid" "angle-right"}}
+                {{else}}
+                {{fa "solid" "angle-left"}}
+                {{/if}}
+            </a>
         {{/if}}
+
         {{#if next}}
-        <a rel="next prefetch" href="{{ ../path_to_root }}{{ link }}" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
-            <i class="fa fa-angle-right"></i>
-        </a>
+            <a rel="next prefetch" href="{{ path_to_root }}{{next.link}}" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                {{#if (eq text_direction "rtl")}}
+                {{fa "solid" "angle-left"}}
+                {{else}}
+                {{fa "solid" "angle-right"}}
+                {{/if}}
+            </a>
         {{/if}}
     </nav>
 </div>
