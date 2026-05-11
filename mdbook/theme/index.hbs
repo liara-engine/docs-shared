@@ -186,21 +186,21 @@
     } catch (e) { }
 </script>
 
-<input type="checkbox" id="sidebar-toggle-anchor" class="hidden">
+<input type="checkbox" id="mdbook-sidebar-toggle-anchor" class="hidden">
 
 {{!-- Sidebar --}}
-<nav id="sidebar" class="sidebar" aria-label="Table of contents">
-    <div class="sidebar-scrollbox">
+<nav id="mdbook-sidebar" class="mdbook-sidebar" aria-label="Table of contents">
+    <div class="mdbook-sidebar-scrollbox">
         {{#toc}}{{/toc}}
     </div>
-    <div id="sidebar-resize-handle" class="sidebar-resize-handle">
-        <div class="sidebar-resize-indicator"></div>
+    <div id="mdbook-sidebar-resize-handle" class="mdbook-sidebar-resize-handle">
+        <div class="mdbook-sidebar-resize-indicator"></div>
     </div>
 </nav>
 
 {{!-- Track and set sidebar scroll position --}}
 <script>
-    var sidebarScrollbox = document.querySelector('#sidebar .sidebar-scrollbox');
+    var sidebarScrollbox = document.querySelector('#mdbook-sidebar .mdbook-sidebar-scrollbox');
     sidebarScrollbox.addEventListener('click', function(e) {
         if (e.target.tagName === 'A') {
             sessionStorage.setItem('sidebar-scroll', sidebarScrollbox.scrollTop);
@@ -211,7 +211,7 @@
     if (sidebarScrollTop) {
         sidebarScrollbox.scrollTop = sidebarScrollTop;
     } else {
-        var activeSection = document.querySelector('#sidebar .active');
+        var activeSection = document.querySelector('#mdbook-sidebar .active');
         if (activeSection) {
             activeSection.scrollIntoView({ block: 'center' });
         }
@@ -282,10 +282,10 @@
 
         {{!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM --}}
         <script>
-            document.getElementById('sidebar-toggle-anchor').addEventListener('change', function () {
-                document.getElementById('sidebar-toggle').setAttribute('aria-expanded', this.checked.toString());
-                document.getElementById('sidebar').setAttribute('aria-hidden', (!this.checked).toString());
-                Array.from(document.querySelectorAll('#sidebar a')).forEach(function (link) {
+            document.getElementById('mdbook-sidebar-toggle-anchor').addEventListener('change', function () {
+                document.getElementById('mdbook-sidebar-toggle').setAttribute('aria-expanded', this.checked.toString());
+                document.getElementById('mdbook-sidebar').setAttribute('aria-hidden', (!this.checked).toString());
+                Array.from(document.querySelectorAll('#mdbook-sidebar a')).forEach(function (link) {
                     link.setAttribute('tabIndex', this.checked ? 0 : -1);
                 }.bind(this));
             });

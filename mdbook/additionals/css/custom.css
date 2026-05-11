@@ -24,7 +24,7 @@
  * its own sticky menu-bar lands below ours.
  * ========================================================================== */
 
-#sidebar.sidebar {
+#mdbook-sidebar.sidebar {
     top: var(--liara-navbar-height);
     height: calc(100vh - var(--liara-navbar-height));
 }
@@ -120,30 +120,30 @@ html, body {
  * Sidebar
  * ========================================================================== */
 
-#sidebar.sidebar {
+#mdbook-sidebar.sidebar {
     font-family: var(--liara-font-sans);
     font-size: var(--liara-text-sm);
     background: var(--liara-bg-surface);
     border-right: var(--liara-border-width-thin) solid var(--liara-border-default);
 }
 
-.sidebar .sidebar-scrollbox {
+.mdbook-sidebar .mdbook-sidebar-scrollbox {
     padding: var(--liara-space-3) var(--liara-space-2);
 }
 
-.sidebar ol.chapter,
-.sidebar ol.section {
+.mdbook-sidebar ol.chapter,
+.mdbook-sidebar ol.section {
     padding-left: 0;
     list-style: none;
 }
 
-.sidebar ol.section {
+.mdbook-sidebar ol.section {
     padding-left: var(--liara-space-3);
     border-left: var(--liara-border-width-thin) solid var(--liara-border-subtle);
     margin-left: var(--liara-space-2);
 }
 
-.sidebar a {
+.mdbook-sidebar a {
     display: block;
     padding: var(--liara-space-2) var(--liara-space-3);
     border-radius: var(--liara-radius-sm);
@@ -155,20 +155,20 @@ html, body {
     line-height: var(--liara-leading-snug);
 }
 
-.sidebar a:hover {
+.mdbook-sidebar a:hover {
     background: var(--liara-brand-primary-soft);
     color: var(--liara-brand-primary-dark);
     text-decoration: none;
 }
 
-.sidebar .chapter li.chapter-item.active > a,
-.sidebar a.active {
+.mdbook-sidebar .chapter li.chapter-item.active > a,
+.mdbook-sidebar a.active {
     background: var(--liara-brand-primary-soft);
     color: var(--liara-brand-primary-dark);
     font-weight: var(--liara-weight-medium);
 }
 
-.sidebar .part-title {
+.mdbook-sidebar .part-title {
     color: var(--liara-text-tertiary);
     font-size: var(--liara-text-xs);
     font-weight: var(--liara-weight-semibold);
@@ -178,19 +178,19 @@ html, body {
     margin-top: var(--liara-space-3);
 }
 
-.sidebar .spacer {
+.mdbook-sidebar .spacer {
     height: 1px;
     background: var(--liara-border-subtle);
     margin: var(--liara-space-2) var(--liara-space-2);
     border: none;
 }
 
-.sidebar-resize-handle {
+.mdbook-sidebar-resize-handle {
     background: transparent;
     border-right: var(--liara-border-width-thin) solid var(--liara-border-default);
 }
 
-.sidebar-resize-handle:hover .sidebar-resize-indicator {
+.mdbook-sidebar-resize-handle:hover .mdbook-sidebar-resize-indicator {
     background: var(--liara-brand-primary);
     width: 2px;
 }
@@ -586,7 +586,7 @@ kbd {
 
 @media print {
     .liara-navbar,
-    #sidebar,
+    #mdbook-sidebar,
     #menu-bar,
     .nav-chapters,
     .mobile-nav-chapters,
