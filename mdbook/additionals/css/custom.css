@@ -202,6 +202,7 @@ html, body {
 
 #mdbook-menu-bar {
     height: 44px;
+    margin-top: var(--liara-navbar-height);
     font-family: var(--liara-font-sans);
 }
 
