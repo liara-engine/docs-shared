@@ -57,15 +57,14 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&family=JetBrains+Mono:wght@400;500&display=swap">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/opendyslexic@1.0.4/opendyslexic-regular.css">
 
-{{!-- mdBook's built-in highlight.css (we ship our own override below) --}}
-<link rel="stylesheet" href="{{ path_to_root }}highlight.css">
+<link rel="stylesheet" href="{{ path_to_root }}css/highlight.css">
 <link rel="stylesheet" href="{{ path_to_root }}tomorrow-night.css">
 <link rel="stylesheet" href="{{ path_to_root }}ayu-highlight.css">
 
 {{!-- Liara design system (loaded AFTER mdBook's own CSS so we override) --}}
-<link rel="stylesheet" href="{{ path_to_root }}design-tokens.css">
-<link rel="stylesheet" href="{{ path_to_root }}navbar.css">
-<link rel="stylesheet" href="{{ path_to_root }}custom.css">
+<link rel="stylesheet" href="{{ path_to_root }}tokens/design-tokens.css">
+<link rel="stylesheet" href="{{ path_to_root }}navbar/navbar.css">
+<link rel="stylesheet" href="{{ path_to_root }}css/custom.css">
 
 {{#each additional_css}}
 <link rel="stylesheet" href="{{ ../path_to_root }}{{ this }}">
@@ -154,7 +153,7 @@
 </nav>
 
 {{!-- Load the Liara navbar logic AFTER the navbar markup is in the DOM --}}
-<script defer src="{{ path_to_root }}navbar.js"></script>
+<script defer src="{{ path_to_root }}navbar/navbar.js"></script>
 
 {{!-- ====================================================================
      mdBook layout — sidebar + content
@@ -373,7 +372,7 @@
 <script src="{{ path_to_root }}book.js"></script>
 
 {{!-- Liara admonition decorator: turns labeled blockquotes into colored callouts --}}
-<script defer src="{{ path_to_root }}admonitions.js"></script>
+<script defer src="{{ path_to_root }}js/admonitions.js"></script>
 
 {{!-- Custom JS scripts --}}
 {{#each additional_js}}
