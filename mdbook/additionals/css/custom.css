@@ -127,23 +127,23 @@ html, body {
     border-right: var(--liara-border-width-thin) solid var(--liara-border-default);
 }
 
-.mdbook-sidebar .mdbook-sidebar-scrollbox {
+.sidebar .sidebar-scrollbox {
     padding: var(--liara-space-3) var(--liara-space-2);
 }
 
-.mdbook-sidebar ol.chapter,
-.mdbook-sidebar ol.section {
+.sidebar ol.chapter,
+.sidebar ol.section {
     padding-left: 0;
     list-style: none;
 }
 
-.mdbook-sidebar ol.section {
+.sidebar ol.section {
     padding-left: var(--liara-space-3);
     border-left: var(--liara-border-width-thin) solid var(--liara-border-subtle);
     margin-left: var(--liara-space-2);
 }
 
-.mdbook-sidebar a {
+.sidebar a {
     display: block;
     padding: var(--liara-space-2) var(--liara-space-3);
     border-radius: var(--liara-radius-sm);
@@ -155,20 +155,20 @@ html, body {
     line-height: var(--liara-leading-snug);
 }
 
-.mdbook-sidebar a:hover {
+.sidebar a:hover {
     background: var(--liara-brand-primary-soft);
     color: var(--liara-brand-primary-dark);
     text-decoration: none;
 }
 
-.mdbook-sidebar .chapter li.chapter-item.active > a,
-.mdbook-sidebar a.active {
+.sidebar .chapter li.chapter-item.active > a,
+.sidebar a.active {
     background: var(--liara-brand-primary-soft);
     color: var(--liara-brand-primary-dark);
     font-weight: var(--liara-weight-medium);
 }
 
-.mdbook-sidebar .part-title {
+.sidebar .part-title {
     color: var(--liara-text-tertiary);
     font-size: var(--liara-text-xs);
     font-weight: var(--liara-weight-semibold);
@@ -178,19 +178,19 @@ html, body {
     margin-top: var(--liara-space-3);
 }
 
-.mdbook-sidebar .spacer {
+.sidebar .spacer {
     height: 1px;
     background: var(--liara-border-subtle);
     margin: var(--liara-space-2) var(--liara-space-2);
     border: none;
 }
 
-.mdbook-sidebar-resize-handle {
+.sidebar-resize-handle {
     background: transparent;
     border-right: var(--liara-border-width-thin) solid var(--liara-border-default);
 }
 
-.mdbook-sidebar-resize-handle:hover .mdbook-sidebar-resize-indicator {
+.sidebar-resize-handle:hover .sidebar-resize-indicator {
     background: var(--liara-brand-primary);
     width: 2px;
 }
