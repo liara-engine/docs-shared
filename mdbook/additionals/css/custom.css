@@ -242,12 +242,12 @@ html, body {
  * Search bar
  * ========================================================================== */
 
-#search-wrapper {
+#mdbook-search-wrapper {
     background: var(--liara-bg-page);
     border-bottom: var(--liara-border-width-thin) solid var(--liara-border-default);
 }
 
-#searchbar {
+#mdbook-searchbar {
     background: var(--liara-bg-elevated);
     color: var(--liara-text-primary);
     border: var(--liara-border-width-thin) solid var(--liara-border-default);
@@ -257,18 +257,18 @@ html, body {
     font-size: var(--liara-text-base);
 }
 
-#searchbar:focus {
+#mdbook-searchbar:focus {
     border-color: var(--liara-brand-primary);
     outline: none;
     box-shadow: var(--liara-shadow-focus);
 }
 
-#searchresults-outer {
+#mdbook-searchresults-outer {
     background: var(--liara-bg-page);
     border: none;
 }
 
-#searchresults li {
+#mdbook-searchresults li {
     background: var(--liara-bg-elevated);
     border: var(--liara-border-width-thin) solid var(--liara-border-default);
     border-radius: var(--liara-radius-md);
@@ -277,18 +277,18 @@ html, body {
     transition: background-color var(--liara-transition-fast);
 }
 
-#searchresults li:hover {
+#mdbook-searchresults li:hover {
     background: var(--liara-brand-primary-soft);
     border-color: var(--liara-brand-primary);
 }
 
-#searchresults a {
+#mdbook-searchresults a {
     color: var(--liara-text-link);
     font-weight: var(--liara-weight-medium);
     text-decoration: none;
 }
 
-#searchresults .breadcrumbs {
+#mdbook-searchresults .breadcrumbs {
     color: var(--liara-text-tertiary);
     font-size: var(--liara-text-sm);
 }
@@ -590,7 +590,7 @@ kbd {
     #menu-bar,
     .nav-chapters,
     .mobile-nav-chapters,
-    #search-wrapper {
+    #mdbook-search-wrapper {
         display: none !important;
     }
 
