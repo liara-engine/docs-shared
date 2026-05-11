@@ -29,13 +29,13 @@
     height: calc(100vh - var(--liara-navbar-height));
 }
 
-#menu-bar.menu-bar {
+#mdbook-menu-bar.menu-bar {
     top: var(--liara-navbar-height);
     background: var(--liara-bg-page);
     border-bottom: var(--liara-border-width-thin) solid var(--liara-border-default);
 }
 
-#menu-bar-hover-placeholder {
+#mdbook-menu-bar-hover-placeholder {
     height: 0;
 }
 
@@ -200,20 +200,20 @@ html, body {
  * Shows: sidebar toggle, book title, search, GitHub edit links
  * ========================================================================== */
 
-#menu-bar {
+#mdbook-menu-bar {
     height: 44px;
     font-family: var(--liara-font-sans);
 }
 
-#menu-bar .menu-title {
+#mdbook-menu-bar .menu-title {
     color: var(--liara-text-primary);
     font-weight: var(--liara-weight-medium);
     font-size: var(--liara-text-base);
 }
 
-#menu-bar .icon-button,
-#menu-bar a.icon-button,
-#menu-bar a:not(.icon-button) {
+#mdbook-menu-bar .icon-button,
+#mdbook-menu-bar a.icon-button,
+#mdbook-menu-bar a:not(.icon-button) {
     color: var(--liara-text-secondary);
     background: transparent;
     border: var(--liara-border-width-thin) solid transparent;
@@ -225,8 +225,8 @@ html, body {
             border-color var(--liara-transition-fast);
 }
 
-#menu-bar .icon-button:hover,
-#menu-bar a:hover {
+#mdbook-menu-bar .icon-button:hover,
+#mdbook-menu-bar a:hover {
     background: var(--liara-bg-surface);
     color: var(--liara-text-primary);
     border-color: var(--liara-border-default);
@@ -587,7 +587,7 @@ kbd {
 @media print {
     .liara-navbar,
     #mdbook-sidebar,
-    #menu-bar,
+    #mdbook-menu-bar,
     .nav-chapters,
     .mobile-nav-chapters,
     #mdbook-search-wrapper {
