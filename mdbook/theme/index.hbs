@@ -193,7 +193,7 @@
 
 {{!-- Track and set sidebar scroll position --}}
 <script>
-    var sidebarScrollbox = document.querySelector('#mdbook-sidebar .mdbook-sidebar-scrollbox');
+    var sidebarScrollbox = document.querySelector('#mdbook-sidebar .sidebar-scrollbox');
     sidebarScrollbox.addEventListener('click', function(e) {
         if (e.target.tagName === 'A') {
             sessionStorage.setItem('sidebar-scroll', sidebarScrollbox.scrollTop);
