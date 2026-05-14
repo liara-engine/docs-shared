@@ -1,0 +1,25 @@
+{
+  "$schema": "https://docs.liaradoc.com/schemas/hub.schema.json",
+  "metadata": {
+    "title": "MDBook Custom Theme",
+    "description": "A custom theme for MDBook documentation, not deployed itself but used by each `book.toml` to generate the actual documentation for each module."
+  },
+
+  "resources": {
+    "favicon-ico": "docs-shared/assets/favicon.ico",
+    "favicon-svg": "docs-shared/assets/logo.svg"
+  },
+
+  "replacements": {
+    "{{{NAVBAR}}}": {
+      "is-file": true,
+      "value": "docs-shared/navbar/navbar.html",
+      "only-in-files": ["docs-shared/mdbook/theme/index.hbs"]
+    },
+    "{{{LOGO}}}": {
+      "is-file": false,
+      "value": "{{ resource \"favicon.svg\" }}",
+      "only-in-files": ["docs-shared/mdbook/theme/index.hbs"]
+    }
+  }
+}
