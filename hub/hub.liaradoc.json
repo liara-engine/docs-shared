@@ -1,0 +1,32 @@
+{
+  "$schema": "https://docs.liaradoc.com/schemas/hub.schema.json",
+  "metadata": {
+    "title": "Liara Engine Documentation Hub",
+    "description": "A central hub for all documentation related to the Liara Engine."
+  },
+
+  "resources": {
+    "css": [
+      "docs-shared/tokens/design-tokens.css",
+      "docs-shared/navbar/navbar.css"
+    ],
+    "js": [
+      "docs-shared/navbar/navbar.js"
+    ],
+    "favicon-ico": "docs-shared/assets/favicon.ico",
+    "favicon-svg": "docs-shared/assets/logo.svg"
+  },
+
+  "replacements": {
+    "{{{NAVBAR}}}": {
+      "is-file": true,
+      "value": "docs-shared/navbar/navbar.html",
+      "only-in-files": ["docs-shared/hub/index.html"]
+    },
+    "{{{LOGO}}}": {
+      "is-file": false,
+      "value": "$relpath^../favicon.svg",
+      "only-in-files": ["docs-shared/hub/index.html"]
+    }
+  }
+}

@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#FFFAFC">
+
+    <title>Liara Engine — Documentation</title>
+    <meta name="description" content="Liara Engine is a modern 3D game engine, built from scratch in C++ with Vulkan, as a personal learning project. Modular, cross-platform, and openly developed.">
+
+    <!-- Fonts: Inter, JetBrains Mono, OpenDyslexic -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&family=JetBrains+Mono:wght@400;500&display=swap">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/opendyslexic@1.0.4/opendyslexic-regular.css">
+
+    <!-- Liara design system -->
+    <link rel="stylesheet" href="css/design-tokens.css">
+    <link rel="stylesheet" href="css/navbar/navbar.css">
+    <link rel="stylesheet" href="style.css">
+
+    <!-- Apply theme/a11y prefs synchronously to prevent flash -->
+    <script>
+        (function () {
+            try {
+                var t = localStorage.getItem("liara-theme");
+                if (t === "light" || t === "dark") {
+                    document.documentElement.setAttribute("data-liara-theme", t);
+                }
+                if (localStorage.getItem("liara-a11y-dyslexia") === "true") {
+                    document.documentElement.setAttribute("data-liara-a11y-dyslexia", "true");
+                }
+            } catch (e) { /* localStorage unavailable, fall back to defaults */ }
+        })();
+    </script>
+
+    <script defer src="js/navbar/navbar.js"></script>
+    <script defer src="script.js"></script>
+</head>
+<body>
+
+{{{NAVBAR}}}
+
+<main class="hub">
+
+    <!-- ============================================================
+         Hero
+         ============================================================ -->
+    <section class="hub-hero">
+        <div class="hub-hero__decor" aria-hidden="true">
+            <div class="hub-hero__blob hub-hero__blob--pink"></div>
+            <div class="hub-hero__blob hub-hero__blob--lavender"></div>
+        </div>
+
+        <div class="hub-hero__inner">
+            <p class="hub-hero__eyebrow">
+                <span class="hub-hero__status-dot" data-liara-status-dot aria-hidden="true"></span>
+                <span data-liara-status-text>Phase 0 — Bootstrap</span>
+            </p>
+
+            <h1 class="hub-hero__title">
+                Liara <span class="hub-hero__title-accent">Engine</span>
+            </h1>
+
+            <p class="hub-hero__tagline">
+                A modern 3D game engine, built from scratch in C++ with Vulkan,
+                as a personal learning project. Modular by construction,
+                cross-platform, and openly developed.
+            </p>
+
+            <div class="hub-hero__cta">
+                <a class="hub-button hub-button--primary" href="./user/dev/">
+                    <span>Read the user guide</span>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+                </a>
+                <a class="hub-button hub-button--secondary" href="https://github.com/liara-engine" target="_blank" rel="noopener">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2A10 10 0 0 0 2 12c0 4.42 2.87 8.17 6.84 9.5.5.09.66-.22.66-.48v-1.7c-2.78.6-3.37-1.34-3.37-1.34-.45-1.16-1.11-1.47-1.11-1.47-.91-.62.07-.6.07-.6 1 .07 1.53 1.03 1.53 1.03.89 1.53 2.34 1.09 2.91.83.09-.65.35-1.09.63-1.34-2.22-.25-4.55-1.11-4.55-4.94 0-1.09.39-1.98 1.03-2.68-.1-.25-.45-1.27.1-2.65 0 0 .84-.27 2.75 1.02a9.5 9.5 0 0 1 5 0c1.91-1.29 2.75-1.02 2.75-1.02.55 1.38.2 2.4.1 2.65.64.7 1.03 1.59 1.03 2.68 0 3.84-2.34 4.69-4.57 4.94.36.31.68.92.68 1.85V21c0 .27.16.58.67.48A10 10 0 0 0 22 12 10 10 0 0 0 12 2z"/></svg>
+                    <span>View on GitHub</span>
+                </a>
+            </div>
+
+            <ul class="hub-hero__meta">
+                <li><span class="hub-hero__meta-label">License</span> <span>MIT</span></li>
+                <li><span class="hub-hero__meta-label">Language</span> <span>C++20 / C ABI</span></li>
+                <li><span class="hub-hero__meta-label">Graphics</span> <span>Vulkan 1.3</span></li>
+                <li><span class="hub-hero__meta-label">Platforms</span> <span>Linux, Windows</span></li>
+            </ul>
+        </div>
+    </section>
+
+    <!-- ============================================================
+         Modules grid
+         ============================================================ -->
+    <section class="hub-section">
+        <header class="hub-section__header">
+            <h2 class="hub-section__title">Modules</h2>
+            <p class="hub-section__subtitle">
+                Liara is composed of independently versioned modules
+                connected through a stable C ABI. Each has its own
+                repository and its own API documentation.
+            </p>
+        </header>
+
+        <div class="hub-modules">
+            <a class="hub-card hub-card--module" href="./user/dev/">
+                <div class="hub-card__icon">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+                </div>
+                <div class="hub-card__body">
+                    <h3 class="hub-card__title">User guide</h3>
+                    <p class="hub-card__description">Tutorials, concepts, and how-tos for building with Liara.</p>
+                    <p class="hub-card__meta" data-liara-card-version data-liara-module="user">dev</p>
+                </div>
+            </a>
+
+            <a class="hub-card hub-card--module" href="./liara-interfaces/dev/">
+                <div class="hub-card__icon">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+                </div>
+                <div class="hub-card__body">
+                    <h3 class="hub-card__title">Interfaces</h3>
+                    <p class="hub-card__description">The C ABI contracts shared by every module. Header-only.</p>
+                    <p class="hub-card__meta" data-liara-card-version data-liara-module="interfaces">dev</p>
+                </div>
+            </a>
+
+            <a class="hub-card hub-card--module" href="./liara-core/dev/">
+                <div class="hub-card__icon">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+                </div>
+                <div class="hub-card__body">
+                    <h3 class="hub-card__title">Core</h3>
+                    <p class="hub-card__description">ECS, math, asset management, logger, settings, application loop.</p>
+                    <p class="hub-card__meta" data-liara-card-version data-liara-module="core">dev</p>
+                </div>
+            </a>
+
+            <a class="hub-card hub-card--module" href="./liara-renderer/dev/">
+                <div class="hub-card__icon">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+                </div>
+                <div class="hub-card__body">
+                    <h3 class="hub-card__title">Renderer</h3>
+                    <p class="hub-card__description">The reference Vulkan implementation. Produces pixels from render packets.</p>
+                    <p class="hub-card__meta" data-liara-card-version data-liara-module="renderer">dev</p>
+                </div>
+            </a>
+
+            <div class="hub-card hub-card--module hub-card--planned" aria-disabled="true">
+                <div class="hub-card__icon">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+                </div>
+                <div class="hub-card__body">
+                    <h3 class="hub-card__title">Editor</h3>
+                    <p class="hub-card__description">Visual scene editor. Planned for the v1.x cycle.</p>
+                    <p class="hub-card__meta">Planned</p>
+                </div>
+            </div>
+
+            <div class="hub-card hub-card--module hub-card--planned" aria-disabled="true">
+                <div class="hub-card__icon">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8"/></svg>
+                </div>
+                <div class="hub-card__body">
+                    <h3 class="hub-card__title">Physics</h3>
+                    <p class="hub-card__description">Collision and rigid body dynamics. Planned for the v1.x cycle.</p>
+                    <p class="hub-card__meta">Planned</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ============================================================
+         Resources
+         ============================================================ -->
+    <section class="hub-section">
+        <header class="hub-section__header">
+            <h2 class="hub-section__title">Resources</h2>
+            <p class="hub-section__subtitle">
+                Reference documents that govern how the project is built and
+                evolves. These live in the meta repository.
+            </p>
+        </header>
+
+        <div class="hub-resources">
+            <a class="hub-card hub-card--resource" href="https://github.com/liara-engine/liara/blob/main/docs/ARCHITECTURE.md" target="_blank" rel="noopener">
+                <h3 class="hub-card__title">Architecture</h3>
+                <p class="hub-card__description">The philosophy and principles behind every design decision.</p>
+            </a>
+
+            <a class="hub-card hub-card--resource" href="https://github.com/liara-engine/liara/blob/main/docs/MODULES.md" target="_blank" rel="noopener">
+                <h3 class="hub-card__title">Modules</h3>
+                <p class="hub-card__description">Concrete decomposition: what each repository contains.</p>
+            </a>
+
+            <a class="hub-card hub-card--resource" href="https://github.com/liara-engine/liara/blob/main/docs/ROADMAP.md" target="_blank" rel="noopener">
+                <h3 class="hub-card__title">Roadmap</h3>
+                <p class="hub-card__description">Phase 0 through v2.0, with milestones and definitions of done.</p>
+            </a>
+
+            <a class="hub-card hub-card--resource" href="https://github.com/liara-engine/liara/blob/main/docs/CONTRIBUTING.md" target="_blank" rel="noopener">
+                <h3 class="hub-card__title">Contributing</h3>
+                <p class="hub-card__description">Workflow, branches, commits, reviews. The daily mechanics.</p>
+            </a>
+
+            <a class="hub-card hub-card--resource" href="https://github.com/liara-engine/liara/blob/main/docs/CODE_STYLE.md" target="_blank" rel="noopener">
+                <h3 class="hub-card__title">Code style</h3>
+                <p class="hub-card__description">C++ conventions, clang-format, clang-tidy, anti-patterns.</p>
+            </a>
+
+            <a class="hub-card hub-card--resource" href="https://github.com/liara-engine/liara/blob/main/docs/BOOTSTRAP.md" target="_blank" rel="noopener">
+                <h3 class="hub-card__title">Bootstrap</h3>
+                <p class="hub-card__description">Setting up Arch or Windows for Liara development.</p>
+            </a>
+        </div>
+    </section>
+
+    <!-- ============================================================
+         Versions
+         ============================================================ -->
+    <section class="hub-section">
+        <header class="hub-section__header">
+            <h2 class="hub-section__title">Versions</h2>
+            <p class="hub-section__subtitle">
+                Documentation is archived for each major release alongside
+                the current development version. Click any version to open
+                its hub view.
+            </p>
+        </header>
+
+        <div class="hub-versions" data-liara-versions-list>
+            <!-- Populated by script.js from version.json. Until JS runs,
+                 this shows a single "dev" placeholder so the section is
+                 not empty for users without JS. -->
+            <a class="hub-version hub-version--current" href="#">
+                <span class="hub-version__label">dev</span>
+                <span class="hub-version__note">Current development</span>
+            </a>
+        </div>
+    </section>
+
+</main>
+
+<footer class="hub-footer">
+    <div class="hub-footer__inner">
+        <p class="hub-footer__line">
+            Liara Engine &middot;
+            <a href="https://github.com/liara-engine" target="_blank" rel="noopener">GitHub organization</a> &middot;
+            <a href="https://github.com/liara-engine/liara/blob/main/LICENSE" target="_blank" rel="noopener">MIT license</a>
+        </p>
+        <p class="hub-footer__small">
+            A personal learning project, made open in case it is useful to anyone else.
+        </p>
+    </div>
+</footer>
+
+</body>
+</html>
