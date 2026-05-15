@@ -1,7 +1,7 @@
 {
-  "$schema": "https://docs.liaradoc.com/schemas/hub.schema.json",
+  "$schema": "https://liara-engine.github.io/liara/schemas/documentation-module.schema.json",
   "metadata": {
-    "title": "Liara Engine Documentation Hub",
+    "name": "Liara Engine Documentation Hub",
     "description": "A central hub for all documentation related to the Liara Engine."
   },
 
