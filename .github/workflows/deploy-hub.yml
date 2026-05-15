@@ -3,8 +3,9 @@ name: docs
 on:
   push:
     branches: [main]
-    tags:
-      - 'v*.*.*'
+    paths:
+      - '.github/workflows/deploy-hub.yml'
+      - 'hub/**'
   workflow_dispatch:
 
 jobs:
