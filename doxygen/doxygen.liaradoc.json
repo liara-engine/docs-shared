@@ -14,12 +14,12 @@
     "{{{NAVBAR}}}": {
       "is-file": true,
       "value": "docs-shared/navbar/navbar.html",
-      "only-in-files": ["docs-shared/doxygen/header.html"]
+      "only-in-files": ["header.html"]
     },
     "{{{LOGO}}}": {
       "is-file": false,
       "value": "$relpath^../favicon.svg",
-      "only-in-files": ["docs-shared/doxygen/header.html"]
+      "only-in-files": ["header.html"]
     }
   }
 }

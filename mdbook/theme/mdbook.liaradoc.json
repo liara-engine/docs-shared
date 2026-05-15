@@ -14,12 +14,12 @@
     "{{{NAVBAR}}}": {
       "is-file": true,
       "value": "docs-shared/navbar/navbar.html",
-      "only-in-files": ["docs-shared/mdbook/theme/index.hbs"]
+      "only-in-files": ["index.hbs"]
     },
     "{{{LOGO}}}": {
       "is-file": false,
       "value": "{{ resource \"favicon.svg\" }}",
-      "only-in-files": ["docs-shared/mdbook/theme/index.hbs"]
+      "only-in-files": ["index.hbs"]
     }
   }
 }

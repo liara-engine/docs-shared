@@ -21,12 +21,12 @@
     "{{{NAVBAR}}}": {
       "is-file": true,
       "value": "docs-shared/navbar/navbar.html",
-      "only-in-files": ["hub/index.html"]
+      "only-in-files": ["index.html"]
     },
     "{{{LOGO}}}": {
       "is-file": false,
       "value": "$relpath^../favicon.svg",
-      "only-in-files": ["hub/index.html"]
+      "only-in-files": ["index.html"]
     }
   }
 }
