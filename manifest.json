@@ -1,0 +1,15 @@
+{
+  "$schema": "https://liara-engine.github.io/liara/schemas/module-manifest.schema.json",
+  "metadata": {
+    "name": "Liara Engine Documentation Hub",
+    "description": "The central hub for all documentation related to the Liara Engine, providing a unified interface and shared resources for all modules.",
+    "latest": "dev"
+  },
+  "versions": {
+    "dev": {
+      "abi_compatibility": [
+        "dev"
+      ]
+    }
+  }
+}
