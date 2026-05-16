@@ -6,6 +6,14 @@
   },
 
   "resources": {
+    "css": [
+      "docs-shared/tokens/design-tokens.css",
+      "docs-shared/navbar/navbar.css"
+    ],
+    "js": [
+      "docs-shared/navbar/navbar.js",
+      "docs-shared/navbar/navbar.config.js"
+    ],
     "favicon-ico": "docs-shared/assets/favicon.ico",
     "favicon-svg": "docs-shared/assets/logo.svg"
   },

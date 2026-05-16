@@ -32,11 +32,11 @@
     <link href="$relpath^tabs.css" rel="stylesheet" type="text/css"/>
     <link href="$relpath^doxygen.css" rel="stylesheet" type="text/css"/>
 
-    <link rel="icon" type="image/x-icon" href="$relpath^../favicon.ico">
+    <link rel="icon" type="image/x-icon" href="$relpath^favicon.ico">
 
     <!-- Liara design system, applied AFTER Doxygen's own CSS so we can override -->
-    <link rel="stylesheet" href="$relpath^design-tokens.css">
-    <link rel="stylesheet" href="$relpath^navbar.css">
+    <link rel="stylesheet" href="$relpath^css/design-tokens.css">
+    <link rel="stylesheet" href="$relpath^css/navbar.css">
     <link rel="stylesheet" href="$relpath^doxygen-custom.css">
 
     $extrastylesheet
@@ -56,7 +56,8 @@
         })();
     </script>
 
-    <script defer src="$relpath^navbar.js"></script>
+    <script src="$relpath^js/navbar.config.js"></script>
+    <script defer src="$relpath^js/navbar.js"></script>
 </head>
 <body>
 
