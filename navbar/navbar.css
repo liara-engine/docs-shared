@@ -1,15 +1,20 @@
 /**
- * Liara Engine — Navbar styles
+ * Liara Engine — Navbar styles (v2)
  *
  * Consumes design tokens from `tokens/design-tokens.css`. Always import
  * design-tokens.css before this file in the consuming page.
  *
- * Block: .liara-navbar
- * Modifiers and elements follow BEM ("__element", "--modifier").
+ * BEM block: .liara-navbar (main nav) and .liara-navbar-subnav (sub).
+ * Modifiers: --variant. State: is-active, is-current, is-open.
+ *
+ * New in v2:
+ *   - Per-module pills with their own dropdown of versions
+ *   - Contextual sub-nav for switching between book and doxygen views
+ *   - Visual compatibility badges based on ABI manifests
  */
 
 /* ============================================================================
- * Container
+ * Main container
  * ========================================================================== */
 
 .liara-navbar {
@@ -26,9 +31,6 @@
     font-family: var(--liara-font-sans);
     font-size: var(--liara-text-sm);
     line-height: 1;
-
-    /* Subtle shadow only when the page has scrolled — applied via JS by
-     * adding the `is-scrolled` class. Default state is shadow-less. */
 }
 
 .liara-navbar.is-scrolled {
@@ -62,6 +64,7 @@
     border-radius: var(--liara-radius-sm);
     padding: var(--liara-space-1) var(--liara-space-2);
     margin-left: calc(var(--liara-space-2) * -1);
+
     transition: background-color var(--liara-transition-fast);
 }
 
@@ -80,13 +83,13 @@
 }
 
 /* ============================================================================
- * Module navigation
+ * Module pills
  * ========================================================================== */
 
 .liara-navbar__modules {
     display: flex;
     align-items: center;
-    gap: var(--liara-space-1);
+    gap: var(--liara-space-2);
 
     list-style: none;
     margin: 0;
@@ -94,99 +97,142 @@
 }
 
 .liara-navbar__module {
-    display: inline-block;
-    padding: var(--liara-space-2) var(--liara-space-3);
-
-    color: var(--liara-text-secondary);
-    text-decoration: none;
-    font-weight: var(--liara-weight-normal);
-
-    border-radius: var(--liara-radius-md);
-    transition:
-            background-color var(--liara-transition-fast),
-            color var(--liara-transition-fast);
-}
-
-.liara-navbar__module:hover {
-    background: var(--liara-bg-surface);
-    color: var(--liara-text-primary);
-}
-
-.liara-navbar__module.is-active {
-    background: var(--liara-brand-primary-soft);
-    color: var(--liara-brand-primary-dark);
-    font-weight: var(--liara-weight-medium);
-}
-
-/* ============================================================================
- * Spacer
- * ========================================================================== */
-
-.liara-navbar__spacer {
-    flex: 1;
-}
-
-/* ============================================================================
- * Version selector
- * ========================================================================== */
-
-.liara-navbar__version {
     position: relative;
+    margin: 0;
 }
 
-.liara-navbar__version-trigger {
-    display: flex;
-    align-items: center;
-    gap: var(--liara-space-2);
-
-    padding: var(--liara-space-2) var(--liara-space-3);
-
+/**
+ * The "pill" wraps a link (module name + version) and a button (chevron).
+ * Both elements share visual treatment so they read as one component.
+ */
+.liara-navbar__module-wrap {
+    display: inline-flex;
+    align-items: stretch;
     background: var(--liara-bg-surface);
-    border: var(--liara-border-width-thin) solid var(--liara-border-default);
+    border: var(--liara-border-width-thin) solid transparent;
     border-radius: var(--liara-radius-md);
-
-    color: var(--liara-brand-secondary-dark);
-    font-family: inherit;
-    font-size: inherit;
-    font-weight: var(--liara-weight-medium);
-    line-height: 1;
-
-    cursor: pointer;
     transition:
             background-color var(--liara-transition-fast),
             border-color var(--liara-transition-fast);
 }
 
-.liara-navbar__version-trigger:hover {
+.liara-navbar__module-wrap:hover {
     background: var(--liara-brand-secondary-soft);
-    border-color: var(--liara-border-strong);
 }
 
-.liara-navbar__version-trigger[aria-expanded="true"] {
-    background: var(--liara-brand-secondary-soft);
-    border-color: var(--liara-brand-secondary);
+/* The link half: module name + current/latest version */
+.liara-navbar__module-link {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--liara-space-2);
+
+    padding: var(--liara-space-2) var(--liara-space-3);
+    color: var(--liara-text-primary);
+    text-decoration: none;
+    border-radius: var(--liara-radius-md) 0 0 var(--liara-radius-md);
+    line-height: 1;
+
+    transition: color var(--liara-transition-fast);
 }
 
-.liara-navbar__version-label {
+.liara-navbar__module-name {
+    font-weight: var(--liara-weight-normal);
+}
+
+.liara-navbar__module-version {
     font-family: var(--liara-font-mono);
     font-size: var(--liara-text-xs);
+    color: var(--liara-text-tertiary);
+    padding-left: var(--liara-space-2);
+    border-left: var(--liara-border-width-thin) solid var(--liara-border-strong);
 }
 
-.liara-navbar__version-caret {
-    flex-shrink: 0;
+/* The button half: chevron that opens the dropdown */
+.liara-navbar__module-trigger {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    width: 28px;
+    padding: 0;
+    background: transparent;
+    border: none;
+    border-radius: 0 var(--liara-radius-md) var(--liara-radius-md) 0;
+
+    color: var(--liara-text-secondary);
+    cursor: pointer;
+
+    transition:
+            color var(--liara-transition-fast),
+            background-color var(--liara-transition-fast);
+}
+
+.liara-navbar__module-trigger:hover {
+    color: var(--liara-brand-primary-dark);
+    background: var(--liara-brand-primary-soft);
+}
+
+.liara-navbar__module-trigger svg {
     transition: transform var(--liara-transition-fast);
 }
 
-.liara-navbar__version-trigger[aria-expanded="true"] .liara-navbar__version-caret {
+.liara-navbar__module-trigger[aria-expanded="true"] svg {
     transform: rotate(180deg);
 }
 
-.liara-navbar__version-menu {
+/* === Active module (we're viewing its docs right now) ====================== */
+
+.liara-navbar__module.is-current .liara-navbar__module-wrap {
+    background: var(--liara-brand-primary-soft);
+    border-color: var(--liara-brand-primary);
+}
+
+.liara-navbar__module.is-current .liara-navbar__module-link {
+    color: var(--liara-brand-primary-dark);
+    font-weight: var(--liara-weight-medium);
+}
+
+.liara-navbar__module.is-current .liara-navbar__module-version {
+    color: var(--liara-brand-primary-dark);
+    border-left-color: var(--liara-brand-primary);
+}
+
+.liara-navbar__module.is-current .liara-navbar__module-trigger {
+    color: var(--liara-brand-primary-dark);
+}
+
+/* Small floating "CURRENT" badge above the active pill */
+.liara-navbar__module.is-current::before {
+    content: "current";
+    position: absolute;
+    top: -8px;
+    right: -4px;
+
+    padding: 2px 6px;
+    background: var(--liara-brand-primary-dark);
+    color: var(--liara-text-on-primary);
+    border-radius: var(--liara-radius-pill);
+
+    font-size: 9px;
+    font-weight: var(--liara-weight-semibold);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    line-height: 1.2;
+    pointer-events: none;
+    z-index: 1;
+}
+
+/* ============================================================================
+ * Module dropdown menu
+ * ========================================================================== */
+
+.liara-navbar__module-menu {
     position: absolute;
     top: calc(100% + var(--liara-space-2));
     right: 0;
-    min-width: 160px;
-    max-height: 280px;
+
+    min-width: 240px;
+    max-height: 360px;
     overflow-y: auto;
 
     list-style: none;
@@ -201,42 +247,123 @@
     z-index: var(--liara-z-dropdown);
 }
 
-.liara-navbar__version-menu[hidden] {
+.liara-navbar__module-menu[hidden] {
     display: none;
 }
 
-.liara-navbar__version-menu li {
+/* Menu header: small all-caps label */
+.liara-navbar__menu-header {
+    padding: var(--liara-space-2) var(--liara-space-3);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--liara-text-tertiary);
+    font-weight: var(--liara-weight-semibold);
+    border-bottom: var(--liara-border-width-thin) solid var(--liara-border-subtle);
+    margin-bottom: var(--liara-space-1);
+}
+
+/* Each version row */
+.liara-navbar__menu-item {
     margin: 0;
 }
 
-.liara-navbar__version-menu a {
-    display: block;
-    padding: var(--liara-space-2) var(--liara-space-3);
+.liara-navbar__menu-link {
+    display: flex;
+    align-items: center;
+    gap: var(--liara-space-2);
 
+    padding: var(--liara-space-2) var(--liara-space-3);
     color: var(--liara-text-primary);
     text-decoration: none;
-    font-family: var(--liara-font-mono);
-    font-size: var(--liara-text-xs);
-
     border-radius: var(--liara-radius-sm);
+
     transition: background-color var(--liara-transition-fast);
 }
 
-.liara-navbar__version-menu a:hover,
-.liara-navbar__version-menu a:focus-visible {
+.liara-navbar__menu-link:hover {
+    background: var(--liara-brand-primary-soft);
+    color: var(--liara-brand-primary-dark);
+    text-decoration: none;
+}
+
+/* The status icon at the left of each entry: check, X, or dot */
+.liara-navbar__menu-status {
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.liara-navbar__menu-status--compatible {
+    color: var(--liara-semantic-success-fg);
+}
+
+.liara-navbar__menu-status--mismatch {
+    color: var(--liara-semantic-danger-fg);
+}
+
+.liara-navbar__menu-status--unknown {
+    color: var(--liara-text-tertiary);
+}
+
+/* Version label in monospace */
+.liara-navbar__menu-version {
+    flex: 1;
+    font-family: var(--liara-font-mono);
+    font-size: var(--liara-text-xs);
+    color: inherit;
+}
+
+/* Right-aligned compatibility badge */
+.liara-navbar__menu-badge {
+    flex-shrink: 0;
+    padding: 2px 6px;
+    border-radius: var(--liara-radius-pill);
+
+    font-size: 9px;
+    font-weight: var(--liara-weight-semibold);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    line-height: 1.2;
+}
+
+.liara-navbar__menu-badge--current {
     background: var(--liara-brand-primary-soft);
     color: var(--liara-brand-primary-dark);
 }
 
-.liara-navbar__version-menu a.is-current {
-    background: var(--liara-brand-secondary-soft);
-    color: var(--liara-brand-secondary-dark);
-    font-weight: var(--liara-weight-medium);
+.liara-navbar__menu-badge--compatible {
+    background: var(--liara-semantic-success-bg);
+    color: var(--liara-semantic-success-fg);
+}
+
+.liara-navbar__menu-badge--mismatch {
+    background: var(--liara-semantic-danger-bg);
+    color: var(--liara-semantic-danger-fg);
+}
+
+.liara-navbar__menu-badge--unknown {
+    background: var(--liara-bg-surface);
+    color: var(--liara-text-tertiary);
+}
+
+/* Slightly dim mismatch rows so they don't compete for attention */
+.liara-navbar__menu-item--mismatch .liara-navbar__menu-link {
+    opacity: 0.6;
+}
+
+.liara-navbar__menu-item--mismatch .liara-navbar__menu-link:hover {
+    opacity: 1;
 }
 
 /* ============================================================================
- * Actions (theme toggle, a11y toggle, GitHub link)
+ * Spacer + actions
  * ========================================================================== */
+
+.liara-navbar__spacer {
+    flex: 1;
+}
 
 .liara-navbar__actions {
     display: flex;
@@ -290,41 +417,22 @@
     flex-shrink: 0;
 }
 
-/* === Theme icon switching ===
- *
- * The three theme icons (system/light/dark) are all in the DOM. CSS shows
- * the one that matches the current resolved theme. The `data-liara-theme`
- * attribute is set by navbar.js based on user preference. */
+/* === Theme icon switching (system / light / dark) ========================== */
 
-/* Default state: no attribute = following system preference */
-.liara-navbar__icon--system {
-    display: block;
-}
+.liara-navbar__icon--system { display: block; }
 .liara-navbar__icon--light,
-.liara-navbar__icon--dark {
-    display: none;
-}
+.liara-navbar__icon--dark { display: none; }
 
-/* User chose light explicitly */
 :root[data-liara-theme="light"] .liara-navbar__icon--system,
-:root[data-liara-theme="light"] .liara-navbar__icon--dark {
-    display: none;
-}
-:root[data-liara-theme="light"] .liara-navbar__icon--light {
-    display: block;
-}
+:root[data-liara-theme="light"] .liara-navbar__icon--dark { display: none; }
+:root[data-liara-theme="light"] .liara-navbar__icon--light { display: block; }
 
-/* User chose dark explicitly */
 :root[data-liara-theme="dark"] .liara-navbar__icon--system,
-:root[data-liara-theme="dark"] .liara-navbar__icon--light {
-    display: none;
-}
-:root[data-liara-theme="dark"] .liara-navbar__icon--dark {
-    display: block;
-}
+:root[data-liara-theme="dark"] .liara-navbar__icon--light { display: none; }
+:root[data-liara-theme="dark"] .liara-navbar__icon--dark { display: block; }
 
 /* ============================================================================
- * Mobile menu toggle (hidden on desktop)
+ * Mobile menu toggle
  * ========================================================================== */
 
 .liara-navbar__menu-toggle {
@@ -364,6 +472,104 @@
 }
 
 /* ============================================================================
+ * Sub-nav (contextual, shown only on module pages)
+ * ========================================================================== */
+
+.liara-navbar-subnav {
+    position: sticky;
+    top: var(--liara-navbar-height);
+    z-index: calc(var(--liara-z-navbar) - 1);
+
+    width: 100%;
+    height: 36px;
+
+    background: var(--liara-bg-page);
+    border-bottom: var(--liara-border-width-thin) solid var(--liara-border-default);
+
+    font-family: var(--liara-font-sans);
+    font-size: var(--liara-text-sm);
+}
+
+.liara-navbar-subnav[hidden] {
+    display: none;
+}
+
+.liara-navbar-subnav__inner {
+    max-width: var(--liara-page-max-width);
+    height: 100%;
+    margin: 0 auto;
+    padding: 0 var(--liara-space-5);
+
+    display: flex;
+    align-items: center;
+    gap: var(--liara-space-4);
+}
+
+.liara-navbar-subnav__breadcrumb {
+    display: flex;
+    align-items: center;
+    gap: var(--liara-space-2);
+    color: var(--liara-text-secondary);
+    font-size: var(--liara-text-sm);
+}
+
+.liara-navbar-subnav__module {
+    color: var(--liara-text-primary);
+    font-weight: var(--liara-weight-medium);
+}
+
+.liara-navbar-subnav__sep {
+    color: var(--liara-text-tertiary);
+}
+
+.liara-navbar-subnav__version {
+    font-family: var(--liara-font-mono);
+    font-size: var(--liara-text-xs);
+    color: var(--liara-brand-secondary-dark);
+    padding: 1px 6px;
+    background: var(--liara-brand-secondary-soft);
+    border-radius: var(--liara-radius-sm);
+}
+
+.liara-navbar-subnav__tabs {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: var(--liara-space-1);
+}
+
+.liara-navbar-subnav__tab {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--liara-space-2);
+
+    padding: var(--liara-space-1) var(--liara-space-3);
+    color: var(--liara-text-secondary);
+    text-decoration: none;
+
+    border-radius: var(--liara-radius-sm);
+    transition:
+            background-color var(--liara-transition-fast),
+            color var(--liara-transition-fast);
+}
+
+.liara-navbar-subnav__tab:hover {
+    background: var(--liara-bg-surface);
+    color: var(--liara-text-primary);
+    text-decoration: none;
+}
+
+.liara-navbar-subnav__tab[aria-selected="true"] {
+    background: var(--liara-brand-primary-soft);
+    color: var(--liara-brand-primary-dark);
+    font-weight: var(--liara-weight-medium);
+}
+
+.liara-navbar-subnav__tab[hidden] {
+    display: none;
+}
+
+/* ============================================================================
  * Responsive: collapse modules into a drawer below 768px
  * ========================================================================== */
 
@@ -375,11 +581,10 @@
     }
 
     .liara-navbar__brand-name {
-        display: none;  /* logo only on small screens */
+        display: none;
     }
 
-    /* Modules collapse into a drawer that's hidden by default and revealed
-     * by toggling the `is-open` class on the navbar. */
+    /* Modules drawer */
     .liara-navbar__modules {
         position: absolute;
         top: 100%;
@@ -388,7 +593,7 @@
 
         flex-direction: column;
         align-items: stretch;
-        gap: 0;
+        gap: var(--liara-space-1);
 
         padding: var(--liara-space-2);
 
@@ -402,20 +607,33 @@
     }
 
     .liara-navbar.is-open .liara-navbar__modules {
-        max-height: 400px;
+        max-height: 80vh;
+        overflow-y: auto;
     }
 
-    .liara-navbar__module {
-        padding: var(--liara-space-3);
-        border-radius: var(--liara-radius-md);
+    .liara-navbar__module-wrap {
+        width: 100%;
     }
 
-    /* Hide the version selector text label on tiny screens to save space.
-     * The button remains tappable; just shows the version more compactly. */
-    @media (max-width: 480px) {
-        .liara-navbar__version {
-            display: none;
-        }
+    .liara-navbar__module-link {
+        flex: 1;
+    }
+
+    /* On mobile, dropdowns expand inline rather than as popovers */
+    .liara-navbar__module-menu {
+        position: static;
+        margin-top: var(--liara-space-1);
+        box-shadow: none;
+        min-width: 0;
+        max-height: none;
+        background: var(--liara-bg-surface);
+    }
+
+    /* The floating "CURRENT" badge moves inline on mobile to avoid clipping */
+    .liara-navbar__module.is-current::before {
+        position: static;
+        margin-left: var(--liara-space-2);
+        align-self: center;
     }
 
     .liara-navbar__menu-toggle {
@@ -432,5 +650,28 @@
 
     .liara-navbar.is-open .liara-navbar__menu-toggle-bar:nth-child(3) {
         transform: translateY(-5.5px) rotate(-45deg);
+    }
+
+    /* Sub-nav: stack breadcrumb above tabs */
+    .liara-navbar-subnav {
+        height: auto;
+        padding: var(--liara-space-2) 0;
+    }
+
+    .liara-navbar-subnav__inner {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: var(--liara-space-2);
+        padding: 0 var(--liara-space-3);
+    }
+
+    .liara-navbar-subnav__tabs {
+        margin-left: 0;
+        width: 100%;
+    }
+
+    .liara-navbar-subnav__tab {
+        flex: 1;
+        justify-content: center;
     }
 }

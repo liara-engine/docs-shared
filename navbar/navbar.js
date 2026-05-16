@@ -1,23 +1,28 @@
 /**
- * Liara Engine — Navbar logic
+ * Liara Engine — Navbar logic (v2)
  *
- * Handles four concerns:
- *   1. Theme cycling (system -> light -> dark -> system) with persistence
- *   2. Dyslexia-friendly mode toggle with persistence
- *   3. Version dropdown population from version.json
- *   4. Active-module highlighting based on the current URL
+ * Responsibilities, in execution order:
  *
- * Design philosophy:
- *   - All preference detection runs synchronously, BEFORE DOMContentLoaded,
- *     to prevent flash of unstyled content (FOUC).
- *   - The navbar's HTML is in the DOM at parse time (it's a static fragment,
- *     not injected by JS), so we only need to wire up event handlers and
- *     fetch the version list.
- *   - Failures are non-fatal: if version.json is unreachable, the version
- *     selector simply shows only "dev" and a placeholder; navigation
- *     continues to work.
+ *   1. Apply theme and a11y preferences synchronously (FOUC prevention).
+ *   2. Wire static handlers: theme toggle, a11y toggle, mobile menu,
+ *      scroll shadow.
+ *   3. Parse the current URL to detect which module, which version, and
+ *      which view (book / doxygen) we are looking at.
+ *   4. Fetch the modules registry and, in parallel, every module's
+ *      manifest.json.
+ *   5. Compute the current "ABI horizon": the set of ABI versions
+ *      compatible with the version we're viewing. If we're on the ABI
+ *      itself, that's just our current version.
+ *   6. Render one pill per module, populated with its versions and
+ *      compatibility badges based on the ABI horizon.
+ *   7. Render the contextual sub-nav (book vs doxygen tabs) when on a
+ *      module page; keep it hidden otherwise.
  *
- * Storage keys:
+ * All failures are non-fatal. If the registry can't be fetched, the
+ * modules list stays empty. If a manifest is missing, that module is
+ * still listed but without compatibility info (badges show "unknown").
+ *
+ * Storage keys (carried over from v1):
  *   - liara-theme: "light" | "dark" | absent (= follow system)
  *   - liara-a11y-dyslexia: "true" | absent (= disabled)
  */
@@ -25,51 +30,36 @@
 (function () {
     "use strict";
 
-    // ========================================================================
-    // Storage keys and defaults
-    // ========================================================================
+    /* ========================================================================
+     * Configuration
+     * ====================================================================== */
+
+    function getConfig() {
+        const fallback = {
+            docsBaseUrl: window.location.origin + "/",
+            modulesRegistryPath: "modules-registry.json"
+        };
+        const user = window.LIARA_NAVBAR_CONFIG || {};
+        return {
+            docsBaseUrl: user.docsBaseUrl || fallback.docsBaseUrl,
+            modulesRegistryPath: user.modulesRegistryPath || fallback.modulesRegistryPath
+        };
+    }
 
     const STORAGE_THEME = "liara-theme";
     const STORAGE_A11Y_DYSLEXIA = "liara-a11y-dyslexia";
 
-    const VERSION_JSON_URL = "https://liara-engine.github.io/version.json";
+    /* ========================================================================
+     * Theme + a11y management (carried over from v1)
+     * ====================================================================== */
 
-    // Module slug -> URL fragment used in deployed paths.
-    // The `null` value for "user" means the user guide lives directly under
-    // the meta repository's docs root, not in a per-module subdirectory.
-    const MODULE_SLUGS = {
-        user:       "user",
-        interfaces: "liara-interfaces",
-        core:       "liara-core",
-        renderer:   "liara-renderer",
-        editor:     "liara-editor",
-        physics:    "liara-physics",
-    };
-
-    const KNOWN_MODULES = Object.keys(MODULE_SLUGS);
-
-    // ========================================================================
-    // Theme management
-    // ========================================================================
-
-    /**
-     * Returns the currently stored theme preference, or null if the user has
-     * not made an explicit choice (in which case the system preference is
-     * followed).
-     */
     function getStoredTheme() {
         try {
-            const value = localStorage.getItem(STORAGE_THEME);
-            return value === "light" || value === "dark" ? value : null;
-        } catch (e) {
-            return null;
-        }
+            const v = localStorage.getItem(STORAGE_THEME);
+            return v === "light" || v === "dark" ? v : null;
+        } catch (e) { return null; }
     }
 
-    /**
-     * Applies a theme preference to the document root. Pass null to clear
-     * the preference and follow the system.
-     */
     function applyTheme(theme) {
         const root = document.documentElement;
         if (theme === "light" || theme === "dark") {
@@ -86,272 +76,500 @@
             } else {
                 localStorage.removeItem(STORAGE_THEME);
             }
-        } catch (e) {
-            /* localStorage may be unavailable (private mode); silently ignore */
-        }
+        } catch (e) { /* private mode */ }
     }
 
-    /**
-     * Cycles theme: system -> light -> dark -> system -> ...
-     */
     function cycleTheme() {
         const current = getStoredTheme();
-        const next =
-            current === null ? "light" :
-                current === "light" ? "dark" :
-                    null;
-
+        const next = current === null ? "light" : current === "light" ? "dark" : null;
         applyTheme(next);
         persistTheme(next);
-        announceThemeChange(next);
+        announceLive(
+            next === null ? "Following system theme" :
+                next === "light" ? "Light theme active" :
+                    "Dark theme active"
+        );
     }
-
-    function announceThemeChange(theme) {
-        const label =
-            theme === null ? "Following system theme" :
-                theme === "light" ? "Light theme active" :
-                    "Dark theme active";
-
-        // Accessible announcement via aria-live region. The region is created
-        // lazily because most pages won't need it.
-        let liveRegion = document.getElementById("liara-navbar-announcer");
-        if (!liveRegion) {
-            liveRegion = document.createElement("div");
-            liveRegion.id = "liara-navbar-announcer";
-            liveRegion.setAttribute("role", "status");
-            liveRegion.setAttribute("aria-live", "polite");
-            liveRegion.style.cssText =
-                "position:absolute;width:1px;height:1px;padding:0;margin:-1px;" +
-                "overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0;";
-            document.body.appendChild(liveRegion);
-        }
-        liveRegion.textContent = label;
-    }
-
-    // ========================================================================
-    // Dyslexia-friendly mode
-    // ========================================================================
 
     function getStoredA11yDyslexia() {
-        try {
-            return localStorage.getItem(STORAGE_A11Y_DYSLEXIA) === "true";
-        } catch (e) {
-            return false;
-        }
+        try { return localStorage.getItem(STORAGE_A11Y_DYSLEXIA) === "true"; }
+        catch (e) { return false; }
     }
 
     function applyA11yDyslexia(enabled) {
         const root = document.documentElement;
-        if (enabled) {
-            root.setAttribute("data-liara-a11y-dyslexia", "true");
-        } else {
-            root.removeAttribute("data-liara-a11y-dyslexia");
-        }
+        if (enabled) root.setAttribute("data-liara-a11y-dyslexia", "true");
+        else root.removeAttribute("data-liara-a11y-dyslexia");
     }
 
     function persistA11yDyslexia(enabled) {
         try {
-            if (enabled) {
-                localStorage.setItem(STORAGE_A11Y_DYSLEXIA, "true");
-            } else {
-                localStorage.removeItem(STORAGE_A11Y_DYSLEXIA);
-            }
-        } catch (e) {
-            /* ignore */
-        }
+            if (enabled) localStorage.setItem(STORAGE_A11Y_DYSLEXIA, "true");
+            else localStorage.removeItem(STORAGE_A11Y_DYSLEXIA);
+        } catch (e) { /* ignore */ }
     }
 
     function toggleA11yDyslexia() {
         const next = !getStoredA11yDyslexia();
         applyA11yDyslexia(next);
         persistA11yDyslexia(next);
-
         const button = document.querySelector("[data-liara-a11y-toggle]");
-        if (button) {
-            button.setAttribute("aria-pressed", next ? "true" : "false");
-        }
+        if (button) button.setAttribute("aria-pressed", next ? "true" : "false");
     }
 
-    // ========================================================================
-    // URL parsing: which module/version is currently being viewed?
-    // ========================================================================
+    /** Accessible live region for screen reader announcements. */
+    function announceLive(message) {
+        let region = document.getElementById("liara-navbar-announcer");
+        if (!region) {
+            region = document.createElement("div");
+            region.id = "liara-navbar-announcer";
+            region.setAttribute("role", "status");
+            region.setAttribute("aria-live", "polite");
+            region.style.cssText =
+                "position:absolute;width:1px;height:1px;padding:0;margin:-1px;" +
+                "overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0;";
+            document.body.appendChild(region);
+        }
+        region.textContent = message;
+    }
 
-    /**
-     * Parses the current URL to determine the active module and version.
-     * Returns { module: string|null, version: string|null }.
+    /* ========================================================================
+     * URL parsing
      *
-     * Expected URL patterns on liara-engine.github.io:
-     *   - /                                  -> hub home
-     *   - /<module>/<version>/...            -> module docs at version
-     *   - /user/<version>/...                -> user guide at version
+     * Expected URL structure on the deployed docs:
      *
-     * Anything else returns nulls and the navbar falls back to defaults.
-     */
-    function detectCurrentLocation() {
+     *     {docsBaseUrl}{repo}/{version}/{book|doxygen}/{rest}
+     *
+     * The hub lives at {docsBaseUrl}hub/ (or at the origin root,
+     * depending on the deployment). Anything that doesn't match a known
+     * repo is treated as "no module context".
+     * ====================================================================== */
+
+    function parseLocation(registry) {
         const segments = window.location.pathname.split("/").filter(Boolean);
-        if (segments.length === 0) {
-            return { module: null, version: null };
+        if (segments.length === 0 || !registry) {
+            return { module: null, version: null, view: null };
         }
 
-        // Try to match the first segment to a known module slug.
-        for (const [moduleKey, slug] of Object.entries(MODULE_SLUGS)) {
-            if (segments[0] === slug) {
-                return {
-                    module: moduleKey,
-                    version: segments[1] || null,
-                };
-            }
+        const module = registry.modules.find(m => m.repo === segments[0]);
+        if (!module) {
+            return { module: null, version: null, view: null };
         }
 
-        return { module: null, version: null };
+        const version = segments[1] || null;
+        let view = null;
+        if (segments[2] === "book" || segments[2] === "doxygen") {
+            view = segments[2];
+        }
+
+        return { module, version, view };
     }
 
-    /**
-     * Returns the canonical URL for a (module, version) pair, used to
-     * rewrite navbar links when the user picks a different version.
-     */
-    function buildModuleUrl(module, version) {
-        const slug = MODULE_SLUGS[module];
-        if (!slug) return null;
-        return `https://liara-engine.github.io/${slug}/${version}/`;
-    }
+    /* ========================================================================
+     * Fetching: registry + manifests
+     * ====================================================================== */
 
-    // ========================================================================
-    // Version dropdown
-    // ========================================================================
-
-    /**
-     * Fetches version.json from the hub. Returns null on any failure;
-     * callers should treat null as "no version data available".
-     */
-    async function fetchVersionList() {
+    async function fetchJson(url) {
         try {
-            const response = await fetch(VERSION_JSON_URL, { cache: "default" });
+            const response = await fetch(url, { cache: "default" });
             if (!response.ok) return null;
-            const data = await response.json();
-            if (!data || !Array.isArray(data.versions)) return null;
-            return data;
+            return await response.json();
         } catch (err) {
-            // Network error, CORS, JSON parse error — all non-fatal.
-            console.warn("liara-navbar: version.json unavailable", err);
+            console.warn("liara-navbar: failed to fetch " + url, err);
             return null;
         }
     }
 
+    async function fetchRegistry(config) {
+        const url = config.docsBaseUrl + config.modulesRegistryPath;
+        const data = await fetchJson(url);
+        if (!data || !Array.isArray(data.modules)) return null;
+        return data;
+    }
+
+    async function fetchAllManifests(registry, config) {
+        const promises = registry.modules.map(async (module) => {
+            const url = config.docsBaseUrl + module.repo + "/manifest.json";
+            const manifest = await fetchJson(url);
+            return Object.assign({}, module, { manifest });
+        });
+        return await Promise.all(promises);
+    }
+
+    /* ========================================================================
+     * ABI compatibility computation
+     * ====================================================================== */
+
     /**
-     * Populates the version dropdown menu and wires up its toggle behavior.
+     * The "ABI horizon" is the set of ABI versions compatible with the
+     * version we're currently viewing.
+     *
+     *   - If we're on the ABI itself, the horizon is just the current
+     *     version: only modules whose abi_compatibility contains that
+     *     version are compatible.
+     *   - If we're on another module, the horizon is the
+     *     abi_compatibility array of that module's current version.
+     *   - If we're nowhere in particular (hub, etc.), the horizon is
+     *     null, meaning compatibility cannot be determined.
      */
-    function setupVersionMenu(versionData, currentLocation) {
-        const trigger = document.querySelector(".liara-navbar__version-trigger");
-        const menu = document.querySelector("[data-liara-version-menu]");
-        const label = document.querySelector("[data-liara-version-label]");
-        if (!trigger || !menu || !label) return;
+    function computeAbiHorizon(currentModule, currentVersion) {
+        if (!currentModule || !currentVersion) return null;
+        if (currentModule.is_abi) return [currentVersion];
+        if (!currentModule.manifest) return null;
+        const versionEntry = currentModule.manifest.versions
+            && currentModule.manifest.versions[currentVersion];
+        if (!versionEntry) return null;
+        return versionEntry.abi_compatibility || [];
+    }
 
-        // Determine which version is "current" for display purposes.
-        const currentVersion = currentLocation.version || "dev";
-        label.textContent = currentVersion;
+    /**
+     * For a given (module, version), returns one of:
+     *     "compatible" — the version is compatible with the ABI horizon
+     *     "mismatch"   — incompatible
+     *     "unknown"    — no data available (manifest missing, etc.)
+     *
+     * `currentModule` and `currentVersion` identify the visited page so
+     * we can return "current" for the exact entry being viewed.
+     */
+    function evaluateCompat(targetModule, targetVersion, abiHorizon,
+                            currentModule, currentVersion) {
 
-        // If we got no version data, the dropdown still works but only shows
-        // the current entry. Better than nothing.
-        const versions = versionData ? versionData.versions : [{ label: currentVersion }];
+        // The version we're currently viewing gets a "current" badge.
+        if (currentModule && targetModule.key === currentModule.key
+            && targetVersion === currentVersion) {
+            return "current";
+        }
 
-        // Build menu items. Each item, when clicked, navigates to the same
-        // module's docs at the chosen version (or to the hub if no module
-        // is currently active).
-        menu.innerHTML = "";
-        for (const versionEntry of versions) {
-            const li = document.createElement("li");
-            const a = document.createElement("a");
-            a.textContent = versionEntry.label;
+        if (abiHorizon === null) return "unknown";
 
-            if (currentLocation.module && versionEntry.modules
-                && versionEntry.modules[currentLocation.module]) {
-                a.href = versionEntry.modules[currentLocation.module];
-            } else if (currentLocation.module) {
-                // No entry for this module at this version — fall back to the
-                // module's hub. Better than a broken link.
-                a.href = buildModuleUrl(currentLocation.module, versionEntry.label);
-            } else {
-                a.href = "https://liara-engine.github.io/";
+        if (targetModule.is_abi) {
+            return abiHorizon.indexOf(targetVersion) !== -1
+                ? "compatible" : "mismatch";
+        }
+
+        if (!targetModule.manifest) return "unknown";
+        const versionEntry = targetModule.manifest.versions
+            && targetModule.manifest.versions[targetVersion];
+        if (!versionEntry) return "unknown";
+
+        const targetAbi = versionEntry.abi_compatibility || [];
+        const overlap = targetAbi.some(v => abiHorizon.indexOf(v) !== -1);
+        return overlap ? "compatible" : "mismatch";
+    }
+
+    /* ========================================================================
+     * URL building
+     * ====================================================================== */
+
+    function buildModuleUrl(config, module, version, view) {
+        let url = config.docsBaseUrl + module.repo + "/" + version + "/";
+        if (view) url += view + "/";
+        return url;
+    }
+
+    /* ========================================================================
+     * SVG icon templates
+     *
+     * Inline SVG strings used in dynamically created menu items. Defined
+     * once at module load and reused via cloneNode.
+     * ====================================================================== */
+
+    const SVG_NS = "http://www.w3.org/2000/svg";
+
+    function makeIcon(paths) {
+        const svg = document.createElementNS(SVG_NS, "svg");
+        svg.setAttribute("width", "14");
+        svg.setAttribute("height", "14");
+        svg.setAttribute("viewBox", "0 0 24 24");
+        svg.setAttribute("fill", "none");
+        svg.setAttribute("stroke", "currentColor");
+        svg.setAttribute("stroke-width", "2.5");
+        svg.setAttribute("stroke-linecap", "round");
+        svg.setAttribute("stroke-linejoin", "round");
+        svg.setAttribute("aria-hidden", "true");
+        for (const p of paths) {
+            const el = document.createElementNS(SVG_NS, p.tag);
+            for (const [k, v] of Object.entries(p.attrs)) {
+                el.setAttribute(k, v);
             }
+            svg.appendChild(el);
+        }
+        return svg;
+    }
 
-            if (versionEntry.label === currentVersion) {
-                a.classList.add("is-current");
-            }
+    function iconCheck() {
+        return makeIcon([{ tag: "polyline", attrs: { points: "20 6 9 17 4 12" } }]);
+    }
 
-            li.appendChild(a);
-            menu.appendChild(li);
+    function iconCross() {
+        return makeIcon([
+            { tag: "line", attrs: { x1: "18", y1: "6", x2: "6", y2: "18" } },
+            { tag: "line", attrs: { x1: "6",  y1: "6", x2: "18", y2: "18" } }
+        ]);
+    }
+
+    function iconDot() {
+        return makeIcon([
+            { tag: "circle", attrs: { cx: "12", cy: "12", r: "4", fill: "currentColor" } }
+        ]);
+    }
+
+    /* ========================================================================
+     * Rendering: module pills
+     * ====================================================================== */
+
+    /**
+     * Builds the entire modules list. Called once after manifests load.
+     */
+    function renderModulesList(modules, location, abiHorizon, config) {
+        const container = document.querySelector("[data-liara-modules]");
+        if (!container) return;
+        container.innerHTML = "";
+
+        for (const module of modules) {
+            const li = renderModulePill(module, location, abiHorizon, config);
+            container.appendChild(li);
+        }
+    }
+
+    function renderModulePill(module, location, abiHorizon, config) {
+        const li = document.createElement("li");
+        li.className = "liara-navbar__module";
+        li.dataset.liaraModuleKey = module.key;
+
+        const isCurrent = location.module && location.module.key === module.key;
+        if (isCurrent) li.classList.add("is-current");
+
+        // The version label shown on the pill: the visited version if
+        // we're on this module, otherwise the manifest's "latest".
+        const displayVersion = isCurrent
+            ? location.version
+            : (module.manifest && module.manifest.metadata
+            && module.manifest.metadata.latest) || "—";
+
+        // Where does the link go? Always to the displayVersion of this
+        // module. If we're on it, that's the page we're already on.
+        const linkUrl = (module.manifest && module.manifest.metadata
+            && module.manifest.metadata.latest)
+            ? buildModuleUrl(config, module,
+                module.manifest.metadata.latest, location.view)
+            : "#";
+
+        const wrap = document.createElement("div");
+        wrap.className = "liara-navbar__module-wrap";
+
+        const link = document.createElement("a");
+        link.className = "liara-navbar__module-link";
+        link.href = linkUrl;
+        link.dataset.liaraModuleLink = "true";
+
+        const name = document.createElement("span");
+        name.className = "liara-navbar__module-name";
+        name.textContent = module.name;
+
+        const versionLabel = document.createElement("span");
+        versionLabel.className = "liara-navbar__module-version";
+        versionLabel.textContent = displayVersion;
+
+        link.appendChild(name);
+        link.appendChild(versionLabel);
+
+        const trigger = document.createElement("button");
+        trigger.type = "button";
+        trigger.className = "liara-navbar__module-trigger";
+        trigger.setAttribute("aria-haspopup", "listbox");
+        trigger.setAttribute("aria-expanded", "false");
+        trigger.setAttribute("aria-label", "Choose " + module.name + " version");
+        trigger.dataset.liaraModuleTrigger = "true";
+
+        const caret = document.createElementNS(SVG_NS, "svg");
+        caret.setAttribute("width", "10");
+        caret.setAttribute("height", "10");
+        caret.setAttribute("viewBox", "0 0 10 10");
+        caret.setAttribute("aria-hidden", "true");
+        const caretPath = document.createElementNS(SVG_NS, "path");
+        caretPath.setAttribute("d", "M2 4l3 3 3-3");
+        caretPath.setAttribute("stroke", "currentColor");
+        caretPath.setAttribute("stroke-width", "1.5");
+        caretPath.setAttribute("fill", "none");
+        caretPath.setAttribute("stroke-linecap", "round");
+        caretPath.setAttribute("stroke-linejoin", "round");
+        caret.appendChild(caretPath);
+        trigger.appendChild(caret);
+
+        wrap.appendChild(link);
+        wrap.appendChild(trigger);
+        li.appendChild(wrap);
+
+        const menu = renderModuleDropdown(module, location, abiHorizon, config);
+        li.appendChild(menu);
+
+        wireDropdownEvents(trigger, menu);
+
+        return li;
+    }
+
+    function renderModuleDropdown(module, location, abiHorizon, config) {
+        const menu = document.createElement("ul");
+        menu.className = "liara-navbar__module-menu";
+        menu.setAttribute("role", "listbox");
+        menu.hidden = true;
+        menu.dataset.liaraModuleMenu = "true";
+
+        const header = document.createElement("li");
+        header.className = "liara-navbar__menu-header";
+        header.textContent = module.name + " versions";
+        menu.appendChild(header);
+
+        // Collect versions from manifest, or fall back to a single
+        // placeholder if the manifest is missing.
+        let versions = [];
+        if (module.manifest && module.manifest.versions) {
+            versions = Object.keys(module.manifest.versions);
+        } else if (location.module && location.module.key === module.key
+            && location.version) {
+            versions = [location.version];
+        } else {
+            versions = ["dev"];
         }
 
-        // Open / close behavior
-        function openMenu() {
-            menu.hidden = false;
-            trigger.setAttribute("aria-expanded", "true");
-        }
-        function closeMenu() {
-            menu.hidden = true;
-            trigger.setAttribute("aria-expanded", "false");
+        // Sort: keep "dev" first, then descending semver-ish for the rest.
+        versions.sort((a, b) => {
+            if (a === "dev") return -1;
+            if (b === "dev") return 1;
+            return b.localeCompare(a, undefined, { numeric: true });
+        });
+
+        const currentModule = location.module;
+        const currentVersion = location.version;
+
+        for (const version of versions) {
+            const status = evaluateCompat(module, version, abiHorizon,
+                currentModule, currentVersion);
+            const item = renderMenuItem(module, version, status, location, config);
+            menu.appendChild(item);
         }
 
+        return menu;
+    }
+
+    const BADGE_LABELS = {
+        current:    "Current",
+        compatible: "Compatible",
+        mismatch:   "ABI mismatch",
+        unknown:    "Unknown"
+    };
+
+    const BADGE_TOOLTIPS = {
+        current:    "You're viewing this version right now",
+        compatible: "Compatible with the current ABI",
+        mismatch:   "Incompatible with the current ABI",
+        unknown:    "Compatibility data not available"
+    };
+
+    function renderMenuItem(module, version, status, location, config) {
+        const li = document.createElement("li");
+        li.className = "liara-navbar__menu-item liara-navbar__menu-item--" + status;
+        li.setAttribute("role", "option");
+
+        const link = document.createElement("a");
+        link.className = "liara-navbar__menu-link";
+        link.href = buildModuleUrl(config, module, version, location.view);
+        link.title = BADGE_TOOLTIPS[status];
+
+        const statusEl = document.createElement("span");
+        statusEl.className = "liara-navbar__menu-status liara-navbar__menu-status--" + status;
+        if (status === "compatible") statusEl.appendChild(iconCheck());
+        else if (status === "mismatch") statusEl.appendChild(iconCross());
+        else if (status === "current") statusEl.appendChild(iconDot());
+        else statusEl.appendChild(iconDot());
+
+        const versionEl = document.createElement("span");
+        versionEl.className = "liara-navbar__menu-version";
+        versionEl.textContent = version;
+
+        const badge = document.createElement("span");
+        badge.className = "liara-navbar__menu-badge liara-navbar__menu-badge--" + status;
+        badge.textContent = BADGE_LABELS[status];
+
+        link.appendChild(statusEl);
+        link.appendChild(versionEl);
+        link.appendChild(badge);
+        li.appendChild(link);
+
+        return li;
+    }
+
+    /* ========================================================================
+     * Dropdown wiring
+     * ====================================================================== */
+
+    function wireDropdownEvents(trigger, menu) {
         trigger.addEventListener("click", function (e) {
             e.stopPropagation();
             const isOpen = !menu.hidden;
-            if (isOpen) closeMenu(); else openMenu();
-        });
-
-        // Close on outside click
-        document.addEventListener("click", function (e) {
-            if (!menu.hidden && !menu.contains(e.target) && e.target !== trigger) {
-                closeMenu();
-            }
-        });
-
-        // Close on Escape
-        document.addEventListener("keydown", function (e) {
-            if (e.key === "Escape" && !menu.hidden) {
-                closeMenu();
-                trigger.focus();
+            // Close any other open menus first
+            closeAllDropdowns();
+            if (!isOpen) {
+                menu.hidden = false;
+                trigger.setAttribute("aria-expanded", "true");
             }
         });
     }
 
-    // ========================================================================
-    // Active module highlighting
-    // ========================================================================
+    function closeAllDropdowns() {
+        document.querySelectorAll("[data-liara-module-menu]").forEach(m => {
+            m.hidden = true;
+        });
+        document.querySelectorAll("[data-liara-module-trigger]").forEach(t => {
+            t.setAttribute("aria-expanded", "false");
+        });
+    }
 
-    function highlightActiveModule(currentModule) {
-        if (!currentModule) return;
-        const link = document.querySelector(
-            `.liara-navbar__module[data-liara-module="${currentModule}"]`
-        );
-        if (link) {
-            link.classList.add("is-active");
-            link.setAttribute("aria-current", "page");
+    /* ========================================================================
+     * Sub-nav (book / doxygen tabs)
+     * ====================================================================== */
+
+    function renderSubnav(location, config) {
+        const subnav = document.querySelector("[data-liara-subnav]");
+        if (!subnav) return;
+
+        if (!location.module || !location.version || !location.view) {
+            subnav.hidden = true;
+            return;
         }
+
+        subnav.hidden = false;
+
+        const moduleSlot = subnav.querySelector("[data-liara-subnav-module]");
+        const versionSlot = subnav.querySelector("[data-liara-subnav-version]");
+        if (moduleSlot) moduleSlot.textContent = location.module.name;
+        if (versionSlot) versionSlot.textContent = location.version;
+
+        const tabs = subnav.querySelectorAll("[data-liara-subnav-tab]");
+        tabs.forEach(tab => {
+            const view = tab.dataset.liaraSubnavTab;
+            tab.href = buildModuleUrl(config, location.module, location.version, view);
+            const isActive = view === location.view;
+            tab.setAttribute("aria-selected", isActive ? "true" : "false");
+        });
     }
 
-    // ========================================================================
-    // GitHub link adjustment
-    // ========================================================================
+    /* ========================================================================
+     * GitHub link update
+     * ====================================================================== */
 
-    /**
-     * Points the GitHub link at the repository for the currently viewed
-     * module. Falls back to the meta repository when no specific module
-     * is active.
-     */
-    function updateGitHubLink(currentModule) {
+    function updateGitHubLink(location) {
         const link = document.querySelector("[data-liara-github]");
         if (!link) return;
-
-        const slug = currentModule ? MODULE_SLUGS[currentModule] : "liara";
-        if (slug && slug !== "user") {
-            link.href = `https://github.com/liara-engine/${slug}`;
+        if (location.module && location.module.repo) {
+            link.href = "https://github.com/liara-engine/" + location.module.repo;
         }
     }
 
-    // ========================================================================
-    // Mobile menu toggle
-    // ========================================================================
+    /* ========================================================================
+     * Mobile menu + scroll shadow (carried over)
+     * ====================================================================== */
 
     function setupMobileMenu() {
         const toggle = document.querySelector("[data-liara-menu-toggle]");
@@ -363,33 +581,15 @@
             toggle.setAttribute("aria-expanded", isOpen ? "true" : "false");
             toggle.setAttribute("aria-label", isOpen ? "Close menu" : "Open menu");
         });
-
-        // Close the mobile menu when a link inside it is clicked.
-        navbar.querySelectorAll(".liara-navbar__module").forEach(function (link) {
-            link.addEventListener("click", function () {
-                navbar.classList.remove("is-open");
-                toggle.setAttribute("aria-expanded", "false");
-                toggle.setAttribute("aria-label", "Open menu");
-            });
-        });
     }
 
-    // ========================================================================
-    // Scroll shadow
-    // ========================================================================
-
-    /**
-     * Adds a subtle shadow to the navbar once the page has scrolled, to
-     * separate it visually from the content sliding behind.
-     */
     function setupScrollShadow() {
         const navbar = document.getElementById("liara-navbar");
         if (!navbar) return;
 
         let ticking = false;
         function update() {
-            const scrolled = window.scrollY > 0;
-            navbar.classList.toggle("is-scrolled", scrolled);
+            navbar.classList.toggle("is-scrolled", window.scrollY > 0);
             ticking = false;
         }
 
@@ -403,47 +603,78 @@
         update();
     }
 
-    // ========================================================================
-    // FOUC prevention: apply preferences synchronously, before DOMContentLoaded
-    // ========================================================================
+    /* ========================================================================
+     * Global event handlers
+     * ====================================================================== */
+
+    function setupGlobalHandlers() {
+        document.addEventListener("click", function (e) {
+            // Close dropdowns when clicking outside any of them
+            if (!e.target.closest("[data-liara-module-menu]")
+                && !e.target.closest("[data-liara-module-trigger]")) {
+                closeAllDropdowns();
+            }
+        });
+
+        document.addEventListener("keydown", function (e) {
+            if (e.key === "Escape") {
+                closeAllDropdowns();
+            }
+        });
+    }
+
+    /* ========================================================================
+     * FOUC prevention: apply preferences before DOMContentLoaded
+     * ====================================================================== */
 
     applyTheme(getStoredTheme());
     applyA11yDyslexia(getStoredA11yDyslexia());
 
-    // ========================================================================
-    // Init
-    // ========================================================================
+    /* ========================================================================
+     * Init
+     * ====================================================================== */
 
-    function init() {
-        // Wire theme toggle
+    async function init() {
+        const config = getConfig();
+
+        // Wire static controls
         const themeToggle = document.querySelector("[data-liara-theme-toggle]");
-        if (themeToggle) {
-            themeToggle.addEventListener("click", cycleTheme);
-        }
+        if (themeToggle) themeToggle.addEventListener("click", cycleTheme);
 
-        // Wire a11y toggle
         const a11yToggle = document.querySelector("[data-liara-a11y-toggle]");
         if (a11yToggle) {
-            a11yToggle.setAttribute(
-                "aria-pressed",
-                getStoredA11yDyslexia() ? "true" : "false"
-            );
+            a11yToggle.setAttribute("aria-pressed",
+                getStoredA11yDyslexia() ? "true" : "false");
             a11yToggle.addEventListener("click", toggleA11yDyslexia);
         }
 
-        // Detect where we are
-        const location = detectCurrentLocation();
-        highlightActiveModule(location.module);
-        updateGitHubLink(location.module);
-
-        // Mobile menu and scroll shadow
         setupMobileMenu();
         setupScrollShadow();
+        setupGlobalHandlers();
 
-        // Version dropdown — fetch async, populate when ready.
-        fetchVersionList().then(function (versionData) {
-            setupVersionMenu(versionData, location);
-        });
+        // Make the brand point to the configured docs root
+        const brand = document.querySelector("[data-liara-brand]");
+        if (brand) brand.href = config.docsBaseUrl;
+
+        // Fetch registry, then in parallel all manifests
+        const registry = await fetchRegistry(config);
+        if (!registry) {
+            console.warn("liara-navbar: no registry available, module list will be empty");
+            return;
+        }
+
+        const modulesWithManifests = await fetchAllManifests(registry, config);
+
+        // Parse where we are, now that we know what counts as a "module"
+        const location = parseLocation({ modules: modulesWithManifests });
+
+        // Compute the ABI horizon from the visited page
+        const abiHorizon = computeAbiHorizon(location.module, location.version);
+
+        // Render everything
+        renderModulesList(modulesWithManifests, location, abiHorizon, config);
+        renderSubnav(location, config);
+        updateGitHubLink(location);
     }
 
     if (document.readyState === "loading") {
