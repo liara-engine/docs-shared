@@ -1,112 +1,151 @@
 # Doxygen integration
 
-This directory contains the Liara-themed Doxygen templates. To use them in
-a module's documentation build, follow the steps below.
+This directory contains the Liara-themed Doxygen templates. They are
+consumed automatically by the Liara documentation pipeline; the
+instructions below describe how a module's `Doxyfile` should reference
+them.
 
 ## Files
 
-| File                  | Role                                           |
-|-----------------------|------------------------------------------------|
-| `header.html`         | Replaces Doxygen's default `<head>` and opens `<body>` with the shared navbar |
-| `footer.html`         | Closes `<body>` with a discreet footer line   |
-| `doxygen-custom.css`  | Restyles every Doxygen output element to match the Liara design system |
+| File                       | Role                                                          |
+|----------------------------|---------------------------------------------------------------|
+| `header.html`              | Replaces Doxygen's default `<head>` and opens `<body>` with the shared navbar inlined. |
+| `footer.html`              | Closes `<body>` with a discreet footer line.                  |
+| `doxygen-custom.css`       | Restyles every Doxygen output element to match the Liara design system. |
+| `doxygen.liaradoc.json`    | Declares the `{{{NAVBAR}}}` and `{{{LOGO}}}` placeholder substitutions in `header.html`, plus favicon resources. Read automatically by the build processor — modules do not need their own liaradoc to handle these. |
 
-These three files depend on assets shipped by the `docs-shared` repo:
-`design-tokens.css`, `navbar.css`, and `navbar.js`. The CI workflow that
-builds documentation is responsible for fetching these and placing them
-alongside the generated HTML.
+These files depend on assets from the parent `docs-shared` repo
+(`tokens/design-tokens.css`, `navbar/navbar.css`, `navbar/navbar.js`,
+`navbar/navbar.config.js`). The documentation pipeline takes care of
+making them available alongside the generated output.
+
+## How docs-shared reaches the build
+
+When a module's docs build runs inside the Liara Docker image, the
+build script copies `/opt/docs-shared` (mounted from the image) into
+`${SRC_DIR}/docs-shared/`. From the module's point of view, every
+docs-shared file is reachable at a `docs-shared/...` path relative to
+the source directory. The `Doxyfile` therefore references them with
+plain relative paths — no environment variables, no symlinks.
 
 ## Doxyfile configuration
 
-In your module's `Doxyfile`, set the following options:
+Add the following to the module's `Doxyfile`:
 
 ```doxyfile
-# Use the Liara header/footer templates
-HTML_HEADER            = path/to/docs-shared/doxygen/header.html
-HTML_FOOTER            = path/to/docs-shared/doxygen/footer.html
+# --- Liara templates -------------------------------------------------------
+HTML_HEADER            = docs-shared/doxygen/header.html
+HTML_FOOTER            = docs-shared/doxygen/footer.html
 
-# Stylesheets — order matters, design-tokens MUST come first
-HTML_EXTRA_STYLESHEET  = path/to/docs-shared/tokens/design-tokens.css \
-                         path/to/docs-shared/navbar/navbar.css \
-                         path/to/docs-shared/doxygen/doxygen-custom.css
+# Stylesheets. Order matters: design-tokens MUST come first so that the
+# variables it defines are available to the others.
+HTML_EXTRA_STYLESHEET  = docs-shared/tokens/design-tokens.css \
+                         docs-shared/navbar/navbar.css \
+                         docs-shared/doxygen/doxygen-custom.css
 
-# Extra files copied verbatim into the output directory
-HTML_EXTRA_FILES       = path/to/docs-shared/navbar/navbar.js
+# Files copied verbatim into the HTML output. Order matters here too:
+# navbar.config.js must come before navbar.js (the config defines
+# window.LIARA_NAVBAR_CONFIG, which navbar.js consumes).
+HTML_EXTRA_FILES       = docs-shared/navbar/navbar.config.js \
+                         docs-shared/navbar/navbar.js
 
-# Enable the side-nav tree (the Liara CSS is tuned for this layout)
+# Sidebar layout the Liara CSS is tuned for
 GENERATE_TREEVIEW      = YES
 DISABLE_INDEX          = NO
 FULL_SIDEBAR           = NO
 
-# Disable Doxygen's own dark mode — we manage it via design tokens
+# Let the Liara design tokens manage dark mode; Doxygen's own
+# dark-mode toggle would compete with ours.
 HTML_COLORSTYLE        = LIGHT
 HTML_DYNAMIC_MENUS     = YES
 ```
 
-The exact paths depend on how the CI fetches `docs-shared`. The reusable
-`docs.yml` workflow in `liara-engine/.github` clones `docs-shared` into a
-known location and exposes it via environment variables; consume those
-variables from your Doxyfile or substitute them at build time.
+No other Doxygen options need to change. The rest of the `Doxyfile`
+(input directories, `PROJECT_NAME`, etc.) stays as you would otherwise
+configure it.
 
 ## Local preview
 
-To preview the styled output locally, run Doxygen as usual and open the
-generated `html/index.html` in a browser:
+To preview the styled output without spinning up the full Docker
+pipeline, you need to make a local copy of `docs-shared` reachable
+from your build directory at the path the `Doxyfile` expects.
+A minimal one-liner from a module's repository root:
 
 ```bash
+ln -s /path/to/docs-shared/ docs-shared
 doxygen Doxyfile
 xdg-open build/docs/html/index.html
 ```
 
-The first time you do this on a new system, expect missing assets if you
-have not arranged for `design-tokens.css`, `navbar.css`, and `navbar.js`
-to be available alongside Doxygen's output. The CI handles this; locally
-you may want a small helper script.
+The symlink stays only for local previews; in CI, the Docker build
+handles the copy.
 
-## Things to check after first integration
+## Things to verify after a deployment
 
-After the first generated build, verify visually that:
+After the first published build, open a generated page and check:
 
-- [ ] The shared navbar appears at the top of every generated page
-- [ ] Theme toggle works and persists across page navigation
-- [ ] The dyslexia-friendly toggle works and persists
-- [ ] Code blocks (the `.fragment` class) render with the pastel syntax
-  coloring
+- [ ] The shared navbar appears at the top with the per-module pills
+  populated from the registry.
+- [ ] The current module's pill shows the "current" badge.
+- [ ] Each module's dropdown shows versions with compatibility badges
+  (compatible / mismatch / current).
+- [ ] The contextual sub-nav under the navbar shows "Module / version"
+  on the left and the `[Developer guide] [API reference]` tabs on
+  the right, with **API reference** active (since you're viewing
+  Doxygen).
+- [ ] Theme toggle and dyslexia toggle persist across page navigation.
+- [ ] Code blocks (`.fragment`) render with the pastel syntax coloring.
 - [ ] Member documentation blocks (the rounded `.memitem` cards) render
-  cleanly with the lavender signature header
-- [ ] Admonitions from `@note`, `@warning`, `@bug`, `@todo` render with
-  their respective semantic colors
-- [ ] The side-nav tree highlights the current page in primary-soft pink
-- [ ] On screens narrower than 768px, the navbar collapses correctly
-- [ ] Search box still works (Doxygen's built-in search is preserved)
+  cleanly with the lavender signature header.
+- [ ] Admonitions from `@note`, `@warning`, `@bug`, `@todo` show their
+  respective semantic colors.
+- [ ] The side-nav tree highlights the current page in primary-soft pink.
+- [ ] On screens narrower than 768px, the navbar collapses to a
+  hamburger drawer.
 
 ## Customizing per module
 
-If a specific module needs to override a token (rare, but possible), the
-override can go in a per-module CSS file added to `HTML_EXTRA_STYLESHEET`
-*after* `doxygen-custom.css`. Define overriding `--liara-*` variables on
-`:root` in that file. Do **not** modify `doxygen-custom.css` itself —
+If a specific module needs to override a token (rare, but possible):
+add a per-module CSS file to `HTML_EXTRA_STYLESHEET` *after*
+`doxygen-custom.css`, and redefine the relevant `--liara-*` variables
+on `:root` in that file. Do **not** edit `doxygen-custom.css` itself —
 that file is shared across all modules and updates flow from the
 `docs-shared` repo.
 
 ## Troubleshooting
 
 **The page renders without the Liara navbar.**
-Either `header.html` is not being picked up (check `HTML_HEADER` path), or
-the navbar's CSS/JS is missing from the output. Inspect the generated
-`index.html` and confirm the `<nav id="liara-navbar">` element is present.
+Either `header.html` is not being picked up (check the `HTML_HEADER`
+path in the `Doxyfile`), or `docs-shared` was not copied alongside
+the Doxygen build. Inspect the generated `index.html`: the
+`<nav id="liara-navbar">` element should be present in the raw HTML
+(it's emitted statically by the header template).
 
-**Code blocks are unstyled.**
-The `doxygen-custom.css` file is not loading. Check `HTML_EXTRA_STYLESHEET`
-order — `design-tokens.css` must come first, then `navbar.css`, then
-`doxygen-custom.css`.
+**The page renders with the navbar but no styling.**
+The `HTML_EXTRA_STYLESHEET` paths are wrong, or the order is broken
+(`design-tokens.css` must come first). Open browser DevTools, check
+the Network tab for 404s on the CSS files, and verify they all load
+in the order declared.
 
-**The theme toggle doesn't switch.**
-Either `navbar.js` is not in the output (check `HTML_EXTRA_FILES`), or
-the browser cached an old version. Hard-refresh and check the browser
-console for errors.
+**The module dropdowns are empty.**
+`navbar.js` could not fetch the registry. Common causes:
+- `docs-shared/navbar/navbar.config.js` is missing from
+  `HTML_EXTRA_FILES`, so `window.LIARA_NAVBAR_CONFIG` is undefined.
+- The `docsBaseUrl` configured in `navbar.config.js` is wrong (e.g.,
+  points to a stale deployment URL).
+- The hub's `modules-registry.json` is not deployed yet at the
+  expected location.
+
+Check the browser console — `navbar.js` logs a warning when a fetch
+fails.
+
+**The theme toggle has no effect.**
+The browser cached an old version of `navbar.js`. Hard-refresh
+(Ctrl+Shift+R). If the issue persists, verify that `navbar.js`
+actually loaded by inspecting the page source.
 
 **Validation errors in Doxygen's HTML output.**
 Doxygen's substitution tokens (`$projectname`, `$relpath^`, etc.) must
-not be removed from `header.html` and `footer.html`. If you edit these
-files, preserve every `$...` token unless you understand its role.
+not be removed from `header.html` and `footer.html`. If you edit
+these templates, preserve every `$...` token unless you understand
+its role.
