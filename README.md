@@ -259,7 +259,7 @@ Three steps:
    the `module-manifest.schema.json` schema. Its location after
    deployment must be `{docsBaseUrl}/{repo}/manifest.json`. The build's
    reusable workflow takes care of publishing it from each module's
-   build.
+   build. Eventually, you can specify `only_mdbook` or `only_doxygen` if the module only has one kind of documentation, to avoid showing the sub-nav and redirecting users to a 404 page if they click the missing tab.
 
 3. **(Optional)** Add a corresponding card in `hub/index.html`'s modules
    grid so visitors to the hub see the new module alongside the others.
