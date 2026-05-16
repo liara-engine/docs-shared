@@ -20,7 +20,7 @@
     },
     {
       "key": "docs-shared",
-      "name": "Documentation Shared",
+      "name": "Shared Documentation",
       "repo": "docs-shared",
       "only_mdbook": true
     }
