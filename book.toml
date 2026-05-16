@@ -1,0 +1,39 @@
+[book]
+title = "Liara Docs-Shared — Developer Guide"
+authors = ["Liara Engine contributors"]
+language = "en"
+src = "."
+
+[output.html]
+hash-files = false
+default-theme = "light"
+preferred-dark-theme = "navy"
+git-repository-url = "https://github.com/liara-engine/docs-shared"
+git-repository-icon = "fa-github"
+
+theme = "docs-shared/mdbook/theme"
+
+additional-css = [
+  "docs-shared/tokens/design-tokens.css",
+  "docs-shared/navbar/navbar.css",
+  "docs-shared/mdbook/additionals/css/custom.css",
+]
+additional-js = [
+  "docs-shared/navbar/navbar.js",
+  "docs-shared/navbar/navbar.config.js",
+  "docs-shared/mdbook/additionals/js/admonitions.js",
+]
+
+[output.html.fold]
+enable = true
+level = 1
+
+[output.html.search]
+enable = true
+limit-results = 30
+use-boolean-and = true
+boost-title = 2
+boost-hierarchy = 2
+boost-paragraph = 1
+expand = true
+heading-split-level = 2
