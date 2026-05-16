@@ -3,6 +3,12 @@
 
   "modules": [
     {
+      "key": "meta-repo",
+      "name": "Liara Engine",
+      "repo": "liara",
+      "only_mdbook": true
+    },
+    {
       "key": "interfaces",
       "name": "Interfaces",
       "repo": "liara-interfaces",
