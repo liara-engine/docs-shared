@@ -157,10 +157,7 @@
         }
 
         const version = segments[1] || null;
-        let view = null;
-        if (segments[2] === "book" || segments[2] === "doxygen") {
-            view = segments[2];
-        }
+        let view = segments[2] || "book"; // Default to "book" if not specified
 
         return { module, version, view };
     }
