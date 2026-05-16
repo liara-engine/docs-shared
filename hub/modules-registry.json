@@ -17,6 +17,11 @@
       "key": "renderer",
       "name": "Renderer",
       "repo": "liara-renderer"
+    },
+    {
+      "key": "docs-shared",
+      "name": "Documentation Shared",
+      "repo": "docs-shared"
     }
   ]
 }

@@ -3,10 +3,15 @@
   "metadata": {
     "name": "Liara Engine Documentation Hub",
     "description": "The central hub for all documentation related to the Liara Engine, providing a unified interface and shared resources for all modules.",
-    "latest": "dev"
+    "latest": "0.0.5"
   },
   "versions": {
     "dev": {
+      "abi_compatibility": [
+        "dev"
+      ]
+    },
+    "0.0.5": {
       "abi_compatibility": [
         "dev"
       ]
