@@ -1,5 +1,5 @@
 /**
- * Liara Engine — Navbar logic (v2)
+ * Liara Engine — Navbar logic (v2.1)
  *
  * Responsibilities, in execution order:
  *
@@ -16,7 +16,7 @@
  *   6. Render one pill per module, populated with its versions and
  *      compatibility badges based on the ABI horizon.
  *   7. Render the contextual sub-nav (book vs doxygen tabs) when on a
- *      module page; keep it hidden otherwise.
+ *      module page; keep it hidden otherwise (or if the module restricts the view).
  *
  * All failures are non-fatal. If the registry can't be fetched, the
  * modules list stays empty. If a manifest is missing, that module is
@@ -157,7 +157,12 @@
         }
 
         const version = segments[1] || null;
-        let view = segments[2] || "book"; // Default to "book" if not specified
+        let view = segments[2];
+
+        if (!view) {
+            if (module.only_doxygen) view = "doxygen";
+            else view = "book";
+        }
 
         return { module, version, view };
     }
@@ -259,9 +264,11 @@
      * ====================================================================== */
 
     function buildModuleUrl(config, module, version, view) {
-        let url = config.docsBaseUrl + module.repo + "/" + version + "/";
-        view ? url += view + "/" : url += "book/";
-        return url;
+        let targetView = view || "book";
+        if (module.only_mdbook) targetView = "book";
+        else if (module.only_doxygen) targetView = "doxygen";
+
+        return config.docsBaseUrl + module.repo + "/" + version + "/" + targetView + "/";
     }
 
     /* ========================================================================
@@ -531,7 +538,9 @@
         const subnav = document.querySelector("[data-liara-subnav]");
         if (!subnav) return;
 
-        if (!location.module || !location.version || !location.view) {
+        // Hide sub-nav if missing context OR if module restricts the view explicitly
+        if (!location.module || !location.version || !location.view ||
+            location.module.only_mdbook || location.module.only_doxygen) {
             subnav.hidden = true;
             return;
         }
