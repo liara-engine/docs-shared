@@ -2,7 +2,7 @@
 title = "Liara Docs-Shared — Developer Guide"
 authors = ["Liara Engine contributors"]
 language = "en"
-src = "."
+src = "docs"
 
 [output.html]
 hash-files = false
