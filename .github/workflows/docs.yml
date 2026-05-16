@@ -1,0 +1,26 @@
+name: docs
+
+on:
+  push:
+    branches: [main]
+    tags:
+      - 'v*.*.*'
+  workflow_dispatch:
+
+jobs:
+  docs:
+    permissions:
+        contents: write
+        packages: read
+
+    uses: liara-engine/.github/.github/workflows/reusable-docs.yml@v0
+    with:
+      image: ghcr.io/liara-engine/liara-documentation-builder:latest
+      output-repository: liara-engine/liara-docs
+      output-branch: cloudflare-pages
+      deployment-version: ${{ github.ref_type == 'tag' && github.ref_name || 'dev' }}
+      erase-existing-output: true
+
+    secrets:
+      ghcr-token: ${{ secrets.GITHUB_TOKEN }}
+      push-token: ${{ secrets.DOCS_PUSH_TOKEN }}
