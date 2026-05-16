@@ -260,7 +260,7 @@
 
     function buildModuleUrl(config, module, version, view) {
         let url = config.docsBaseUrl + module.repo + "/" + version + "/";
-        if (view) url += view + "/";
+        view ? url += view + "/" : url += "book/";
         return url;
     }
 

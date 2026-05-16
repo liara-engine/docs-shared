@@ -18,7 +18,7 @@
     },
     "{{{LOGO}}}": {
       "is-file": false,
-      "value": "$relpath^../favicon.svg",
+      "value": "$relpath^logo.svg",
       "only-in-files": ["header.html"]
     }
   }
