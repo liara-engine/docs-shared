@@ -19,7 +19,7 @@
 (function () {
     "use strict";
 
-    const VERSION_JSON_PATH = "./version.json";
+    const VERSION_JSON_PATH = "/version.json";
 
     /**
      * Fetches version.json from the same origin. Returns null on any
