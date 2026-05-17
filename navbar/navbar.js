@@ -1,5 +1,5 @@
 /**
- * Liara Engine — Navbar logic (v2.1)
+ * Liara Engine — Navbar logic (v2.2)
  *
  * Responsibilities, in execution order:
  *
@@ -215,7 +215,7 @@
      *     null, meaning compatibility cannot be determined.
      */
     function computeAbiHorizon(currentModule, currentVersion) {
-        if (!currentModule || !currentVersion) return null;
+        if (!currentModule || !currentVersion || currentModule.meta) return null;
         if (currentModule.is_abi) return [currentVersion];
         if (!currentModule.manifest) return null;
         const versionEntry = currentModule.manifest.versions
@@ -226,12 +226,12 @@
 
     /**
      * For a given (module, version), returns one of:
-     *     "compatible" — the version is compatible with the ABI horizon
-     *     "mismatch"   — incompatible
-     *     "unknown"    — no data available (manifest missing, etc.)
-     *
-     * `currentModule` and `currentVersion` identify the visited page so
-     * we can return "current" for the exact entry being viewed.
+     *     "compatible"   — the version is compatible with the ABI horizon
+     *     "mismatch"     — incompatible
+     *     "unknown"      — no data available (manifest missing, etc.)
+     *     "meta"         — target module is meta-documentation (no ABI check)
+     *     "meta-current" — target module is meta-documentation and currently viewed
+     *     "none"         — no compatibility badge at all (e.g. browsing a meta section)
      */
     function evaluateCompat(targetModule, targetVersion, abiHorizon,
                             currentModule, currentVersion) {
@@ -239,7 +239,17 @@
         // The version we're currently viewing gets a "current" badge.
         if (currentModule && targetModule.key === currentModule.key
             && targetVersion === currentVersion) {
-            return "current";
+            return targetModule.meta ? "meta-current" : "current";
+        }
+
+        // If the target module itself is a meta-documentation module, it has no ABI constraints
+        if (targetModule.meta === true) {
+            return "meta";
+        }
+
+        // If we are currently visiting a meta module, we hide compatibility for all other modules
+        if (currentModule && currentModule.meta === true) {
+            return "none";
         }
 
         if (abiHorizon === null) return "unknown";
@@ -458,17 +468,21 @@
     }
 
     const BADGE_LABELS = {
-        current:    "Current",
-        compatible: "Compatible",
-        mismatch:   "ABI mismatch",
-        unknown:    "Unknown"
+        current:        "Current",
+        compatible:     "Compatible",
+        mismatch:       "ABI mismatch",
+        unknown:        "Unknown",
+        meta:           "Meta",
+        "meta-current": "Current"
     };
 
     const BADGE_TOOLTIPS = {
-        current:    "You're viewing this version right now",
-        compatible: "Compatible with the current ABI",
-        mismatch:   "Incompatible with the current ABI",
-        unknown:    "Compatibility data not available"
+        current:        "You're viewing this version right now",
+        compatible:     "Compatible with the current ABI",
+        mismatch:       "Incompatible with the current ABI",
+        unknown:        "Compatibility data not available",
+        meta:           "Meta-documentation, not tied to an ABI version",
+        "meta-current": "You're viewing this meta version right now"
     };
 
     function renderMenuItem(module, version, status, location, config) {
@@ -479,26 +493,31 @@
         const link = document.createElement("a");
         link.className = "liara-navbar__menu-link";
         link.href = buildModuleUrl(config, module, version, location.view);
-        link.title = BADGE_TOOLTIPS[status];
+        if (BADGE_TOOLTIPS[status]) {
+            link.title = BADGE_TOOLTIPS[status];
+        }
 
         const statusEl = document.createElement("span");
         statusEl.className = "liara-navbar__menu-status liara-navbar__menu-status--" + status;
         if (status === "compatible") statusEl.appendChild(iconCheck());
         else if (status === "mismatch") statusEl.appendChild(iconCross());
-        else if (status === "current") statusEl.appendChild(iconDot());
-        else statusEl.appendChild(iconDot());
+        else if (status === "current" || status === "meta-current") statusEl.appendChild(iconDot());
+        // For 'meta' and 'none', statusEl remains empty (no icon)
 
         const versionEl = document.createElement("span");
         versionEl.className = "liara-navbar__menu-version";
         versionEl.textContent = version;
 
-        const badge = document.createElement("span");
-        badge.className = "liara-navbar__menu-badge liara-navbar__menu-badge--" + status;
-        badge.textContent = BADGE_LABELS[status];
-
         link.appendChild(statusEl);
         link.appendChild(versionEl);
-        link.appendChild(badge);
+
+        if (BADGE_LABELS[status]) {
+            const badge = document.createElement("span");
+            badge.className = "liara-navbar__menu-badge liara-navbar__menu-badge--" + status;
+            badge.textContent = BADGE_LABELS[status];
+            link.appendChild(badge);
+        }
+
         li.appendChild(link);
 
         return li;

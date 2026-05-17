@@ -6,7 +6,8 @@
       "key": "meta-repo",
       "name": "Liara Engine",
       "repo": "liara",
-      "only_mdbook": true
+      "only_mdbook": true,
+      "meta": true
     },
     {
       "key": "interfaces",
@@ -28,7 +29,8 @@
       "key": "docs-shared",
       "name": "Shared Documentation",
       "repo": "docs-shared",
-      "only_mdbook": true
+      "only_mdbook": true,
+      "meta": true
     }
   ]
 }
