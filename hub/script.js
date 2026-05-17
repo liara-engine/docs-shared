@@ -51,12 +51,16 @@
         container.innerHTML = "";
 
         const currentDev = versionData.current_dev || "dev";
+        const latest = versionData.latest || currentDev;
 
         for (const versionEntry of versionData.versions) {
             const link = document.createElement("a");
             link.className = "hub-version";
             if (versionEntry.label === currentDev) {
                 link.classList.add("hub-version--current");
+            }
+            if (versionEntry.label === latest) {
+                link.classList.add("hub-version--latest");
             }
 
             // Link to the user-guide for the chosen version by default;

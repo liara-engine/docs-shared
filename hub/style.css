@@ -453,6 +453,11 @@ html, body {
     background: var(--liara-brand-primary-soft);
 }
 
+.hub-version--latest {
+    border-color: var(--liara-brand-secondary);
+    background: var(--liara-brand-secondary-soft);
+}
+
 .hub-version__label {
     font-family: var(--liara-font-mono);
     font-size: var(--liara-text-base);
