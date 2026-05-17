@@ -34,7 +34,7 @@ jobs:
       - uses: actions/checkout@v6
         with:
           repository: liara-engine/liara-docs
-          token: ${{ secrets.push-token }}
+          token: ${{ secrets.DOCS_PUSH_TOKEN }}
           path: output-repository
           fetch-depth: '0'
 
