@@ -8,15 +8,16 @@
     <title>Liara Engine — Documentation</title>
     <meta name="description" content="Liara Engine is a modern 3D game engine, built from scratch in C++ with Vulkan, as a personal learning project. Modular, cross-platform, and openly developed.">
 
+    <link rel="icon" type="image/x-icon" href="/shared-content/assets/logo.svg">
+
     <!-- Fonts: Inter, JetBrains Mono, OpenDyslexic -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&family=JetBrains+Mono:wght@400;500&display=swap">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/opendyslexic@1.0.4/opendyslexic-regular.css">
 
     <!-- Liara design system -->
-    <link rel="stylesheet" href="css/design-tokens.css">
-    <link rel="stylesheet" href="css/navbar.css">
+    <link rel="stylesheet" href="/shared-content/tokens/design-tokens.css">
+    <link rel="stylesheet" href="/shared-content/navbar/navbar.css">
     <link rel="stylesheet" href="style.css">
 
     <!-- Apply theme/a11y prefs synchronously to prevent flash -->
@@ -33,14 +34,14 @@
             } catch (e) { /* localStorage unavailable, fall back to defaults */ }
         })();
     </script>
-
-    <script src="js/navbar.config.js"></script>
-    <script defer src="js/navbar.js"></script>
     <script defer src="script.js"></script>
 </head>
 <body>
 
-{{{NAVBAR}}}
+<shared-navbar></shared-navbar>
+
+<script src="/shared-content/navbar/navbar.config.js"></script>
+<script defer src="/shared-content/mdbook/shared-navbar.js"></script>
 
 <main class="hub">
 

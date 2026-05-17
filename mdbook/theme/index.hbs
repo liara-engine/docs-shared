@@ -38,12 +38,7 @@
 <meta name="description" content="{{ description }}">
 <meta name="theme-color" content="#FFFAFC">
 
-{{#if favicon_svg}}
-<link rel="icon" href="{{ resource "favicon.svg" }}">
-{{/if}}
-{{#if favicon_png}}
-<link rel="shortcut icon" href="{{ resource "favicon.png" }}">
-{{/if}}
+<link rel="icon" type="image/x-icon" href="/shared-content/assets/logo.svg">
 <link rel="stylesheet" href="{{ resource "css/variables.css" }}">
 <link rel="stylesheet" href="{{ resource "css/general.css" }}">
 <link rel="stylesheet" href="{{ resource "css/chrome.css" }}">
@@ -58,9 +53,9 @@
 <link rel="stylesheet" id="mdbook-ayu-highlight-css" href="{{ resource "ayu-highlight.css" }}">
 
 {{!-- Liara design system (loaded AFTER mdBook's own CSS so we override) --}}
-<link rel="stylesheet" href="{{ path_to_root }}docs-shared/tokens/design-tokens.css">
-<link rel="stylesheet" href="{{ path_to_root }}docs-shared/navbar/navbar.css">
-<link rel="stylesheet" href="{{ path_to_root }}docs-shared/mdbook/additionals/css/custom.css">
+<link rel="stylesheet" href="/shared-content/tokens/design-tokens.css">
+<link rel="stylesheet" href="/shared-content/navbar/navbar.css">
+<link rel="stylesheet" href="/shared-content/mdbook/css/custom.css">
 
 {{#each additional_css}}
 <link rel="stylesheet" href="{{ ../path_to_root }}{{ this }}">
@@ -102,11 +97,10 @@
 {{!-- ====================================================================
      LIARA NAVBAR — mirrors docs-shared/navbar/navbar.html
      ==================================================================== --}}
-{{{NAVBAR}}}
+<shared-navbar></shared-navbar>
 
-<script src="{{ path_to_root }}docs-shared/navbar/navbar.config.js"></script>
-{{!-- Load the Liara navbar logic AFTER the navbar markup is in the DOM --}}
-<script defer src="{{ path_to_root }}docs-shared/navbar/navbar.js"></script>
+<script src="/shared-content/navbar/navbar.config.js"></script>
+<script defer src="/shared-content/mdbook/shared-navbar.js"></script>
 
 {{!-- ====================================================================
      mdBook layout — sidebar + content
@@ -356,7 +350,7 @@
 <script src="{{ path_to_root }}book.js"></script>
 
 {{!-- Liara admonition decorator: turns labeled blockquotes into colored callouts --}}
-<script defer src="{{ path_to_root }}docs-shared/mdbook/additionals/js/admonitions.js"></script>
+<script defer src="/shared-content/mdbook/js/admonitions.js"></script>
 
 {{!-- Custom JS scripts --}}
 {{#each additional_js}}

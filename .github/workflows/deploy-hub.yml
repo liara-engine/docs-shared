@@ -1,4 +1,4 @@
-name: docs
+name: hub
 
 on:
   push:
@@ -6,7 +6,6 @@ on:
     paths:
       - '.github/workflows/deploy-hub.yml'
       - 'hub/**'
-      - 'navbar/navbar.config.js'
   workflow_dispatch:
 
 jobs:

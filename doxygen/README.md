@@ -37,18 +37,6 @@ Add the following to the module's `Doxyfile`:
 HTML_HEADER            = docs-shared/doxygen/header.html
 HTML_FOOTER            = docs-shared/doxygen/footer.html
 
-# Stylesheets. Order matters: design-tokens MUST come first so that the
-# variables it defines are available to the others.
-HTML_EXTRA_STYLESHEET  = docs-shared/tokens/design-tokens.css \
-                         docs-shared/navbar/navbar.css \
-                         docs-shared/doxygen/doxygen-custom.css
-
-# Files copied verbatim into the HTML output. Order matters here too:
-# navbar.config.js must come before navbar.js (the config defines
-# window.LIARA_NAVBAR_CONFIG, which navbar.js consumes).
-HTML_EXTRA_FILES       = docs-shared/navbar/navbar.config.js \
-                         docs-shared/navbar/navbar.js
-
 # Sidebar layout the Liara CSS is tuned for
 GENERATE_TREEVIEW      = YES
 DISABLE_INDEX          = NO
