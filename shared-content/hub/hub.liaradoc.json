@@ -7,8 +7,8 @@
 
   "resources": {
     "unspecified": {
-      "navbar": "docs-shared/shared-content/navbar/navbar.html",
-      "shared-navbar": "docs-shared/shared-content/navbar/shared-navbar.js"
+      "navbar": "shared-content/navbar/navbar.html",
+      "shared-navbar": "shared-content/navbar/shared-navbar.js"
     }
   },
 
