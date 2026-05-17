@@ -49,20 +49,20 @@ jobs:
           cd output-repository
           output_branch="cloudflare-pages"
 
-          if git ls-remote --exit-code --heads origin output_branch; then
+          if git ls-remote --exit-code --heads origin $output_branch; then
               echo "Branch exists"
-              git checkout output_branch
-              git pull origin output_branch
+              git checkout $output_branch
+              git pull origin $output_branch
           else
               echo "Branch does not exist, creating it"
-              git checkout --orphan output_branch
+              git checkout --orphan $output_branch
               git rm -rf . || true
               echo "# Documentation" > README.md
               mkdir -p site
               echo "<DOCTYPE html><html><head><title>Documentation</title></head><body><h1>Documentation</h1><p>This branch is used to host generated documentation.</p></body></html>" > site/index.html
               git add README.md
               git commit -m "Initialize documentation branch"
-              git push origin output_branch
+              git push origin $output_branch
           fi
 
       - uses: actions/download-artifact@v4
@@ -79,4 +79,4 @@ jobs:
           cd output-repository
           git add site/shared-content
           git commit -m "Update shared content"
-          git push origin output_branch
+          git push origin HEAD
