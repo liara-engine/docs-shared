@@ -5,6 +5,11 @@ on:
     branches: [main]
     tags:
       - 'v*.*.*'
+    paths:
+      - '.github/workflows/docs.yml'
+      - 'docs/**'
+      - 'README.md'
+      - '**/*.md'
   workflow_dispatch:
 
 jobs:
