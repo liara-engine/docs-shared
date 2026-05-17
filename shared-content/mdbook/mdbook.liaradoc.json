@@ -15,7 +15,7 @@
   "replacements": {
     "{{{LOGO}}}": {
       "is-file": false,
-      "value": "{{ resource \"favicon.svg\" }}",
+      "value": "/shared-content/assets/logo.svg",
       "only-in-files": ["navbar.html"]
     },
     "{{{MODULE}}}": {
