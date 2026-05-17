@@ -13,17 +13,6 @@ git-repository-icon = "fa-github"
 
 theme = "docs-shared/mdbook/theme"
 
-additional-css = [
-  "docs-shared/tokens/design-tokens.css",
-  "docs-shared/navbar/navbar.css",
-  "docs-shared/mdbook/additionals/css/custom.css",
-]
-additional-js = [
-  "docs-shared/navbar/navbar.js",
-  "docs-shared/navbar/navbar.config.js",
-  "docs-shared/mdbook/additionals/js/admonitions.js",
-]
-
 [output.html.fold]
 enable = true
 level = 1
