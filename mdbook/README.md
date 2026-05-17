@@ -12,14 +12,8 @@ mdbook/
 ├── theme/                          mdBook's recognized theme directory.
 │   ├── index.hbs                   Handlebars template override.
 │   ├── highlight.css               Replaces highlight.js's theme.
-│   ├── mdbook.liaradoc.json        Placeholder + favicon declarations.
 │   └── css/
 │       └── variables.css           Bridges mdBook variables to Liara tokens.
-├── additionals/                    Extras outside mdBook's theme dir.
-│   ├── css/
-│   │   └── custom.css              Liara-specific styling on top of the theme.
-│   └── js/
-│       └── admonitions.js          Decorates labeled blockquotes.
 └── README.md                       This file.
 ```
 
@@ -61,18 +55,6 @@ hash-files            = false
 git-repository-url    = "https://github.com/liara-engine/<repo>"
 git-repository-icon   = "fa-github"
 edit-url-template     = "https://github.com/liara-engine/<repo>/edit/main/docs/{path}"
-
-additional-css = [
-    "docs-shared/tokens/design-tokens.css",
-    "docs-shared/navbar/navbar.css",
-    "docs-shared/mdbook/additionals/css/custom.css",
-]
-
-additional-js = [
-    "docs-shared/navbar/navbar.js",
-    "docs-shared/navbar/navbar.config.js",
-    "docs-shared/mdbook/additionals/js/admonitions.js",
-]
 
 [output.html.fold]
 enable = true
