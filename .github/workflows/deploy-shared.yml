@@ -73,7 +73,7 @@ jobs:
       - run: |
           output_dir="output-repository/site/shared-content"
           mkdir -p "$output_dir"
-          cp -r generated-docs/* "$output_dir/"
+          cp -r generated-docs/shared-content/* "$output_dir/"
 
       - run: |
           cd output-repository
