@@ -42,12 +42,12 @@
     <link href="$relpath^tabs.css" rel="stylesheet" type="text/css"/>
     <link href="$relpath^doxygen.css" rel="stylesheet" type="text/css"/>
 
-    <link rel="icon" type="image/x-icon" href="$relpath^favicon.ico">
+    <link rel="icon" type="image/x-icon" href="/shared-content/assets/logo.svg">
 
     <!-- Liara design system, applied AFTER Doxygen's own CSS so we can override -->
-    <link rel="stylesheet" href="$relpath^design-tokens.css">
-    <link rel="stylesheet" href="$relpath^navbar.css">
-    <link rel="stylesheet" href="$relpath^doxygen-custom.css">
+    <link rel="stylesheet" href="/shared-content/tokens/design-tokens.css">
+    <link rel="stylesheet" href="/shared-content/navbar/navbar.css">
+    <link rel="stylesheet" href="/shared-content/doxygen/doxygen-custom.css">
 
     $extrastylesheet
 
@@ -65,16 +65,16 @@
             } catch (e) { /* localStorage unavailable, fall back to defaults */ }
         })();
     </script>
-
-    <script src="$relpath^navbar.config.js"></script>
-    <script defer src="$relpath^navbar.js"></script>
 </head>
 <body>
 
 <!--
     Shared navbar. The fragment below mirrors docs-shared/navbar/navbar.html.
 -->
-{{{NAVBAR}}}
+<shared-navbar></shared-navbar>
+
+<script src="/shared-content/navbar/navbar.config.js"></script>
+<script defer src="/shared-content/doxygen/shared-navbar.js"></script>
 
 <!--
     Doxygen-generated content begins here. The wrapper div lets us scope our
