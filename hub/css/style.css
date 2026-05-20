@@ -520,7 +520,7 @@ html, body {
     }
 
     .hub-hero {
-        padding: var(--liara-space-8) 0 var(--liara-space-6);
+        padding: var(--liara-space-8) var(--liara-space-3) var(--liara-space-6);
     }
 
     .hub-hero__meta {
