@@ -8,8 +8,8 @@
 <!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en-US">
 <head>
-    <meta charset="UTF-8"/>
-    <meta http-equiv="X-UA-Compatible" content="IE=9"/>
+    <meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
+    <meta http-equiv="X-UA-Compatible" content="IE=11"/>
     <meta name="generator" content="Doxygen $doxygenversion"/>
     <meta name="viewport" content="width=device-width, initial-scale=1"/>
     <!--BEGIN PROJECT_NAME--><title>$projectname: $title</title><!--END PROJECT_NAME-->
@@ -20,8 +20,10 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&family=JetBrains+Mono:wght@400;500&display=swap">
 
-    <script src="$relpath^jquery.js"></script>
-
+    <!--BEGIN PROJECT_ICON-->
+    <link rel="icon" type="image/x-icon" href="/shared-content/assets/logo.svg">
+    <!--END PROJECT_ICON-->
+    <link href="$relpath^tabs.css" rel="stylesheet" type="text/css"/>
     <!--BEGIN FULL_SIDEBAR-->
     <script type="text/javascript">var page_layout=1;</script>
     <!--END FULL_SIDEBAR-->
@@ -40,17 +42,14 @@
     $search
     $mathjax
     $darkmode
-    <link href="$relpath^tabs.css" rel="stylesheet" type="text/css"/>
-    <link href="$relpath^doxygen.css" rel="stylesheet" type="text/css"/>
-
-    <link rel="icon" type="image/x-icon" href="/shared-content/assets/logo.svg">
+    $mermaidjs
+    <link href="$relpath^$stylesheet" rel="stylesheet" type="text/css" />
+    $extrastylesheet
 
     <!-- Liara design system, applied AFTER Doxygen's own CSS so we can override -->
     <link rel="stylesheet" href="/shared-content/tokens/design-tokens.css">
     <link rel="stylesheet" href="/shared-content/navbar/navbar.css">
     <link rel="stylesheet" href="/shared-content/doxygen/doxygen-custom.css">
-
-    $extrastylesheet
 
     <!-- Apply theme/a11y prefs synchronously to prevent flash -->
     <script>
@@ -78,9 +77,32 @@
 <script src="/shared-content/doxygen/shared-navbar.js"></script>
 <script defer src="/shared-content/navbar/navbar.js"></script>
 
-<!--
-    Doxygen-generated content begins here. The wrapper div lets us scope our
-    custom CSS without touching Doxygen's own structure.
--->
-<div id="top" class="liara-doxygen">
-    <!-- $generatedby -->
+<!--BEGIN FULL_SIDEBAR-->
+<div id="side-nav" class="ui-resizable side-nav-resizable"><!-- do not remove this div, it is closed by doxygen! -->
+<!--END FULL_SIDEBAR-->
+
+<div id="top"><!-- do not remove this div, it is closed by doxygen! -->
+
+    <!--BEGIN TITLEAREA-->
+    <div id="titlearea">
+        <table cellspacing="0" cellpadding="0">
+            <tbody>
+            <tr id="projectrow">
+                <!--BEGIN DISABLE_INDEX-->
+                <!--BEGIN SEARCHENGINE-->
+                <!--BEGIN !FULL_SIDEBAR-->
+                <td>$searchbox</td>
+                <!--END !FULL_SIDEBAR-->
+                <!--END SEARCHENGINE-->
+                <!--END DISABLE_INDEX-->
+            </tr>
+            <!--BEGIN SEARCHENGINE-->
+            <!--BEGIN FULL_SIDEBAR-->
+            <tr><td colspan="2">$searchbox</td></tr>
+            <!--END FULL_SIDEBAR-->
+            <!--END SEARCHENGINE-->
+            </tbody>
+        </table>
+    </div>
+    <!--END TITLEAREA-->
+    <!-- end header part -->
