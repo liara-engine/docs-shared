@@ -702,9 +702,17 @@
         updateGitHubLink(location);
     }
 
+    function start() {
+        if (document.querySelector("[data-liara-theme-toggle]")) {
+            init();
+        } else {
+            document.addEventListener("liara-navbar-ready", init, { once: true });
+        }
+    }
+
     if (document.readyState === "loading") {
-        document.addEventListener("DOMContentLoaded", init);
+        document.addEventListener("DOMContentLoaded", start);
     } else {
-        init();
+        start();
     }
 })();
