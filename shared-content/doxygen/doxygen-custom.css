@@ -575,7 +575,7 @@ dl.post dt {
 .navpath {
     background: var(--liara-bg-page) !important;
     border-top: var(--liara-border-width-thin) solid var(--liara-border-default) !important;
-    margin-top: var(--liara-space-6);
+    margin-top: 0;
     padding: var(--liara-space-2) var(--liara-space-5);
 }
 
@@ -611,9 +611,9 @@ dl.post dt {
  * ========================================================================== */
 
 .liara-doxygen-footer {
-    margin-top: var(--liara-space-8);
+    margin-top: 0;
     padding: var(--liara-space-5) var(--liara-space-5);
-    border-top: var(--liara-border-width-thin) solid var(--liara-border-default);
+    border-top: 0 solid var(--liara-border-default);
     background: var(--liara-bg-page);
 }
 
