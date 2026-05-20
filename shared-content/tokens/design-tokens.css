@@ -472,7 +472,7 @@
     font-family: "OpenDyslexic";
     font-weight: 400;
     font-style: normal;
-    src: url("https://cdn.jsdelivr.net/gh/antijingoist/opendyslexic@0.92/compiled/OpenDyslexic-Regular.woff2") format("woff2");
+    src: url('/shared-content/fonts/opendyslexic-0.92/OpenDyslexic-Regular.woff2') format("woff2");
     font-display: swap;
 }
 
@@ -480,6 +480,6 @@
     font-family: "OpenDyslexic";
     font-weight: 700;
     font-style: normal;
-    src: url("https://cdn.jsdelivr.net/gh/antijingoist/opendyslexic@0.92/compiled/OpenDyslexic-Bold.woff2") format("woff2");
+    src: url('/shared-content/fonts/opendyslexic-0.92/OpenDyslexic-Bold.woff2') format("woff2");
     font-display: swap;
 }
