@@ -832,3 +832,6 @@ className:"string",relevance:0,begin:/'/,end:/'/,contains:[{match:/''/,
 scope:"char.escape",relevance:0}]},s],g=[...r]
 ;return g.pop(),g.push(i),l.contains=g,{name:"YAML",case_insensitive:!0,
 aliases:["yml"],contains:r}}})();hljs.registerLanguage("yaml",e)})();
+
+
+hljs.registerLanguage('doxyfile',function(hljs){return {name: 'Doxyfile',aliases: ['doxy'],case_insensitive: false,keywords: {literal: 'YES NO'},contains: [hljs.HASH_COMMENT_MODE,{scope: 'attr',begin: /^\s*[A-Z][A-Z0-9_]*\b/},{scope: 'operator',match: /\+?=/},hljs.QUOTE_STRING_MODE,hljs.NUMBER_MODE,{scope:'meta',match: /\\$/}]};});
