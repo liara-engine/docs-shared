@@ -44,6 +44,45 @@ html:has(shared-navbar [data-liara-subnav-module]:not(:empty)) {
     top: var(--liara-navbar-total-height);
     background: var(--liara-bg-page);
     border-bottom: var(--liara-border-width-thin) solid var(--liara-border-default);
+    height: var(--menu-bar-height, 50px) !important;
+    box-sizing: border-box !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    padding: 0 var(--page-padding, 15px) !important;
+    overflow: visible !important;
+}
+
+.menu-bar .left-buttons,
+.menu-bar .right-buttons {
+    display: flex !important;
+    align-items: center !important;
+    height: 100% !important;
+}
+
+.menu-bar .icon-button {
+    height: calc(var(--menu-bar-height, 50px) - 2px) !important;
+    line-height: calc(var(--menu-bar-height, 50px) - 2px) !important;
+    margin: 0 !important;
+    padding: 0 var(--liara-space-3, 12px) !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    box-sizing: border-box !important;
+    border-radius: var(--liara-radius-md, 4px) !important;
+}
+
+.menu-bar .menu-title {
+    margin: 0 !important;
+    padding: 0 !important;
+    display: flex !important;
+    align-items: center !important;
+    height: 100% !important;
+    line-height: normal !important;
+    font-weight: var(--liara-weight-medium, 500) !important;
+    position: absolute !important;
+    left: 50% !important;
+    transform: translateX(-50%) !important;
 }
 
 #mdbook-menu-bar-hover-placeholder {
