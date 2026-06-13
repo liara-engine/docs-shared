@@ -33,7 +33,7 @@ html, body {
 
 .hub-hero {
     position: relative;
-    padding: var(--liara-space-12) 0 var(--liara-space-10);
+    padding: var(--liara-space-12) var(--liara-space-3) var(--liara-space-10);
     overflow: hidden;
 }
 
