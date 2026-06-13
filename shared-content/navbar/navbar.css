@@ -481,7 +481,7 @@
     z-index: calc(var(--liara-z-navbar) - 1);
 
     width: 100%;
-    height: 36px;
+    height: var(--liara-subnavbar-height);
 
     background: var(--liara-bg-page);
     border-bottom: var(--liara-border-width-thin) solid var(--liara-border-default);

@@ -360,6 +360,7 @@
     --liara-page-max-width:       1280px;      /* hub and outer wrappers */
     --liara-sidebar-width:        260px;       /* mdBook-style sidebar */
     --liara-navbar-height:        52px;        /* shared navbar */
+    --liara-subnavbar-height:     36px;        /* shared sub-navbar */
 
     /* --- Z-index scale ----------------------------------------------------- */
     --liara-z-base:               0;
