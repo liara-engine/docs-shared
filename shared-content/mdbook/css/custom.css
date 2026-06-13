@@ -17,6 +17,16 @@
  *   - Search: search bar styled to match the navbar's version selector.
  */
 
+:root {
+    --liara-navbar-total-height: var(--liara-navbar-height);
+}
+
+html:has(shared-navbar .liara-navbar-subnav:not([style*="display: none"])),
+html:has(shared-navbar .liara-navbar-subnav--visible),
+html:has(shared-navbar [data-liara-subnav-module]:not(:empty)) {
+    --liara-navbar-total-height: calc(var(--liara-navbar-height) + var(--liara-subnavbar-height));
+}
+
 /* ============================================================================
  * Make room for the sticky Liara navbar
  * mdBook's default layout assumes the page starts at top:0. The Liara
@@ -25,12 +35,13 @@
  * ========================================================================== */
 
 #mdbook-sidebar.sidebar {
-    top: var(--liara-navbar-height);
-    height: calc(100vh - var(--liara-navbar-height));
+    top: var(--liara-navbar-total-height);
+    height: calc(100vh - var(--liara-navbar-total-height));
+    z-index: 1001;
 }
 
 #mdbook-menu-bar.menu-bar {
-    top: var(--liara-navbar-height);
+    top: var(--liara-navbar-total-height);
     background: var(--liara-bg-page);
     border-bottom: var(--liara-border-width-thin) solid var(--liara-border-default);
 }
@@ -186,13 +197,26 @@ html, body {
 }
 
 .sidebar-resize-handle {
+    display: block;
+    visibility: visible;
+    position: fixed;
+    top: var(--liara-navbar-total-height);
+    height: calc(100vh - var(--liara-navbar-total-height));
+    z-index: 1002;
+    cursor: col-resize;
+    pointer-events: auto;
+    width: var(--sidebar-resize-indicator-width, 8px);
     background: transparent;
-    border-right: var(--liara-border-width-thin) solid var(--liara-border-default);
 }
 
 .sidebar-resize-handle:hover .sidebar-resize-indicator {
     background: var(--liara-brand-primary);
     width: 2px;
+}
+
+.sidebar-resize-handle:hover {
+    background: var(--liara-brand-primary-soft, rgba(0, 0, 0, 0.03));
+    border-right: 2px solid var(--liara-brand-primary);
 }
 
 /* ============================================================================
