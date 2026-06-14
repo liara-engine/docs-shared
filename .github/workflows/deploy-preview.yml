@@ -35,6 +35,7 @@ jobs:
           set -euo pipefail
           mkdir -p out
           docker run --rm \
+            --user "$(id -u):$(id -g)" \
             -v "$PWD/docs-shared/tests/fixtures:/src" \
             -v "$PWD/out:/docs" \
             -v "$PWD/docs-shared/mdbook:/opt/docs-shared/mdbook:ro" \
