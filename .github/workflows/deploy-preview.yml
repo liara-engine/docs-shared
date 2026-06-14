@@ -1,4 +1,4 @@
-name: docs-shared-preview
+name: preview
 
 on:
   pull_request:
