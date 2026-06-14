@@ -1,0 +1,14 @@
+{
+  "$schema": "https://liara-engine.github.io/liara/schemas/documentation-module.schema.json",
+  "metadata": {
+    "name": "Docs-Shared Preview Fixtures",
+    "description": "Synthetic module used only to exercise the shared documentation templates and assets in CI. Not a real engine module."
+  },
+
+  "resources": {
+    "unspecified": {
+      "README": "README.md",
+      "documentation-pipeline": "docs/documentation-pipeline.md"
+    }
+  }
+}

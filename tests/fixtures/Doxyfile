@@ -1,0 +1,19 @@
+PROJECT_NAME           = "Docs-Shared Preview Fixtures"
+PROJECT_BRIEF          = "Synthetic API surface to exercise the Doxygen template"
+OUTPUT_DIRECTORY       = build/doxygen
+
+INPUT                  = include
+RECURSIVE              = YES
+
+EXTRACT_ALL            = YES
+EXTRACT_PRIVATE        = YES
+EXTRACT_STATIC         = YES
+
+GENERATE_HTML          = YES
+GENERATE_LATEX         = NO
+GENERATE_TREEVIEW      = YES
+DISABLE_INDEX          = NO
+FULL_SIDEBAR           = NO
+
+HTML_HEADER            = docs-shared/doxygen/header.html
+HTML_FOOTER            = docs-shared/doxygen/footer.html
