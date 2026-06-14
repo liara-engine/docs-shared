@@ -19,7 +19,7 @@ jobs:
       pull-requests: write
 
     concurrency:
-      group: docs-publish-${{ env.OUTPUT_REPO }}-${{ github.repository }}
+      group: docs-publish-${{ github.repository }}
       cancel-in-progress: false
 
     steps:
