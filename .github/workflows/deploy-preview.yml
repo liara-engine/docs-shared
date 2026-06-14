@@ -1,0 +1,88 @@
+name: docs-shared-preview
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, labeled]
+
+env:
+  OUTPUT_REPO: liara-engine/liara-docs
+  OUTPUT_BRANCH: cloudflare-pages
+  IMAGE: ghcr.io/liara-engine/liara-documentation-builder:latest
+  BASE_URL: https://liara-engine.liara-engine-documentation.workers.dev
+
+jobs:
+  preview:
+    runs-on: ubuntu-24.04
+
+    permissions:
+      contents: read
+      pull-requests: write
+
+    concurrency:
+      group: docs-publish-${{ env.OUTPUT_REPO }}-${{ github.repository }}
+      cancel-in-progress: false
+
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          path: docs-shared
+
+      - run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
+      - run: docker pull "$IMAGE"
+
+      - name: Build fixtures with the PR's templates
+        run: |
+          set -euo pipefail
+          mkdir -p out
+          docker run --rm \
+            -v "$PWD/docs-shared/tests/fixtures:/src" \
+            -v "$PWD/out:/docs" \
+            -v "$PWD/docs-shared/mdbook:/opt/docs-shared/mdbook:ro" \
+            -v "$PWD/docs-shared/doxygen:/opt/docs-shared/doxygen:ro" \
+            "$IMAGE"
+
+      - name: Bundle the PR's runtime shared-content and isolate it
+        run: |
+          set -euo pipefail
+          preview="docs-shared/pr-${{ github.event.number }}"
+
+          cp -a docs-shared/shared-content out/shared-content
+
+          find out -type f \( -name '*.html' -o -name '*.js' \) -print0 \
+            | xargs -0 sed -i "s#/shared-content/#/${preview}/shared-content/#g"
+
+      - name: Publish preview
+        run: |
+          set -euo pipefail
+          git clone --depth 1 --branch "$OUTPUT_BRANCH" \
+            "https://x-access-token:${{ secrets.DOCS_PUSH_TOKEN }}@github.com/${OUTPUT_REPO}.git" \
+            output-repository
+
+          dest="output-repository/site/docs-shared/pr-${{ github.event.number }}"
+          rm -rf "$dest"
+          mkdir -p "$dest"
+          cp -a out/* "$dest/"
+
+          cd output-repository
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add .
+          if git diff --cached --quiet; then
+            echo "No changes to commit"
+            exit 0
+          fi
+          git commit -m "Docs-shared preview pr-${{ github.event.number }}"
+          git pull --rebase origin "$OUTPUT_BRANCH" || echo "Nothing to rebase"
+          git push origin HEAD:"$OUTPUT_BRANCH"
+
+      - name: Comment preview URLs
+        uses: marocchino/sticky-pull-request-comment@v3
+        with:
+          header: docs-shared-preview
+          message: |
+            **Docs-shared preview** — fixtures built with *this PR's* templates and shared assets:
+
+            - mdBook: ${{ env.BASE_URL }}/docs-shared/pr-${{ github.event.number }}/book/
+            - Doxygen: ${{ env.BASE_URL }}/docs-shared/pr-${{ github.event.number }}/doxygen/
+
+            <sub>Rebuilt on every push · pruned automatically when the PR closes.</sub>
