@@ -28,6 +28,63 @@
     color: var(--liara-text-primary);
 }
 
+/* --- Info icon + tooltip ------------------------------------------------- */
+
+.liara-version-banner__help {
+    position: relative;
+    display: inline-flex;
+    flex: 0 0 auto;
+}
+
+.liara-version-banner__info {
+    appearance: none;
+    border: none;
+    background: transparent;
+    cursor: help;
+    padding: 0;
+    font-size: var(--liara-text-base);
+    line-height: 1;
+    color: var(--liara-text-tertiary);
+    border-radius: var(--liara-radius-pill);
+}
+
+.liara-version-banner__info:hover,
+.liara-version-banner__info:focus-visible {
+    color: var(--liara-text-primary);
+}
+
+.liara-version-banner__tooltip {
+    position: absolute;
+    top: calc(100% + var(--liara-space-2));
+    left: 50%;
+    transform: translateX(-50%);
+    width: max-content;
+    max-width: 22rem;
+    padding: var(--liara-space-2) var(--liara-space-3);
+    background: var(--liara-bg-elevated);
+    color: var(--liara-text-primary);
+    border: var(--liara-border-width-thin) solid var(--liara-border-default);
+    border-radius: var(--liara-radius-md);
+    box-shadow: var(--liara-shadow-md, 0 4px 14px rgba(0, 0, 0, 0.12));
+    font-size: var(--liara-text-xs);
+    font-weight: 400;
+    line-height: var(--liara-leading-normal);
+    text-align: left;
+    white-space: normal;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity var(--liara-transition-fast),
+    visibility var(--liara-transition-fast);
+    z-index: 1000;
+}
+
+.liara-version-banner__help:hover .liara-version-banner__tooltip,
+.liara-version-banner__help:focus-within .liara-version-banner__tooltip,
+.liara-version-banner__help.is-open .liara-version-banner__tooltip {
+    opacity: 1;
+    visibility: visible;
+}
+
 .liara-version-banner__link {
     flex: 0 0 auto;
     font-weight: var(--liara-weight-medium);
@@ -63,7 +120,7 @@
 }
 
 .liara-version-banner--old .liara-version-banner__link {
-    color: var(--liara-semantic-warning-fg, var(--liara-brand-primary-dark));
+    color: var(--liara-semantic-warning-fg, var(--liara-brand-accent));
 }
 
 /* --- Preview build: periwinkle / info ----------------------------------- */
@@ -73,7 +130,17 @@
 }
 
 .liara-version-banner--preview .liara-version-banner__link {
-    color: var(--liara-semantic-info-fg, var(--liara-brand-secondary-dark));
+    color: var(--liara-semantic-info-fg, var(--liara-brand-secondary));
+}
+
+/* --- Dev build: green / success ----------------------------------------- */
+.liara-version-banner--dev {
+    background: var(--liara-semantic-success-bg);
+    border-bottom-color: var(--liara-semantic-success-border);
+}
+
+.liara-version-banner--dev .liara-version-banner__link {
+    color: var(--liara-semantic-success-fg, var(--liara-brand-primary));
 }
 
 @media (max-width: 480px) {
@@ -82,5 +149,10 @@
     }
     .liara-version-banner__link {
         flex-basis: 100%;
+    }
+    .liara-version-banner__tooltip {
+        left: 0;
+        transform: none;
+        max-width: 16rem;
     }
 }

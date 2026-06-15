@@ -8,9 +8,10 @@
  *   - a dev continous build (version is "dev")             -> "dev" banner
  *   - an old release (a x.y.z that is not metadata.latest) -> "old" banner
  *
- * `dev` and the current `latest` get no banner. The notice carries a random,
- * self-deprecating line (same spirit as the 404 page) and a link back to the
- * latest version of the same view.
+ * the current `latest` get no banner. The notice carries a random,
+ * self-deprecating line (same spirit as the 404 page), an info icon with a
+ * clearer explanation on hover/focus/tap, and a link back to the latest version
+ * of the same view.
  *
  * Self-contained: it re-parses the URL and reads window.LIARA_NAVBAR_CONFIG
  * (set by navbar.config.js). All failures are non-fatal — on any error, no
@@ -66,6 +67,19 @@
         ]
     };
 
+    const EXPLAIN = {
+        preview: "This page was built from an open pull request to preview proposed changes. " +
+            "It is temporary, may contain errors or unfinished content, and disappears " +
+            "when the request is merged or closed. For documentation you can rely on, " +
+            "use the latest released version.",
+        dev: "This page was built from the development branch. It may contain new features, " +
+            "but also bugs, incomplete content, or breaking changes. It's useful if you want " +
+            "to see the latest work in progress, but for stable documentation, use the latest release.",
+        old: "This page documents an older release, kept available for anyone still pinned to " +
+            "that version. It may be out of date compared with the current engine. Unless you " +
+            "specifically need this version, use the latest release."
+    };
+
     function pick(arr) {
         return arr[Math.floor(Math.random() * arr.length)];
     }
@@ -105,12 +119,33 @@
         const icon = document.createElement("span");
         icon.className = "liara-version-banner__icon";
         icon.setAttribute("aria-hidden", "true");
-        //icon.textContent = kind === "preview" ? "\uD83E\uDDEA" : "\uD83D\uDD70\uFE0F";
         icon.textContent = kind === "preview" ? "\uD83E\uDDEA" : kind === "dev" ? "\uD83D\uDD70\uFE0F" : "\uD83D\uDCC5";
 
         const msg = document.createElement("span");
         msg.className = "liara-version-banner__message";
         msg.textContent = pick(MESSAGES[kind]);
+
+        const help = document.createElement("span");
+        help.className = "liara-version-banner__help";
+
+        const info = document.createElement("button");
+        info.type = "button";
+        info.className = "liara-version-banner__info";
+        info.setAttribute("aria-label", "What does this mean?");
+        info.textContent = "\u24D8";
+
+        const tip = document.createElement("span");
+        tip.className = "liara-version-banner__tooltip";
+        tip.setAttribute("role", "tooltip");
+        tip.textContent = EXPLAIN[kind];
+
+        info.addEventListener("click", function (e) {
+            e.preventDefault();
+            help.classList.toggle("is-open");
+        });
+
+        help.appendChild(info);
+        help.appendChild(tip);
 
         const link = document.createElement("a");
         link.className = "liara-version-banner__link";
@@ -126,6 +161,7 @@
 
         bar.appendChild(icon);
         bar.appendChild(msg);
+        bar.appendChild(help);
         bar.appendChild(link);
         bar.appendChild(dismiss);
 
