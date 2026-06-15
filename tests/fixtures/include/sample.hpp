@@ -12,6 +12,7 @@
 #include <cstdint>
 #include <span>
 #include <string_view>
+#include <stdexcept>
 
 /**
  * @defgroup preview_fixtures Preview fixtures
@@ -23,6 +24,14 @@
 namespace liara::preview {
 
 /**
+ * @brief Global compile-time configuration constants.
+ *
+ * This exercises how global variables, types, and constants render in the
+ * member declaration tables (`table.memberdecls`).
+ */
+inline constexpr std::uint32_t MaxChannels = 64;
+
+/**
  * @brief Severity levels for a synthetic log channel.
  *
  * Documented enumerators show up in the member table.
@@ -32,6 +41,24 @@ enum class Severity : std::uint8_t {
     Info,    ///< Normal operational messages.
     Warning, ///< Recoverable problems.
     Fatal    ///< Unrecoverable; the process should stop.
+};
+
+/**
+ * @brief A low-level hardware or packet configuration overlay.
+ *
+ * Exercises how a plain @c struct and an anonymous @c union render within
+ * the Liara Engine design system.
+ */
+struct HardwareOverlay {
+    std::uint32_t id; ///< Unique hardware identifier.
+
+    union {
+        std::uint32_t raw_flags; ///< Combined bitmask of all status flags.
+        struct {
+            bool is_active : 1;  ///< Component operational state.
+            bool has_error : 1;  ///< Error state indicator.
+        } bits;                  ///< Bit-level access.
+    } status;                    ///< Status union container.
 };
 
 /**
@@ -92,6 +119,35 @@ private:
  *         unrelated string helper.
  */
 [[deprecated]] std::int64_t sum(std::span<const std::int32_t> values) noexcept;
+
+/**
+ * @brief Dispatches a transactional command payload to the engine core.
+ *
+ * This heavy synthetic function is explicitly designed to stress-test every
+ * single customized admonition box, parameter layout, exception table,
+ * and return-value block defined inside @c doxygen-custom.css.
+ *
+ * @param channel_id The destination pipeline index. Must be strictly less than @ref MaxChannels.
+ * @param payload    A view over the raw byte sequence to transmit.
+ *
+ * @retval true  The transaction was successfully committed and processed.
+ * @retval false The command was rejected because the channel is currently choked.
+ *
+ * @exception std::out_of_range Thrown if @p channel_id exceeds @ref MaxChannels.
+ * @exception std::invalid_argument Thrown if the @p payload size is zero.
+ *
+ * @attention High frequency calls to this function can incur hardware bus lockups.
+ * @bug Context switching timings are unstable under highly nested interrupts.
+ * @todo Implement hardware fallback queues before the next preview release.
+ *
+ * @pre The engine subsystem must be initialized via @c liara::core::init().
+ * @post The targeted channel will transition to a busy state until flushed.
+ *
+ * @threadsafety This function is thread-safe and can be invoked from concurrent context pipelines. @endthreadsafety
+ *
+ * @see to_string
+ */
+bool dispatch_command(std::uint32_t channel_id, std::span<const std::byte> payload);
 
 } // namespace liara::preview
 
