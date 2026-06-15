@@ -64,6 +64,10 @@
 {{#if mathjax_support}}
 <script async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
 {{/if}}
+
+<script src="/shared-content/mdbook/js/mermaid.min.js"></script>
+<script src="/shared-content/mdbook/js/mermaid-init.js"></script>
+
 </head>
 <body class="sidebar-visible">
 {{!-- Provide site root and default themes for the JS to consume --}}
@@ -102,6 +106,9 @@
 <script src="/shared-content/navbar/navbar.config.js"></script>
 <script src="/shared-content/mdbook/shared-navbar.js"></script>
 <script defer src="/shared-content/navbar/navbar.js"></script>
+
+<link rel="stylesheet" href="/shared-content/navbar/version-banner.css">
+<script defer src="/shared-content/navbar/version-banner.js"></script>
 
 {{!-- ====================================================================
      mdBook layout — sidebar + content
