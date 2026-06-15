@@ -10,33 +10,61 @@ If you are touching templates, CI, or the hosting layer, start here.
 The documentation is **not** built in one place.
 Shared look-and-feel lives in one repository, the build logic lives in a container image, each module builds its own docs from its own sources, and everything is published to a single hosting repository served at the edge.
 
-```
- docs-shared                      liara (meta)
- ┌───────────────────┐            ┌────────────────────────────┐
- │ templates + assets │  cloned   │ docker/…/Dockerfile         │
- │ (theme, navbar,    │ ───at─────▶ scripts/ (build-docs.py…)   │
- │  tokens, doxygen)  │  build    │ schemas/                    │
- └───────────────────┘            └─────────────┬──────────────┘
-                                                 │ builds & publishes
-                                                 ▼
-                                   ghcr.io/liara-engine/
-                                   liara-documentation-builder:latest
-                                                 │
-        ┌────────────────────────────────────────┼───────────────────────────┐
-        │ used by every repo's CI                 │                           │
-        ▼                                         ▼                           ▼
-  liara-interfaces                          liara-core                  docs-shared
-  (a "classic" module)                      (a "classic" module)        (special: builds
-        │ build-docs                              │ build-docs           test fixtures)
-        ▼                                         ▼                           │
-        └──────────────── push generated HTML ────┴───────────────────────────┘
-                                   ▼
-                         liara-docs  (branch: cloudflare-pages)
-                         site/<repo>/<version>/{book,doxygen}/…
-                                   │ Git integration -> wrangler deploy
-                                   ▼
-                    Cloudflare Worker (Static Assets + edge router)
-        https://liara-engine.liara-engine-documentation.workers.dev/
+```mermaid
+flowchart TB
+
+    subgraph Shared["Shared Documentation Assets"]
+        DS["docs-shared<br/>templates + assets<br/>(theme, navbar, tokens, doxygen)"]
+    end
+
+    subgraph Builder["Documentation Builder Infrastructure"]
+        LM["liara (meta)<br/>docker/.../Dockerfile<br/>scripts/ (build-docs.py...)<br/>schemas/"]
+        IMG["ghcr.io/liara-engine/<br/>liara-documentation-builder:latest"]
+
+        LM -->|"builds & publishes"| IMG
+    end
+
+    DS -->|"cloned at build"| LM
+
+    subgraph Repos["Repositories generating documentation"]
+        LI["liara-interfaces<br/>(classic module)"]
+        LC["liara-core<br/>(classic module)"]
+        DST["docs-shared<br/>(builds test fixtures)"]
+
+        HTML["Generated HTML"]
+
+        LI -->|"build-docs"| HTML
+        LC -->|"build-docs"| HTML
+        DST --> HTML
+    end
+
+    IMG -->|"used by CI"| LI
+    IMG -->|"used by CI"| LC
+    IMG -->|"used by CI"| DST
+
+    subgraph Publishing["Documentation Publishing"]
+        DOCS["liara-docs<br/>(branch: cloudflare-pages)<br/>site/&lt;repo&gt;/&lt;version&gt;/{book,doxygen}/..."]
+    end
+
+    HTML -->|"push generated HTML"| DOCS
+
+    subgraph Delivery["Public Delivery"]
+        CF["Cloudflare Worker<br/>(Static Assets + edge router)"]
+        URL["liara-engine.liara-engine-documentation.workers.dev"]
+    end
+
+    DOCS -->|"Git integration → wrangler deploy"| CF
+    CF --> URL
+
+    classDef repo fill:#e8f5e9,stroke:#2e7d32;
+    classDef infra fill:#e3f2fd,stroke:#1565c0;
+    classDef publish fill:#fff3e0,stroke:#ef6c00;
+    classDef delivery fill:#f3e5f5,stroke:#7b1fa2;
+
+    class LI,LC,DST repo;
+    class LM,IMG,DS infra;
+    class DOCS publish;
+    class CF,URL delivery;
 ```
 
 The mental model that makes everything else click: **docs-shared content is split in two.** Some of it is *baked* into the builder image and used at build time; the rest is *served at runtime* from a central `/shared-content/` path.
