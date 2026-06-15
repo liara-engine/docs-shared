@@ -1,19 +1,59 @@
+# ============================================================================
+# Project Related Configuration
+# ============================================================================
 PROJECT_NAME           = "Docs-Shared Preview Fixtures"
 PROJECT_BRIEF          = "Synthetic API surface to exercise the Doxygen template"
+PROJECT_ICON           = docs-shared/shared-content/assets/logo.svg
 OUTPUT_DIRECTORY       = build/doxygen
 
+# ============================================================================
+# Input and Parsing Configuration
+# ============================================================================
 INPUT                  = include
+INPUT_ENCODING         = UTF-8
 RECURSIVE              = YES
 
 EXTRACT_ALL            = YES
 EXTRACT_PRIVATE        = YES
+EXTRACT_PRIV_VIRTUAL   = YES
 EXTRACT_STATIC         = YES
+EXTRACT_LOCAL_CLASSES  = NO
 
+OPTIMIZE_OUTPUT_FOR_C  = NO
+BUILTIN_STL_SUPPORT    = YES
+MARKDOWN_SUPPORT       = YES
+
+# ============================================================================
+# Build and Navigation Settings
+# ============================================================================
 GENERATE_HTML          = YES
 GENERATE_LATEX         = NO
 GENERATE_TREEVIEW      = YES
 DISABLE_INDEX          = NO
-FULL_SIDEBAR           = NO
+FULL_SIDEBAR           = YES
+NUM_PROC_THREADS       = 0
 
+# Structure de tri
+SORT_MEMBER_DOCS       = YES
+SORT_BRIEF_DOCS        = NO
+TOC_INCLUDE_HEADINGS   = 3
+
+# ============================================================================
+# Theme & Custom Layout
+# ============================================================================
 HTML_HEADER            = docs-shared/doxygen/header.html
 HTML_FOOTER            = docs-shared/doxygen/footer.html
+
+# ============================================================================
+# Preprocessor Configuration
+# ============================================================================
+ENABLE_PREPROCESSING   = YES
+MACRO_EXPANSION        = YES
+EXPAND_ONLY_SELECTIVELY= YES
+SEARCH_INCLUDES        = YES
+
+# ============================================================================
+# Custom Tags & Aliases
+# ============================================================================
+ALIASES               += "threadsafety=<dl class='section threadsafety'><dt>Thread Safety</dt><dd>"
+ALIASES               += "endthreadsafety=</dd></dl>"

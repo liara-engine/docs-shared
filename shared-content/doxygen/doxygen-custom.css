@@ -678,6 +678,28 @@ dl.post dt {
     color: var(--liara-semantic-success-fg);
 }
 
+dl.threadsafety {
+    margin: var(--liara-space-3) 0;
+    padding: var(--liara-space-3) var(--liara-space-4);
+    border-radius: var(--liara-radius-md);
+    border-left: 3px solid var(--liara-brand-secondary-dark);
+    background: var(--liara-brand-secondary-soft);
+}
+
+dl.threadsafety dt {
+    margin: 0 0 var(--liara-space-2) 0;
+    font-weight: var(--liara-weight-medium);
+    font-size: var(--liara-text-sm);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--liara-brand-secondary-dark);
+}
+
+dl.threadsafety dd {
+    margin-left: 0;
+    color: var(--liara-text-secondary);
+}
+
 /* ============================================================================
  * Breadcrumbs (.navpath)
  * ========================================================================== */
