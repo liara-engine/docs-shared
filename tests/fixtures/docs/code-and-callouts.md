@@ -59,6 +59,42 @@ docker run --rm -v "$PWD:/src" ghcr.io/liara-engine/liara-documentation-builder:
 { "metadata": { "latest": "dev" }, "versions": { "dev": { "abi_compatibility": ["dev"] } } }
 ```
 
+## Mermaid
+
+Since v0.1.1, docs-shared supports Mermaid diagrams. The following should render as a flowchart, not a code block:
+
+```mermaid
+flowchart TD
+    A[Start] --> B{Is it working?}
+    B -- Yes --> C[Great!]
+    B -- No --> D[Check the logs]
+    D --> E[Fix the issue]
+```
+
+Also, a sequence diagram:
+
+```mermaid
+sequenceDiagram
+    participant A as Alice
+    participant B as Bob
+    A->>B: Hello Bob, how are you?
+    B-->>A: I am good thanks!
+```
+
+And a Gantt chart:
+
+```mermaid
+gantt
+    title A Gantt Diagram
+    dateFormat  YYYY-MM-DD
+    section Section
+    A task           :a1, 2024-01-01, 30d
+    Another task     :after a1  , 20d
+    section Another
+    Task in sec      :2024-01-12  , 12d
+    another task     : 24d
+```
+
 ## Callouts
 
 If docs-shared defines a callout convention (the semantic tokens cover
