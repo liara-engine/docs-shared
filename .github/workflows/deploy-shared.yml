@@ -8,6 +8,9 @@ on:
       - 'shared-content/**'
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
   build:
     uses: liara-engine/.github/.github/workflows/reusable-build-docs.yml@v0
