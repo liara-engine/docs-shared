@@ -307,12 +307,28 @@
     color: var(--liara-text-tertiary);
 }
 
+/* Wraps the version label and its optional note (manifest v2 only) */
+.liara-navbar__menu-version-wrap {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+}
+
 /* Version label in monospace */
 .liara-navbar__menu-version {
-    flex: 1;
     font-family: var(--liara-font-mono);
     font-size: var(--liara-text-xs);
     color: inherit;
+}
+
+/* Optional human-readable remark from a v2 manifest's `versions[x].note` */
+.liara-navbar__menu-note {
+    font-size: 9px;
+    color: var(--liara-text-tertiary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 /* Right-aligned compatibility badge */
