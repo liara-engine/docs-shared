@@ -99,7 +99,14 @@ Validated against `module-manifest.schema.json`. No `manifest_version` or
 
 * `metadata.latest` is the version the `latest` alias resolves to.
 * `abi_compatibility` lists the ABI versions it is compatible with — the
-  navbar uses this to show compatibility badges across modules.
+  navbar uses this to show compatibility badges across modules, computed
+  with the exact same rule as the ABI's own `liara_version_provides()`:
+  same major.minor is "Compatible", an older minor is "Degraded", a
+  different major is a mismatch. Only major- (or, for a 0.x ABI, minor-)
+  level precision is meaningful here — declaring `"0.2.0"` means every
+  `0.2.x` release is compatible. Declaring a specific patch (`"0.2.1"`)
+  additionally marks older patches of that same minor (`0.2.0`) as
+  "Degraded" rather than fully compatible.
 
 In both versions, each key in `versions` must be `dev` or a `x.y.z` string.
 
