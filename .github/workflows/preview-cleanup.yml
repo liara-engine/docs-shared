@@ -8,7 +8,7 @@ permissions:
 
 jobs:
   cleanup:
-    uses: liara-engine/.github/.github/workflows/reusable-docs-preview-cleanup.yml@v0
+    uses: liara-engine/.github/.github/workflows/reusable-docs-preview-cleanup.yml@v1
     with:
       output-repository: liara-engine/liara-docs
     secrets:

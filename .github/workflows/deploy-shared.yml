@@ -13,7 +13,7 @@ permissions:
 
 jobs:
   build:
-    uses: liara-engine/.github/.github/workflows/reusable-build-docs.yml@v0
+    uses: liara-engine/.github/.github/workflows/reusable-build-docs.yml@v1
     with:
       image: ghcr.io/liara-engine/liara-documentation-builder:latest
       additional-dir-to-deploy: "shared-content"
