@@ -304,8 +304,83 @@
     }
 
     /**
+     * Parses a dotted version string into {major, minor, patch}, or null if
+     * it isn't one (e.g. "dev"). Mirrors what the ABI's own
+     * LIARA_VERSION_MAJOR/MINOR macros read off a real version number.
+     */
+    function parseSemver(v) {
+        if (typeof v !== "string") return null;
+        const m = /^(\d+)\.(\d+)\.(\d+)/.exec(v);
+        if (!m) return null;
+        return { major: +m[1], minor: +m[2], patch: +m[3] };
+    }
+
+    /**
+     * Mirrors `liara_version_provides()` from the ABI itself, so the badge
+     * the site shows can never claim something the ABI's own rule wouldn't:
+     * identical versions are "exact"; differing majors are "incompatible";
+     * a 0.0.x version on either side demands exact equality and is
+     * otherwise "incompatible"; an older provided minor is "degraded";
+     * anything else is "compatible".
+     *
+     * One addition on top of the C function: a manifest is only ever meant
+     * to declare major- (or, for 0.x, minor-) level precision — see
+     * `docs/authoring-a-module.md` — so patch is normally irrelevant and
+     * every patch of an otherwise-matching major.minor is "compatible",
+     * exactly like the ABI function (which never looks at patch beyond the
+     * initial equality check). But a manifest MAY declare a specific patch
+     * (e.g. "0.2.1" instead of "0.2.0") to mean "requires at least that
+     * patch" — when major.minor already tie, we then break the tie on
+     * patch the same way the ABI breaks it on minor: an older provided
+     * patch is "degraded", an equal-or-newer one is "compatible".
+     *
+     * Non-parseable strings (e.g. "dev") are only ever "exact" (on literal
+     * string equality) or "incompatible" — there's no numeric rule to fall
+     * back on.
+     */
+    function compareAbiVersions(providedStr, requiredStr) {
+        if (providedStr === requiredStr) return "exact";
+
+        const provided = parseSemver(providedStr);
+        const required = parseSemver(requiredStr);
+        if (!provided || !required) return "incompatible";
+
+        if (provided.major !== required.major) return "incompatible";
+
+        if ((provided.major === 0 && provided.minor === 0)
+            || (required.major === 0 && required.minor === 0)) {
+            return "incompatible";
+        }
+
+        if (provided.minor < required.minor) return "degraded";
+        if (provided.minor > required.minor) return "compatible";
+
+        return provided.patch < required.patch ? "degraded" : "compatible";
+    }
+
+    const COMPAT_RANK = { exact: 3, compatible: 2, degraded: 1, incompatible: 0 };
+
+    /** Best compatibility of `providedStr` against any one of `requiredList`. */
+    function bestCompat(providedStr, requiredList) {
+        let best = "incompatible";
+        for (const requiredStr of requiredList) {
+            const result = compareAbiVersions(providedStr, requiredStr);
+            if (COMPAT_RANK[result] > COMPAT_RANK[best]) best = result;
+        }
+        return best;
+    }
+
+    /** Collapses a compareAbiVersions() result into a badge status. */
+    function toBadgeStatus(compat) {
+        if (compat === "exact" || compat === "compatible") return "compatible";
+        if (compat === "degraded") return "degraded";
+        return "mismatch";
+    }
+
+    /**
      * For a given (module, version), returns one of:
      *     "compatible"   — the version is compatible with the ABI horizon
+     *     "degraded"     — compatible with reduced functionality (older minor/patch)
      *     "mismatch"     — incompatible
      *     "unknown"      — no data available (manifest missing, etc.)
      *     "meta"         — target module is meta-documentation (no ABI check)
@@ -335,16 +410,39 @@
 
         if (abiHorizon === null) return "unknown";
 
+        // computeAbiHorizon() sets abiHorizon = [currentVersion] precisely
+        // when currentModule is the ABI itself — i.e. a single concrete,
+        // "provided" ABI release, as opposed to a set of declared
+        // requirements. That distinction tells us which side of
+        // compareAbiVersions()'s provided/required each value plays.
+        const currentIsAbi = !!(currentModule && effectiveModuleRole(currentModule).isAbi);
+
         if (targetRole.isAbi) {
-            return abiHorizon.indexOf(targetVersion) !== -1
-                ? "compatible" : "mismatch";
+            if (currentIsAbi) {
+                // Two concrete ABI releases: is targetVersion new enough
+                // to stand in for the one we're viewing?
+                return toBadgeStatus(compareAbiVersions(targetVersion, currentVersion));
+            }
+            // currentModule's own declared ABI requirement(s): is this
+            // concrete ABI release new enough for them?
+            return toBadgeStatus(bestCompat(targetVersion, abiHorizon));
         }
 
         if (!targetModule.manifest) return "unknown";
         const entry = getVersionEntry(targetModule.manifest, targetVersion);
         if (!entry) return "unknown";
-
         const targetAbi = entry.abi || [];
+
+        if (currentIsAbi) {
+            // We're viewing one concrete ABI release: is it new enough for
+            // what this module declares it needs?
+            return toBadgeStatus(bestCompat(currentVersion, targetAbi));
+        }
+
+        // Neither side is a concrete ABI release here — both are declared
+        // requirements from two different modules' manifests, so there is
+        // no well-defined provided-vs-required direction to run the ABI's
+        // rule on. Fall back to requiring an exact declared-version match.
         const overlap = targetAbi.some(v => abiHorizon.indexOf(v) !== -1);
         return overlap ? "compatible" : "mismatch";
     }
@@ -405,6 +503,14 @@
     function iconDot() {
         return makeIcon([
             { tag: "circle", attrs: { cx: "12", cy: "12", r: "4", fill: "currentColor" } }
+        ]);
+    }
+
+    function iconWarning() {
+        return makeIcon([
+            { tag: "path", attrs: { d: "M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" } },
+            { tag: "line", attrs: { x1: "12", y1: "9", x2: "12", y2: "13" } },
+            { tag: "line", attrs: { x1: "12", y1: "17", x2: "12.01", y2: "17" } }
         ]);
     }
 
@@ -552,6 +658,7 @@
     const BADGE_LABELS = {
         current:        "Current",
         compatible:     "Compatible",
+        degraded:       "Degraded",
         mismatch:       "ABI mismatch",
         unknown:        "Unknown",
         meta:           "Meta",
@@ -561,6 +668,7 @@
     const BADGE_TOOLTIPS = {
         current:        "You're viewing this version right now",
         compatible:     "Compatible with the current ABI",
+        degraded:       "Compatible with the current ABI, but with reduced functionality (older minor or patch)",
         mismatch:       "Incompatible with the current ABI",
         unknown:        "Compatibility data not available",
         meta:           "Meta-documentation, not tied to an ABI version",
@@ -584,6 +692,7 @@
         const statusEl = document.createElement("span");
         statusEl.className = "liara-navbar__menu-status liara-navbar__menu-status--" + status;
         if (status === "compatible") statusEl.appendChild(iconCheck());
+        else if (status === "degraded") statusEl.appendChild(iconWarning());
         else if (status === "mismatch") statusEl.appendChild(iconCross());
         else if (status === "current" || status === "meta-current") statusEl.appendChild(iconDot());
         // For 'meta' and 'none', statusEl remains empty (no icon)

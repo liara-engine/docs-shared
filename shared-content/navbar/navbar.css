@@ -299,6 +299,10 @@
     color: var(--liara-semantic-success-fg);
 }
 
+.liara-navbar__menu-status--degraded {
+    color: var(--liara-semantic-warning-fg);
+}
+
 .liara-navbar__menu-status--mismatch {
     color: var(--liara-semantic-danger-fg);
 }
@@ -352,6 +356,11 @@
 .liara-navbar__menu-badge--compatible {
     background: var(--liara-semantic-success-bg);
     color: var(--liara-semantic-success-fg);
+}
+
+.liara-navbar__menu-badge--degraded {
+    background: var(--liara-semantic-warning-bg);
+    color: var(--liara-semantic-warning-fg);
 }
 
 .liara-navbar__menu-badge--mismatch {
