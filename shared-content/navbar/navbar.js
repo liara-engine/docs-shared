@@ -1,5 +1,5 @@
 /**
- * Liara Engine — Navbar logic (v2.2)
+ * Liara Engine — Navbar logic (v2.3)
  *
  * Responsibilities, in execution order:
  *
@@ -21,6 +21,19 @@
  * All failures are non-fatal. If the registry can't be fetched, the
  * modules list stays empty. If a manifest is missing, that module is
  * still listed but without compatibility info (badges show "unknown").
+ *
+ * Manifest schema versions:
+ *
+ *   Both `module-manifest.schema.json` (v1) and `module-manifest-v2.schema.json`
+ *   (v2) are supported side by side — see `normalizeVersionEntry` and
+ *   `effectiveModuleRole` below. A manifest is v2 when it carries
+ *   `manifest_version: 2`; its absence means v1. v1 manifests are read
+ *   exactly as before (`versions[x].abi_compatibility`, and the module's
+ *   ABI/meta role comes only from the registry's `is_abi`/`meta` flags).
+ *   v2 manifests additionally carry `kind`, which — when present — takes
+ *   precedence over those registry flags, and versions may carry a
+ *   human-readable `note` that is surfaced in the version dropdown.
+ *   This lets modules migrate to v2 independently and at their own pace.
  *
  * Storage keys (carried over from v1):
  *   - liara-theme: "light" | "dark" | absent (= follow system)
@@ -199,6 +212,71 @@
     }
 
     /* ========================================================================
+     * Manifest v1 / v2 compatibility layer
+     *
+     * v1 versions look like:      { "abi_compatibility": ["dev"] }
+     * v2 versions look like:      "dev" | ["dev", "1.0.0"]
+     *                        or:  { "abi": "dev" | [...], "note": "..." }
+     * v2 "contract"/"infrastructure" versions carry no `abi` at all — just
+     * an optional `note`.
+     * ====================================================================== */
+
+    /**
+     * Normalizes any version-entry shape (v1 or v2) into
+     * { abi: string[] | null, note: string | undefined }.
+     */
+    function normalizeVersionEntry(raw) {
+        if (raw === undefined || raw === null) return { abi: null, note: undefined };
+
+        // v2 shorthand: a bare ABI version, or an array of them.
+        if (typeof raw === "string") return { abi: [raw], note: undefined };
+        if (Array.isArray(raw)) return { abi: raw, note: undefined };
+
+        // v1: always an object with `abi_compatibility`.
+        if ("abi_compatibility" in raw) {
+            return { abi: raw.abi_compatibility || [], note: undefined };
+        }
+
+        // v2 object form: { abi?: string | string[], note?: string }.
+        let abi = raw.abi;
+        if (typeof abi === "string") abi = [abi];
+        return { abi: abi || null, note: raw.note };
+    }
+
+    /** Looks up and normalizes a module's version entry, v1 or v2 alike. */
+    function getVersionEntry(manifest, version) {
+        if (!manifest || !manifest.versions) return null;
+        const raw = manifest.versions[version];
+        if (raw === undefined) return null;
+        return normalizeVersionEntry(raw);
+    }
+
+    /**
+     * A module's ABI role: is it the ABI itself ("contract" in v2 /
+     * `is_abi` in the registry), pure meta-documentation with no ABI
+     * relation ("infrastructure" / `meta`), or a normal ABI-consuming
+     * module ("module"/"host" / neither flag)?
+     *
+     * A v2 manifest's `kind` — when present — takes precedence over the
+     * registry's `is_abi`/`meta` flags, so a module's own manifest becomes
+     * the source of truth as soon as it migrates. v1 manifests carry no
+     * `kind`, so they keep relying on the registry entry exactly as before.
+     */
+    function effectiveModuleRole(module) {
+        const manifest = module && module.manifest;
+        if (manifest && manifest.kind) {
+            return {
+                isAbi: manifest.kind === "contract",
+                meta: manifest.kind === "infrastructure"
+            };
+        }
+        return {
+            isAbi: !!(module && module.is_abi),
+            meta: !!(module && module.meta)
+        };
+    }
+
+    /* ========================================================================
      * ABI compatibility computation
      * ====================================================================== */
 
@@ -207,21 +285,22 @@
      * version we're currently viewing.
      *
      *   - If we're on the ABI itself, the horizon is just the current
-     *     version: only modules whose abi_compatibility contains that
+     *     version: only modules whose ABI compatibility contains that
      *     version are compatible.
-     *   - If we're on another module, the horizon is the
-     *     abi_compatibility array of that module's current version.
+     *   - If we're on another module, the horizon is the ABI compatibility
+     *     of that module's current version.
      *   - If we're nowhere in particular (hub, etc.), the horizon is
      *     null, meaning compatibility cannot be determined.
      */
     function computeAbiHorizon(currentModule, currentVersion) {
-        if (!currentModule || !currentVersion || currentModule.meta) return null;
-        if (currentModule.is_abi) return [currentVersion];
+        if (!currentModule || !currentVersion) return null;
+        const role = effectiveModuleRole(currentModule);
+        if (role.meta) return null;
+        if (role.isAbi) return [currentVersion];
         if (!currentModule.manifest) return null;
-        const versionEntry = currentModule.manifest.versions
-            && currentModule.manifest.versions[currentVersion];
-        if (!versionEntry) return null;
-        return versionEntry.abi_compatibility || [];
+        const entry = getVersionEntry(currentModule.manifest, currentVersion);
+        if (!entry) return null;
+        return entry.abi || [];
     }
 
     /**
@@ -236,35 +315,36 @@
     function evaluateCompat(targetModule, targetVersion, abiHorizon,
                             currentModule, currentVersion) {
 
+        const targetRole = effectiveModuleRole(targetModule);
+
         // The version we're currently viewing gets a "current" badge.
         if (currentModule && targetModule.key === currentModule.key
             && targetVersion === currentVersion) {
-            return targetModule.meta ? "meta-current" : "current";
+            return targetRole.meta ? "meta-current" : "current";
         }
 
         // If the target module itself is a meta-documentation module, it has no ABI constraints
-        if (targetModule.meta === true) {
+        if (targetRole.meta) {
             return "meta";
         }
 
         // If we are currently visiting a meta module, we hide compatibility for all other modules
-        if (currentModule && currentModule.meta === true) {
+        if (currentModule && effectiveModuleRole(currentModule).meta) {
             return "none";
         }
 
         if (abiHorizon === null) return "unknown";
 
-        if (targetModule.is_abi) {
+        if (targetRole.isAbi) {
             return abiHorizon.indexOf(targetVersion) !== -1
                 ? "compatible" : "mismatch";
         }
 
         if (!targetModule.manifest) return "unknown";
-        const versionEntry = targetModule.manifest.versions
-            && targetModule.manifest.versions[targetVersion];
-        if (!versionEntry) return "unknown";
+        const entry = getVersionEntry(targetModule.manifest, targetVersion);
+        if (!entry) return "unknown";
 
-        const targetAbi = versionEntry.abi_compatibility || [];
+        const targetAbi = entry.abi || [];
         const overlap = targetAbi.some(v => abiHorizon.indexOf(v) !== -1);
         return overlap ? "compatible" : "mismatch";
     }
@@ -460,7 +540,9 @@
         for (const version of versions) {
             const status = evaluateCompat(module, version, abiHorizon,
                 currentModule, currentVersion);
-            const item = renderMenuItem(module, version, status, location, config);
+            const entry = getVersionEntry(module.manifest, version);
+            const item = renderMenuItem(module, version, status, location, config,
+                entry && entry.note);
             menu.appendChild(item);
         }
 
@@ -485,7 +567,7 @@
         "meta-current": "You're viewing this meta version right now"
     };
 
-    function renderMenuItem(module, version, status, location, config) {
+    function renderMenuItem(module, version, status, location, config, note) {
         const li = document.createElement("li");
         li.className = "liara-navbar__menu-item liara-navbar__menu-item--" + status;
         li.setAttribute("role", "option");
@@ -494,7 +576,9 @@
         link.className = "liara-navbar__menu-link";
         link.href = buildModuleUrl(config, module, version, location.view);
         if (BADGE_TOOLTIPS[status]) {
-            link.title = BADGE_TOOLTIPS[status];
+            link.title = note ? BADGE_TOOLTIPS[status] + " — " + note : BADGE_TOOLTIPS[status];
+        } else if (note) {
+            link.title = note;
         }
 
         const statusEl = document.createElement("span");
@@ -504,12 +588,26 @@
         else if (status === "current" || status === "meta-current") statusEl.appendChild(iconDot());
         // For 'meta' and 'none', statusEl remains empty (no icon)
 
+        // The version label, plus its optional v2 `note` underneath (e.g.
+        // "LTS", "security fixes only"). v1 entries never carry a note, so
+        // this wrapper renders identically to a plain version label for them.
+        const versionWrap = document.createElement("span");
+        versionWrap.className = "liara-navbar__menu-version-wrap";
+
         const versionEl = document.createElement("span");
         versionEl.className = "liara-navbar__menu-version";
         versionEl.textContent = version;
+        versionWrap.appendChild(versionEl);
+
+        if (note) {
+            const noteEl = document.createElement("span");
+            noteEl.className = "liara-navbar__menu-note";
+            noteEl.textContent = note;
+            versionWrap.appendChild(noteEl);
+        }
 
         link.appendChild(statusEl);
-        link.appendChild(versionEl);
+        link.appendChild(versionWrap);
 
         if (BADGE_LABELS[status]) {
             const badge = document.createElement("span");

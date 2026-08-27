@@ -1,35 +1,18 @@
 {
-  "$schema": "https://liara-engine.github.io/liara/schemas/module-manifest.schema.json",
+  "$schema": "https://liara-engine.github.io/liara/schemas/module-manifest-v2.schema.json",
+  "manifest_version": 2,
+  "kind": "infrastructure",
   "metadata": {
     "name": "Liara Engine Documentation Hub",
     "description": "The central hub for all documentation related to the Liara Engine, providing a unified interface and shared resources for all modules.",
+    "repo": "docs-shared",
     "latest": "0.1.1"
   },
   "versions": {
-    "dev": {
-      "abi_compatibility": [
-        "dev"
-      ]
-    },
-    "0.0.5": {
-      "abi_compatibility": [
-        "dev"
-      ]
-    },
-    "0.0.6": {
-      "abi_compatibility": [
-        "dev"
-      ]
-    },
-    "0.1.0": {
-      "abi_compatibility": [
-        "dev"
-      ]
-    },
-    "0.1.1": {
-      "abi_compatibility": [
-        "dev"
-      ]
-    }
+    "dev": {},
+    "0.0.5": {},
+    "0.0.6": {},
+    "0.1.0": {},
+    "0.1.1": {}
   }
 }

@@ -21,9 +21,66 @@ tolerates a module that has only one of the two.
 
 ## 1. The manifest (required)
 
-`manifest.json` is validated against `module-manifest.schema.json` and drives
-the version selector and the `/<repo>/latest/` redirect. It is small and strict
+`manifest.json` drives the version selector and the `/<repo>/latest/`
+redirect. Two schema versions are supported; the navbar detects which one
+it's reading from the presence of `manifest_version`. **New modules should
+use v2** — v1 remains fully supported for modules that haven't migrated yet,
+and there is no deadline to do so.
+
+### v2 (recommended)
+
+Validated against `module-manifest-v2.schema.json`. Strict
 (`additionalProperties` is off everywhere):
+
+```json
+{
+  "$schema": "https://liara-engine.github.io/liara/schemas/module-manifest-v2.schema.json",
+  "manifest_version": 2,
+  "kind": "contract",
+  "metadata": {
+    "name": "Liara Interfaces",
+    "description": "The C ABI contracts shared by every module.",
+    "repo": "liara-interfaces",
+    "latest": "1.0.0"
+  },
+  "versions": {
+    "dev":   {},
+    "1.0.0": { "note": "First stable ABI" }
+  }
+}
+```
+
+* `manifest_version` must be `2` — this is what distinguishes it from v1.
+* `kind` says what the repository *is*, and determines how its versions
+  relate to the ABI:
+  * `contract` — this repo's versions **are** ABI versions (e.g.
+    `liara-interfaces`). Its `versions` entries carry no `abi`, only an
+    optional `note`.
+  * `module` / `host` — this repo targets one or more ABI versions. Each
+    `versions` entry requires `abi`: either a bare version
+    (`"abi": "1.0.0"`) or an array of anchors (`"abi": ["1.0.0", "2.0.0"]`)
+    when the version is deliberately built against more than one ABI major.
+  * `infrastructure` — no ABI relation at all (e.g. this repository,
+    `docs-shared`). Like `contract`, its `versions` entries carry no `abi`.
+* `metadata.repo` is the GitHub repository name (matches the module's entry
+  in the central `modules-registry.json`).
+* `metadata.latest` is the version the `latest` alias resolves to. Update it
+  when you cut a release.
+* Each `versions` entry may carry a short `note` (e.g. `"LTS"`,
+  `"security fixes only"`) — the navbar shows it under the version in the
+  dropdown and in its tooltip.
+* A v2 manifest's `kind` takes precedence over the module's `is_abi`/`meta`
+  flags in `modules-registry.json`, so once a module ships a v2 manifest
+  those registry flags become informational only for it.
+* Optional `artifacts` — for a repository that publishes something with its
+  own, independent version line (different from the repo's own releases).
+  Most modules don't need this; see the schema for the shape.
+
+### v1 (still supported)
+
+Validated against `module-manifest.schema.json`. No `manifest_version` or
+`kind` field — the module's ABI role instead comes from
+`modules-registry.json`'s `is_abi`/`meta` flags.
 
 ```json
 {
@@ -40,11 +97,11 @@ the version selector and the `/<repo>/latest/` redirect. It is small and strict
 }
 ```
 
-* `metadata.latest` is the version the `latest` alias resolves to. Update it
-  when you cut a release.
-* Each key in `versions` must be `dev` or a `x.y.z` string, and lists the ABI
-  versions it is compatible with — the navbar uses this to show compatibility
-  badges across modules.
+* `metadata.latest` is the version the `latest` alias resolves to.
+* `abi_compatibility` lists the ABI versions it is compatible with — the
+  navbar uses this to show compatibility badges across modules.
+
+In both versions, each key in `versions` must be `dev` or a `x.y.z` string.
 
 ## 2. The user guide (mdBook)
 
