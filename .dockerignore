@@ -1,0 +1,29 @@
+# Build context for docker/liara-documentation-builder/Dockerfile.
+#
+# The Dockerfile COPYs only docker/, mdbook/, doxygen/, and
+# shared-content/assets/ — everything below is genuinely unused at build
+# time and would otherwise be uploaded to the docker daemon for nothing
+# (shared-content/fonts/ especially, which is sizeable).
+
+.git
+.github
+.idea
+.vscode
+
+docs
+hub
+tests
+
+shared-content/doxygen
+shared-content/fonts
+shared-content/hub
+shared-content/mdbook
+shared-content/navbar
+shared-content/tokens
+
+*.log
+*.tmp
+*.bak
+*.swp
+*.swo
+*.DS_Store
