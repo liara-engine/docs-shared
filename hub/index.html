@@ -34,7 +34,6 @@
             } catch (e) { /* localStorage unavailable, fall back to defaults */ }
         })();
     </script>
-    <script defer src="js/liara-hub.js"></script>
 </head>
 <body>
 
@@ -232,9 +231,6 @@
         </header>
 
         <div class="hub-versions" data-liara-versions-list>
-            <!-- Populated by liara-hub.js from version.json. Until JS runs,
-                 this shows a single "dev" placeholder so the section is
-                 not empty for users without JS. -->
             <a class="hub-version hub-version--current" href="#">
                 <span class="hub-version__label">dev</span>
                 <span class="hub-version__note">Current development</span>
