@@ -1,11 +1,5 @@
 /**
- * Liara Engine — Hub page styles
- *
- * Styles for the landing page at liara-engine.github.io. Consumes the
- * design tokens defined in tokens/design-tokens.css and the navbar
- * styles from navbar/navbar.css.
- *
- * Block prefix: `hub-` (and the inherited `liara-navbar-` from navbar).
+ * Liara Engine — hub-style landing page.
  */
 
 /* ============================================================================
@@ -26,6 +20,75 @@ html, body {
     margin: 0 auto;
     padding: 0 var(--liara-space-5);
 }
+
+/* ============================================================================
+ * Topbar
+ * ========================================================================== */
+
+.hub-topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--liara-space-4);
+    max-width: var(--liara-page-max-width);
+    margin: 0 auto;
+    padding: var(--liara-space-4) var(--liara-space-5);
+}
+
+.hub-topbar__brand {
+    display: flex;
+    align-items: center;
+    gap: var(--liara-space-2);
+    color: var(--liara-text-primary);
+    text-decoration: none;
+    font-family: var(--liara-font-mono);
+    font-size: var(--liara-text-sm);
+    font-weight: var(--liara-weight-medium);
+}
+
+.hub-topbar__brand:hover {
+    color: var(--liara-brand-primary-dark);
+}
+
+.hub-topbar__brand img {
+    width: 22px;
+    height: 22px;
+    border-radius: var(--liara-radius-sm);
+}
+
+.hub-topbar__actions {
+    display: flex;
+    align-items: center;
+    gap: var(--liara-space-2);
+}
+
+.hub-icon-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    border-radius: var(--liara-radius-md);
+    border: var(--liara-border-width-default) solid var(--liara-border-default);
+    background: var(--liara-bg-elevated);
+    color: var(--liara-text-secondary);
+    cursor: pointer;
+    transition: border-color var(--liara-transition-fast), color var(--liara-transition-fast);
+}
+
+.hub-icon-button:hover {
+    border-color: var(--liara-brand-primary);
+    color: var(--liara-brand-primary-dark);
+}
+
+.hub-icon-button svg {
+    width: 16px;
+    height: 16px;
+}
+
+.hub-icon-button .hub-icon--moon { display: none; }
+[data-theme="dark"] .hub-icon-button .hub-icon--sun { display: none; }
+[data-theme="dark"] .hub-icon-button .hub-icon--moon { display: inline; }
 
 /* ============================================================================
  * Hero
@@ -71,14 +134,8 @@ html, body {
     opacity: 0.35;
 }
 
-[data-liara-theme="dark"] .hub-hero__blob {
+[data-theme="dark"] .hub-hero__blob {
     opacity: 0.25;
-}
-
-@media (prefers-color-scheme: dark) {
-    :root:not([data-liara-theme="light"]) .hub-hero__blob {
-        opacity: 0.25;
-    }
 }
 
 .hub-hero__inner {
@@ -109,7 +166,6 @@ html, body {
     height: 8px;
     border-radius: 50%;
     background: var(--liara-brand-primary-dark);
-    box-shadow: 0 0 0 0 var(--liara-brand-primary);
     animation: hub-pulse 2.4s ease-in-out infinite;
 }
 
@@ -208,27 +264,15 @@ html, body {
     text-decoration: none;
 }
 
-[data-liara-theme="dark"] .hub-button--primary {
+[data-theme="dark"] .hub-button--primary {
     background: var(--liara-brand-primary);
     color: #1E1A1F;
     border-color: var(--liara-brand-primary);
 }
 
-[data-liara-theme="dark"] .hub-button--primary:hover {
+[data-theme="dark"] .hub-button--primary:hover {
     background: var(--liara-brand-primary-dark);
     border-color: var(--liara-brand-primary-dark);
-}
-
-@media (prefers-color-scheme: dark) {
-    :root:not([data-liara-theme="light"]) .hub-button--primary {
-        background: var(--liara-brand-primary);
-        color: #1E1A1F;
-        border-color: var(--liara-brand-primary);
-    }
-    :root:not([data-liara-theme="light"]) .hub-button--primary:hover {
-        background: var(--liara-brand-primary-dark);
-        border-color: var(--liara-brand-primary-dark);
-    }
 }
 
 .hub-button--secondary {
@@ -333,14 +377,8 @@ html, body {
     color: var(--liara-text-on-primary);
 }
 
-[data-liara-theme="dark"] .hub-card:hover .hub-card__icon {
+[data-theme="dark"] .hub-card:hover .hub-card__icon {
     color: #1E1A1F;
-}
-
-@media (prefers-color-scheme: dark) {
-    :root:not([data-liara-theme="light"]) .hub-card:hover .hub-card__icon {
-        color: #1E1A1F;
-    }
 }
 
 .hub-card__body {

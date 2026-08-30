@@ -2,28 +2,7 @@
  * Liara Engine — design tokens.
  *
  * This is `shared-content/tokens/design-tokens.css` retargeted onto
- * Starlight's theme attribute. Three mechanical changes, no new values:
- *
- *   1. `[data-liara-theme="light"|"dark"]`  ->  `[data-theme="light"|"dark"]`.
- *      Starlight already writes `data-theme` on <html>, persists the choice,
- *      and applies it before first paint. Adopting its attribute deletes the
- *      bridge script the mdBook template needed to keep two theme systems in
- *      agreement, and with it a whole class of flash-of-wrong-theme bugs.
- *
- *   2. The `@media (prefers-color-scheme: dark)` block is gone. Starlight
- *      resolves the system preference itself and writes the result into
- *      `data-theme`, so a second resolver could only disagree with the first.
- *
- *   3. The global `:root, :root * { transition: background-color, ... }` rule
- *      is gone. A transition declared on every element in the document makes
- *      the browser evaluate three animatable properties per element on every
- *      style recalculation, which is a real cost on a long API page for a
- *      benefit — a soft fade when toggling themes — that Starlight's own
- *      toggle does not need.
- *
- * Everything below is unchanged from the original file. This copy carries
- * only the tokens the Starlight mapping consumes; port the full original in
- * its place by applying the three changes above.
+ * Starlight's theme attribute.
  */
 
 /* ============================================================================
@@ -157,10 +136,20 @@
  * ========================================================================== */
 
 :root {
-    --liara-font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI',
+    --liara-font-sans: 'Open Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI',
                        system-ui, sans-serif;
     --liara-font-mono: 'JetBrains Mono', 'Fira Code', 'Consolas',
                        'Liberation Mono', monospace;
+
+    /* --- Type scale --------------------------------------------------- */
+    --liara-text-xs:   0.75rem;
+    --liara-text-sm:   0.875rem;
+    --liara-text-base: 1rem;
+    --liara-text-lg:   1.125rem;
+    --liara-text-2xl:  1.5rem;
+
+    --liara-weight-medium: 500;
+    --liara-weight-bold:   700;
 
     --liara-leading-tight:   1.25;
     --liara-leading-snug:    1.4;
@@ -168,10 +157,29 @@
     --liara-leading-relaxed: 1.75;
     --liara-leading-loose:   2;
 
+    /* --- Spacing scale ------------------------------------------------- */
+    --liara-space-1:  0.25rem;
+    --liara-space-2:  0.5rem;
+    --liara-space-3:  0.75rem;
+    --liara-space-4:  1rem;
+    --liara-space-5:  1.5rem;
+    --liara-space-6:  2rem;
+    --liara-space-8:  3rem;
+    --liara-space-10: 4rem;
+    --liara-space-12: 6rem;
+
     --liara-radius-sm:   4px;
     --liara-radius-md:   8px;
     --liara-radius-lg:   16px;
     --liara-radius-pill: 999px;
+
+    --liara-border-width-thin:    0.5px;
+    --liara-border-width-default: 1px;
+
+    --liara-transition-fast:    120ms cubic-bezier(0.4, 0, 0.2, 1);
+    --liara-transition-default: 200ms cubic-bezier(0.4, 0, 0.2, 1);
+
+    --liara-page-max-width: 1280px;
 
     --liara-focus-ring-width:  3px;
     --liara-focus-ring-offset: 2px;

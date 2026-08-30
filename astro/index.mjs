@@ -19,12 +19,6 @@
  *         description: 'The C ABI contracts shared by every module.',
  *     }));
  *
- * The `starlight` factory is injected rather than imported here on purpose.
- * Starlight publishes a TypeScript entry point, and Node refuses to strip
- * types from a file under node_modules, so a published preset that imported
- * it would fail to load. Astro compiles the consumer's config, which is why
- * the import belongs there.
- *
  * Deployment path
  * ---------------
  * A built Astro site is not relocatable: `base` is baked into every emitted
@@ -41,14 +35,56 @@
  */
 
 import mermaid from 'astro-mermaid';
+import { readFileSync } from 'node:fs';
+import { dirname, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 const DEFAULT_SITE = 'https://liara-engine.liara-engine-documentation.workers.dev';
+const HERE = dirname(fileURLToPath(import.meta.url));
 
-/** Section slugs. Authored prose and generated API reference are kept in
- *  separate URL namespaces on purpose: generated slugs churn when the code
- *  is refactored, and must not be able to collide with, or shadow, a
- *  hand-written page whose URL is meant to stay linkable. */
 export const SECTIONS = Object.freeze({ about: 'about', guide: 'guides', api: 'api' });
+
+/**
+ * Reads the module registry, wherever a copy of it can be found.
+ */
+export function readRegistry() {
+    const candidates = [
+        resolve(HERE, 'registry.json'),
+        resolve(HERE, '..', 'modules-registry.json'),
+    ];
+    for (const path of candidates) {
+        try {
+            return JSON.parse(readFileSync(path, 'utf-8'));
+        } catch {
+            // try the next candidate
+        }
+    }
+    return { modules: [] };
+}
+
+/**
+ * Reads the module manifest being built, if there is one.
+ */
+export function readManifest(cwd = process.cwd()) {
+    try {
+        return JSON.parse(readFileSync(resolve(cwd, 'manifest.json'), 'utf-8'));
+    } catch {
+        return null;
+    }
+}
+
+export function sortVersions(labels) {
+    return [...labels].sort((a, b) => {
+        if (a === 'dev') return -1;
+        if (b === 'dev') return 1;
+        return b.localeCompare(a, undefined, { numeric: true });
+    });
+}
+
+export function parseBase(base) {
+    const [, repo = '', version = ''] = base.replace(/\/+$/, '').split('/');
+    return { repo, version };
+}
 
 function requireString(value, name) {
     if (typeof value !== 'string' || value.length === 0) {
@@ -118,8 +154,10 @@ export function liaraDocs(options = {}) {
         description,
         disable404Route: true,
         customCss: [
+            '@liara/starlight-preset/styles/fonts.css',
             '@liara/starlight-preset/styles/tokens.css',
             '@liara/starlight-preset/styles/theme.css',
+            '@liara/starlight-preset/styles/hub.css',
         ],
         social: [{
             icon: 'github',
