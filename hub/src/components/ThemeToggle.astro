@@ -1,0 +1,38 @@
+---
+/**
+ * Light/dark toggle, wire-compatible with Starlight's own.
+ *
+ * Not a re-skin of `@astrojs/starlight/components/ThemeSelect.astro` — that
+ * one drives a three-way `<select>` (auto/light/dark) sized for a sidebar.
+ * This is a single icon button that flips between light and dark, which is
+ * all a one-page site needs. What matters is that both read and write the
+ * same place: `localStorage['starlight-theme']` and `data-theme` on <html>.
+ * A choice made on the hub carries into a module's docs and back.
+ */
+---
+
+<button type="button" class="hub-icon-button" id="hub-theme-toggle" aria-label="Toggle dark mode">
+    <svg class="hub-icon--sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/>
+    </svg>
+    <svg class="hub-icon--moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+    </svg>
+</button>
+
+<script>
+    const STORAGE_KEY = 'starlight-theme';
+    const button = document.getElementById('hub-theme-toggle');
+
+    function currentTheme() {
+        return document.documentElement.dataset.theme === 'dark' ? 'dark' : 'light';
+    }
+
+    button?.addEventListener('click', () => {
+        const next = currentTheme() === 'dark' ? 'light' : 'dark';
+        document.documentElement.dataset.theme = next;
+        try {
+            localStorage.setItem(STORAGE_KEY, next);
+        } catch { /* localStorage unavailable — theme still applies for this load */ }
+    });
+</script>
