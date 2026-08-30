@@ -4,6 +4,9 @@
 build
 target
 book
+node_modules
+dist
+.astro
 
 *.log
 *.tmp
