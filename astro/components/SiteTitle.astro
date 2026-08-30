@@ -1,0 +1,214 @@
+---
+/**
+ * Liara Engine — module and version switchers.
+ *
+ * Placed inside Starlight's own header by overriding `SiteTitle` rather
+ * than `Header`. Overriding the header would mean reimplementing search,
+ * the theme toggle and the mobile menu, or fighting a fixed header height
+ * to fit a second bar underneath — which is the shape of problem this
+ * whole migration exists to leave behind. `SiteTitle` is a slot Starlight
+ * expects to be replaced, so the switchers sit in supported territory.
+ *
+ * Rendering strategy
+ * ------------------
+ * The markup is produced at build time and then corrected at runtime.
+ *
+ * Build time gives an immediate first paint and a navigation that works
+ * with JavaScript disabled. On its own it would go stale: a module that
+ * stops being released stops being rebuilt, and its pages would advertise
+ * whatever the module list looked like on its last build, forever.
+ *
+ * The runtime pass fixes that. It fetches one aggregated index — see
+ * tools/build-registry-index.py — and reconciles the lists in place. One
+ * request, not one per module, and it never blocks the first paint.
+ */
+import Default from '@astrojs/starlight/components/SiteTitle.astro';
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
+
+const INDEX_PATH = '/registry-index.json';
+
+/** Registry shipped with the preset: the module list changes rarely, and
+ *  bundling it removes any build-time dependency on the live site. */
+import registry from '../registry.json';
+
+/** The module's own manifest is authoritative for its version list and is
+ *  right there in the repository being built, so it is read directly. */
+function readLocalManifest() {
+    try {
+        return JSON.parse(readFileSync(resolve(process.cwd(), 'manifest.json'), 'utf-8'));
+    } catch {
+        return null;
+    }
+}
+
+function sortVersions(labels) {
+    return [...labels].sort((a, b) => {
+        if (a === 'dev') return -1;
+        if (b === 'dev') return 1;
+        return b.localeCompare(a, undefined, { numeric: true });
+    });
+}
+
+const base = import.meta.env.BASE_URL.replace(/\/+$/, '');
+const [, repo = '', version = ''] = base.split('/');
+
+const manifest = readLocalManifest();
+const versions = manifest?.versions
+    // Preview builds are reachable by URL only and must never be listed.
+    ? sortVersions(Object.keys(manifest.versions).filter((v) => !v.startsWith('pr-')))
+    : [version];
+const latest = manifest?.metadata?.latest ?? null;
+
+const modules = (registry.modules ?? []).map((m) => ({
+    repo: m.repo,
+    name: m.name,
+    current: m.repo === repo,
+}));
+---
+
+<div class="liara-title">
+    <Default {...Astro.props}><slot /></Default>
+
+    <liara-nav data-index={INDEX_PATH} data-repo={repo} data-version={version}>
+        <label class="liara-switch">
+            <span class="sr-only">Module</span>
+            <select data-liara-modules>
+                {modules.map((m) => (
+                    <option value={m.repo} selected={m.current}>{m.name}</option>
+                ))}
+            </select>
+        </label>
+
+        <label class="liara-switch">
+            <span class="sr-only">Version</span>
+            <select data-liara-versions>
+                {versions.map((v) => (
+                    <option value={v} selected={v === version}>
+                        {v}{v === latest ? ' (latest)' : ''}
+                    </option>
+                ))}
+            </select>
+        </label>
+    </liara-nav>
+</div>
+
+<style>
+    .liara-title {
+        display: flex;
+        align-items: center;
+        gap: var(--liara-space-3, 0.75rem);
+        min-width: 0;
+    }
+
+    liara-nav {
+        display: flex;
+        gap: 0.4rem;
+    }
+
+    .liara-switch select {
+        font: inherit;
+        font-size: var(--sl-text-xs);
+        color: var(--sl-color-text);
+        background: var(--sl-color-bg-nav);
+        border: 1px solid var(--sl-color-hairline);
+        border-radius: var(--liara-radius-pill, 999px);
+        padding: 0.15rem 0.5rem;
+        cursor: pointer;
+        max-width: 11ch;
+    }
+
+    .liara-switch select:hover {
+        border-color: var(--sl-color-accent);
+    }
+
+    /* The switchers are the first thing to go when space runs out: the
+       mobile menu already exposes the same navigation. */
+    @media (max-width: 50rem) {
+        liara-nav { display: none; }
+    }
+
+    .sr-only {
+        position: absolute;
+        width: 1px; height: 1px;
+        padding: 0; margin: -1px;
+        overflow: hidden; clip-path: inset(50%);
+        white-space: nowrap;
+    }
+</style>
+
+<script>
+    /**
+     * Reconciles the statically rendered switchers against the live index.
+     *
+     * Everything here is best-effort. A failed fetch, a malformed index or
+     * a missing element all leave the build-time markup in place, which is
+     * correct as of the last build — degraded, never broken.
+     */
+    class LiaraNav extends HTMLElement {
+        connectedCallback() {
+            this.repo = this.dataset.repo ?? '';
+            this.version = this.dataset.version ?? '';
+            this.modules = this.querySelector('[data-liara-modules]');
+            this.versions = this.querySelector('[data-liara-versions]');
+
+            this.modules?.addEventListener('change', (event) => {
+                // `latest` is resolved by the edge router, so switching
+                // module never needs to know that module's version list.
+                location.href = `/${event.target.value}/latest/`;
+            });
+
+            this.versions?.addEventListener('change', (event) => {
+                location.href = `/${this.repo}/${event.target.value}/`;
+            });
+
+            this.refresh().catch(() => { /* keep the build-time markup */ });
+        }
+
+        async refresh() {
+            const response = await fetch(this.dataset.index ?? '/registry-index.json',
+                                         { cache: 'no-cache' });
+            if (!response.ok) return;
+
+            const index = await response.json();
+            if (!Array.isArray(index?.modules)) return;
+
+            this.syncModules(index.modules);
+            this.syncVersions(index.modules.find((m) => m.repo === this.repo));
+        }
+
+        syncModules(modules) {
+            if (!this.modules) return;
+            const listed = modules.filter((m) => m.deployed !== false);
+            if (listed.length === 0) return;
+
+            this.modules.replaceChildren(...listed.map((m) => {
+                const option = new Option(m.name ?? m.repo, m.repo);
+                option.selected = m.repo === this.repo;
+                return option;
+            }));
+        }
+
+        syncVersions(module) {
+            if (!this.versions || !module?.order?.length) return;
+
+            this.versions.replaceChildren(...module.order.map((label) => {
+                const note = label === module.latest ? ' (latest)' : '';
+                const option = new Option(`${label}${note}`, label);
+                option.selected = label === this.version;
+                return option;
+            }));
+
+            // A version the index does not know about — a preview, or a
+            // release since removed — would otherwise silently vanish from
+            // a page that is being viewed right now.
+            if (!module.order.includes(this.version) && this.version) {
+                const option = new Option(this.version, this.version);
+                option.selected = true;
+                this.versions.prepend(option);
+            }
+        }
+    }
+
+    customElements.define('liara-nav', LiaraNav);
+</script>

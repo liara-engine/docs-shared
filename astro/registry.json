@@ -1,0 +1,10 @@
+{
+  "$schema": "https://liara-engine.github.io/liara/schemas/modules-registry.schema.json",
+  "modules": [
+    { "key": "meta-repo",   "name": "Liara Engine", "repo": "liara",            "only_mdbook": true, "meta": true },
+    { "key": "interfaces",  "name": "Interfaces",   "repo": "liara-interfaces", "is_abi": true },
+    { "key": "core",        "name": "Core",         "repo": "liara-core" },
+    { "key": "renderer",    "name": "Renderer",     "repo": "liara-renderer" },
+    { "key": "docs-shared", "name": "Shared Docs",  "repo": "docs-shared",      "only_mdbook": true, "meta": true }
+  ]
+}

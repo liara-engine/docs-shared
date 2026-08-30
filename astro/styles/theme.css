@@ -1,0 +1,186 @@
+/*
+ * Liara Engine — Starlight theme mapping.
+ *
+ * Starlight exposes its entire visual surface as CSS custom properties and
+ * documents overriding them as the supported way to theme it. This file does
+ * exactly that: it binds Starlight's `--sl-*` properties to the `--liara-*`
+ * design tokens and stops there. There is no rule here that fights a
+ * Starlight selector, no `!important`, and no markup assumption — which is
+ * the whole point of the move away from the previous stack, where the theme
+ * was obtained by overriding mdBook's template and hijacking two of its five
+ * built-in themes.
+ *
+ * One mapping block covers both colour schemes. The `--liara-*` tokens
+ * already switch on `[data-theme]`, so `--sl-color-bg: var(--liara-bg-page)`
+ * resolves correctly in light and dark without being written twice. Anything
+ * duplicated per scheme below is duplicated because Starlight needs a
+ * *different token*, not a different value.
+ */
+
+:root {
+
+    /* --- Accent ----------------------------------------------------------
+     * Starlight uses accent-low for selection and subtle fills, accent for
+     * borders and marks, accent-high for text on the page background. The
+     * mid-tone rose does not carry enough contrast for body-sized text, so
+     * accent-high maps to the dark role rather than the default one.        */
+    --sl-color-accent-low:        var(--liara-brand-primary-soft);
+    --sl-color-accent:            var(--liara-brand-primary);
+    --sl-color-accent-high:       var(--liara-brand-primary-dark);
+
+    /* --- Greyscale ramp --------------------------------------------------
+     * Starlight's ramp runs from white through gray-1..gray-7 to black, and
+     * every component picks from it. Mapping the ramp onto the token set is
+     * what makes third-party Starlight components inherit the palette for
+     * free instead of needing individual overrides.                          */
+    --sl-color-white:             var(--liara-text-primary);
+    --sl-color-gray-1:            var(--liara-text-primary);
+    --sl-color-gray-2:            var(--liara-text-secondary);
+    --sl-color-gray-3:            var(--liara-text-tertiary);
+    --sl-color-gray-4:            var(--liara-border-strong);
+    --sl-color-gray-5:            var(--liara-border-default);
+    --sl-color-gray-6:            var(--liara-bg-surface);
+    --sl-color-gray-7:            var(--liara-bg-elevated);
+    --sl-color-black:             var(--liara-bg-page);
+
+    /* --- Surfaces --------------------------------------------------------- */
+    --sl-color-bg:                var(--liara-bg-page);
+    --sl-color-bg-nav:            var(--liara-bg-surface);
+    --sl-color-bg-sidebar:        var(--liara-bg-surface);
+    --sl-color-bg-inline-code:    var(--liara-code-bg);
+    --sl-color-bg-badge:          var(--liara-brand-primary-soft);
+    --sl-color-backdrop-overlay:  var(--liara-bg-overlay);
+
+    /* --- Hairlines -------------------------------------------------------- */
+    --sl-color-hairline:          var(--liara-border-default);
+    --sl-color-hairline-light:    var(--liara-border-subtle);
+    --sl-color-hairline-shade:    var(--liara-border-strong);
+
+    /* --- Text ------------------------------------------------------------- */
+    --sl-color-text:              var(--liara-text-primary);
+    --sl-color-text-accent:       var(--liara-text-link);
+    --sl-color-text-invert:       var(--liara-text-on-primary);
+
+    /* --- Asides ----------------------------------------------------------
+     * Starlight's four callout kinds line up one-to-one with the semantic
+     * token roles, so each maps directly rather than borrowing the accent.  */
+    --sl-color-asides-text-accent: var(--liara-semantic-info-fg);
+    --sl-color-blue:              var(--liara-semantic-info-fg);
+    --sl-color-blue-low:          var(--liara-semantic-info-bg);
+    --sl-color-blue-high:         var(--liara-semantic-info-border);
+    --sl-color-green:             var(--liara-semantic-success-fg);
+    --sl-color-green-low:         var(--liara-semantic-success-bg);
+    --sl-color-green-high:        var(--liara-semantic-success-border);
+    --sl-color-orange:            var(--liara-semantic-warning-fg);
+    --sl-color-orange-low:        var(--liara-semantic-warning-bg);
+    --sl-color-orange-high:       var(--liara-semantic-warning-border);
+    --sl-color-red:               var(--liara-semantic-danger-fg);
+    --sl-color-red-low:           var(--liara-semantic-danger-bg);
+    --sl-color-red-high:          var(--liara-semantic-danger-border);
+    --sl-color-purple:            var(--liara-brand-secondary-dark);
+    --sl-color-purple-low:        var(--liara-brand-secondary-soft);
+    --sl-color-purple-high:       var(--liara-brand-secondary);
+
+    /* --- Banner ----------------------------------------------------------- */
+    --sl-color-banner-bg:         var(--liara-brand-secondary-soft);
+
+    /* --- Typography ------------------------------------------------------- */
+    --sl-font:                    var(--liara-font-sans);
+    --sl-font-mono:               var(--liara-font-mono);
+
+    /* --- Shadows ---------------------------------------------------------- */
+    --sl-shadow-sm:               var(--liara-shadow-sm);
+    --sl-shadow-md:               var(--liara-shadow-md);
+    --sl-shadow-lg:               var(--liara-shadow-lg);
+}
+
+/*
+ * The dyslexia-friendly mode is a Liara addition with no Starlight
+ * equivalent. It is an extension, not an override: the attribute lives
+ * alongside `data-theme` and only swaps font-family and leading tokens,
+ * which the mapping above then propagates into Starlight untouched.
+ */
+:root[data-liara-a11y-dyslexia='true'] {
+    --sl-font:                    var(--liara-font-sans);
+    --sl-font-mono:               var(--liara-font-mono);
+    --sl-line-height:             var(--liara-leading-normal);
+}
+
+/*
+ * Focus visibility. Pastels are easy to lose against a warm-white page, and
+ * Starlight's default ring inherits the accent, which here is the mid-tone
+ * rose. Restating the ring in token terms keeps keyboard navigation legible
+ * in both schemes.
+ */
+:where(a, button, summary, input, select, textarea):focus-visible {
+    outline: var(--liara-focus-ring-width) solid var(--liara-brand-primary);
+    outline-offset: var(--liara-focus-ring-offset);
+    border-radius: var(--liara-radius-sm);
+}
+
+::selection {
+    background: var(--liara-brand-primary);
+    color: var(--liara-text-on-primary);
+}
+
+/* ============================================================================
+ * Generated API reference
+ *
+ * The pages under /api/ are produced by the Doxygen loader and emit HTML
+ * directly, so they sit outside Expressive Code's reach — it only sees
+ * Markdown code fences. These few rules give the generated blocks the same
+ * weight and rhythm as the rest of the page. Everything is expressed in
+ * tokens, so the two sections cannot drift apart when the palette changes.
+ * ========================================================================== */
+
+.sl-markdown-content .doxygen-signature pre,
+.sl-markdown-content pre.doxygen-code {
+    background: var(--liara-code-bg);
+    border: 1px solid var(--liara-border-default);
+    border-left: 3px solid var(--liara-brand-primary);
+    border-radius: var(--liara-radius-md);
+    padding: 0.6rem 0.9rem;
+    overflow-x: auto;
+    font-size: var(--sl-text-sm);
+}
+
+/* A signature is a declaration, not a snippet: it belongs to the heading
+   above it rather than floating between two paragraphs. */
+.sl-markdown-content .doxygen-signature {
+    margin-block: 0.4rem 1rem;
+}
+
+.sl-markdown-content .doxygen-params,
+.sl-markdown-content .doxygen-enum {
+    display: table;
+    width: 100%;
+    font-size: var(--sl-text-sm);
+}
+
+.sl-markdown-content .doxygen-params td:first-child,
+.sl-markdown-content .doxygen-enum td:first-child {
+    white-space: nowrap;
+}
+
+.sl-markdown-content .doxygen-dir {
+    color: var(--liara-text-tertiary);
+    font-size: var(--sl-text-xs);
+}
+
+.sl-markdown-content .doxygen-returns {
+    border-left: 3px solid var(--liara-border-strong);
+    padding-left: 0.75rem;
+    color: var(--liara-text-secondary);
+}
+
+/* Where the symbol is declared. Useful, but never the point of the page. */
+.sl-markdown-content .doxygen-source {
+    font-size: var(--sl-text-xs);
+    color: var(--liara-text-tertiary);
+    margin-block-start: 0.25rem;
+}
+
+.sl-markdown-content .doxygen-xref {
+    border-left: 3px solid var(--liara-brand-secondary);
+    padding-left: 0.75rem;
+}
