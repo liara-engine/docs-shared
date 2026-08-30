@@ -22,6 +22,7 @@
 
   "exports": {
     ".": "./index.mjs",
+    "./api": "./api/loader.mjs",
     "./styles/tokens.css": "./styles/tokens.css",
     "./styles/theme.css": "./styles/theme.css",
     "./components/SiteTitle.astro": "./components/SiteTitle.astro",
@@ -29,6 +30,7 @@
   },
   "files": [
     "index.mjs",
+    "api",
     "styles",
     "components",
     "registry.json"

@@ -116,6 +116,7 @@ export function liaraDocs(options = {}) {
     const starlightOptions = {
         title,
         description,
+        disable404Route: true,
         customCss: [
             '@liara/starlight-preset/styles/tokens.css',
             '@liara/starlight-preset/styles/theme.css',
