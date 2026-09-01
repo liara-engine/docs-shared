@@ -4,10 +4,7 @@
  * `modules-registry.json` (repository root) is the single source of truth
  * for a module's identity — key, repo, ABI/meta flags. It is also read
  * server-side, by tools/build-registry-index.py, to join in each module's
- * manifest at deploy time, and by the Starlight preset at build time (as
- * astro/registry.json, generated from this same file — see
- * astro/scripts/sync-registry.mjs — because the Docker image that bakes
- * every module's docs only ever `COPY`s astro/, never hub/).
+ * manifest at deploy time, and by the Starlight preset at build time.
  *
  * The registry carries no presentation — description, icon, card copy —
  * so that lives here, keyed by the same `key`.

@@ -10,9 +10,8 @@
     "build": "astro build",
     "preview": "astro preview",
     "astro": "astro",
-    "predev": "node scripts/sync-registry.mjs && node scripts/generate-config.mjs",
-    "prebuild": "node scripts/sync-registry.mjs && node scripts/generate-config.mjs",
-    "prepack": "node scripts/sync-registry.mjs"
+    "predev": "node scripts/generate-config.mjs",
+    "prebuild": "node scripts/generate-config.mjs"
   },
 
   "dependencies": {
@@ -31,6 +30,7 @@
     "./styles/fonts.css": "./styles/fonts.css",
     "./styles/hub.css": "./styles/hub.css",
     "./components/SiteTitle.astro": "./components/SiteTitle.astro",
+    "./components/VersionBanner.astro": "./components/VersionBanner.astro",
     "./registry.json": "./registry.json"
   },
   "files": [

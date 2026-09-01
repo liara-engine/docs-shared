@@ -26,13 +26,6 @@ import Default from '@astrojs/starlight/components/SiteTitle.astro';
 import { parseBase, readManifest, sortVersions } from '@liara/starlight-preset';
 
 const INDEX_PATH = '/registry-index.json';
-
-/** Registry shipped with the preset: the module list changes rarely, and
- *  bundling it removes any build-time dependency on the live site. Generated
- *  from the repository's canonical modules-registry.json by `predev`/
- *  `prebuild` — see scripts/sync-registry.mjs — not hand-maintained here.
- *  A static import, not `readRegistry()`: see that function's doc comment
- *  in index.mjs for why this file needs the static form specifically. */
 import registry from '../registry.json';
 
 const { repo, version } = parseBase(import.meta.env.BASE_URL);
