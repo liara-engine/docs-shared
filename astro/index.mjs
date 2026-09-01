@@ -169,6 +169,7 @@ export function liaraDocs(options = {}) {
         },
         components: {
             SiteTitle: '@liara/starlight-preset/components/SiteTitle.astro',
+            Banner: '@liara/starlight-preset/components/VersionBanner.astro',
         },
         sidebar,
         pagination: true,
