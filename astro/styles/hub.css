@@ -22,73 +22,129 @@ html, body {
 }
 
 /* ============================================================================
- * Topbar
+ * Navbar
  * ========================================================================== */
 
-.hub-topbar {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: var(--liara-space-4);
-    max-width: var(--liara-page-max-width);
-    margin: 0 auto;
-    padding: var(--liara-space-4) var(--liara-space-5);
+.liara-navbar {
+    position: sticky;
+    top: 0;
+    z-index: 500;
+
+    width: 100%;
+    height: var(--liara-navbar-height);
+
+    background: var(--liara-bg-elevated);
+    border-bottom: var(--liara-border-width-thin) solid var(--liara-border-default);
+
+    font-family: var(--liara-font-sans);
+    font-size: var(--liara-text-sm);
+    line-height: 1;
 }
 
-.hub-topbar__brand {
+.liara-navbar__inner {
+    max-width: var(--liara-page-max-width);
+    height: 100%;
+    margin: 0 auto;
+    padding: 0 var(--liara-space-5);
+
+    display: flex;
+    align-items: center;
+    gap: var(--liara-space-5);
+}
+
+.liara-navbar__brand {
     display: flex;
     align-items: center;
     gap: var(--liara-space-2);
+
     color: var(--liara-text-primary);
     text-decoration: none;
-    font-family: var(--liara-font-mono);
-    font-size: var(--liara-text-sm);
     font-weight: var(--liara-weight-medium);
+
+    border-radius: var(--liara-radius-sm);
+    padding: var(--liara-space-1) var(--liara-space-2);
+    margin-left: calc(var(--liara-space-2) * -1);
+
+    transition: background-color var(--liara-transition-fast);
 }
 
-.hub-topbar__brand:hover {
-    color: var(--liara-brand-primary-dark);
+.liara-navbar__brand:hover {
+    background: var(--liara-brand-primary-soft);
 }
 
-.hub-topbar__brand img {
-    width: 22px;
-    height: 22px;
+.liara-navbar__logo {
+    flex-shrink: 0;
+    display: block;
     border-radius: var(--liara-radius-sm);
 }
 
-.hub-topbar__actions {
-    display: flex;
-    align-items: center;
-    gap: var(--liara-space-2);
+.liara-navbar__brand-name {
+    font-size: var(--liara-text-base);
+    letter-spacing: -0.01em;
 }
 
-.hub-icon-button {
+.liara-navbar__spacer {
+    flex: 1;
+}
+
+.liara-navbar__actions {
+    display: flex;
+    align-items: center;
+    gap: var(--liara-space-1);
+}
+
+.liara-navbar__action {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 34px;
-    height: 34px;
+
+    width: 36px;
+    height: 36px;
+
+    background: transparent;
+    border: var(--liara-border-width-thin) solid transparent;
     border-radius: var(--liara-radius-md);
-    border: var(--liara-border-width-default) solid var(--liara-border-default);
-    background: var(--liara-bg-elevated);
+
     color: var(--liara-text-secondary);
+    font-family: inherit;
     cursor: pointer;
-    transition: border-color var(--liara-transition-fast), color var(--liara-transition-fast);
+    text-decoration: none;
+
+    transition:
+            background-color var(--liara-transition-fast),
+            color var(--liara-transition-fast),
+            border-color var(--liara-transition-fast);
 }
 
-.hub-icon-button:hover {
-    border-color: var(--liara-brand-primary);
+.liara-navbar__action:hover {
+    background: var(--liara-bg-surface);
+    color: var(--liara-text-primary);
+    border-color: var(--liara-border-default);
+}
+
+.liara-navbar__action[aria-pressed="true"] {
+    background: var(--liara-brand-primary-soft);
     color: var(--liara-brand-primary-dark);
+    border-color: var(--liara-brand-primary);
 }
 
-.hub-icon-button svg {
-    width: 16px;
-    height: 16px;
+.liara-navbar__icon {
+    display: block;
+    flex-shrink: 0;
+    width: 18px;
+    height: 18px;
 }
 
-.hub-icon-button .hub-icon--moon { display: none; }
-[data-theme="dark"] .hub-icon-button .hub-icon--sun { display: none; }
-[data-theme="dark"] .hub-icon-button .hub-icon--moon { display: inline; }
+@media (max-width: 480px) {
+    .liara-navbar__inner {
+        padding: 0 var(--liara-space-3);
+        gap: var(--liara-space-2);
+    }
+
+    .liara-navbar__brand-name {
+        display: none;
+    }
+}
 
 /* ============================================================================
  * Hero
