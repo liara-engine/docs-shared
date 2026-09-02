@@ -1,0 +1,126 @@
+name: image
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*.*.*']
+  pull_request:
+    types: [opened, synchronize, reopened]
+    paths:
+      - '.github/workflows/image.yml'
+      - 'Dockerfile'
+      - 'build-docs.sh'
+      - 'tools/**'
+      - 'astro/**'
+      - 'modules-registry.json'
+  workflow_dispatch:
+
+concurrency:
+  group: image-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+env:
+  SITE: https://liara-engine.liara-engine-documentation.workers.dev
+
+jobs:
+  image:
+    permissions:
+      contents: read
+      packages: write
+
+    uses: liara-engine/.github/.github/workflows/reusable-generate-docker.yml@v2
+    with:
+      image-name: liara-engine/liara-documentation-builder
+      dockerfile-path: Dockerfile
+      image-tag: >-
+        ${{ github.event_name == 'pull_request'
+            && format('pr-{0}', github.event.pull_request.number)
+            || (github.ref_type == 'tag' && github.ref_name || 'dev') }}
+      tag-latest: ${{ github.event_name != 'pull_request' }}
+
+  plan:
+    needs: image
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-24.04
+
+    permissions:
+      contents: read
+
+    outputs:
+      targets: ${{ steps.plan.outputs.targets }}
+
+    steps:
+      - id: plan
+        env:
+          SELF: ${{ github.event.repository.name }}
+          IS_TAG: ${{ github.ref_type == 'tag' }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+
+          # This repository's own documentation always follows main, because
+          # main is what the image was just built from.
+          targets=$(jq -nc --arg r "$SELF" '[{repo: $r, version: "dev"}]')
+
+          if [ "$IS_TAG" = "true" ]; then
+            targets=$(jq -c --arg r "$SELF" --arg v "${TAG#v}" \
+                        '. + [{repo: $r, version: $v}]' <<< "$targets")
+
+            # A release changes the baked templates for everyone, so the pages
+            # people actually read are refreshed with it: `dev` and `latest`
+            # of every module the site already serves. Older releases are left
+            # alone — they are rebuilt on demand, see rebuild-version.yml.
+            if index=$(curl -fsSL --retry 3 "${SITE}/registry-index.json"); then
+              others=$(jq -c --arg self "$SELF" '[
+                  .modules[]
+                  | select(.deployed) | select(.repo != $self)
+                  | .repo as $r | .latest as $l | (.versions // {}) as $vs
+                  | [ (if ($vs | has("dev")) and (($vs.dev.removed // false) | not)
+                       then {repo: $r, version: "dev"} else empty end),
+                      (if ($l // "") != "" and ((($vs[$l] // {}).removed // false) | not)
+                       then {repo: $r, version: $l} else empty end) ]
+                  | .[]
+                ]' <<< "$index")
+              targets=$(jq -c --argjson others "$others" '. + $others' <<< "$targets")
+            else
+              echo "::warning::${SITE}/registry-index.json is unreadable;" \
+                   "only ${SELF} will be refreshed."
+            fi
+          fi
+
+          targets=$(jq -c 'unique_by("\(.repo)@\(.version)")' <<< "$targets")
+          echo "targets=${targets}" >> "$GITHUB_OUTPUT"
+
+          {
+            echo "### Documentation to refresh"
+            echo
+            jq -r '.[] | "- \(.repo) \(.version)"' <<< "$targets"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  refresh:
+    needs: plan
+    if: needs.plan.outputs.targets != '[]'
+
+    strategy:
+      fail-fast: false
+      max-parallel: 2
+      matrix:
+        target: ${{ fromJson(needs.plan.outputs.targets) }}
+
+    permissions:
+      contents: read
+      packages: read
+
+    uses: liara-engine/.github/.github/workflows/reusable-docs.yml@v2
+    with:
+      image: ghcr.io/liara-engine/liara-documentation-builder:latest
+      output-repository: liara-engine/liara-docs
+      source-repository: liara-engine/${{ matrix.target.repo }}
+      repo: ${{ matrix.target.repo }}
+      version: ${{ matrix.target.version }}
+      docs-shared-ref: ${{ github.sha }}
+
+    secrets:
+      ghcr-token: ${{ secrets.GITHUB_TOKEN }}
+      push-token: ${{ secrets.DOCS_PUSH_TOKEN }}
+      read-token: ${{ secrets.ORG_READ_TOKEN }}
