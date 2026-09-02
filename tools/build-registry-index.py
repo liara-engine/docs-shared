@@ -38,6 +38,9 @@ REGISTRY_NAME = "modules-registry.json"
 # version selector: they are reachable by direct URL only.
 PREVIEW_PREFIX = "pr-"
 
+# Written beside a retired version's tombstone page by tools/make-tombstone.py.
+REMOVED_MARKER = "removed.json"
+
 
 def load_json(path: Path) -> dict | None:
     try:
@@ -90,6 +93,39 @@ def normalise_versions(manifest: dict) -> dict[str, dict]:
     return result
 
 
+def annotate_deployment(module_dir: Path, versions: dict[str, dict]) -> None:
+    """Records, per version, what the site actually holds for it.
+
+    A manifest declares versions; it does not know which of them made it onto
+    the site. Three states have to be told apart, because they want three
+    different links:
+
+      * deployed        — an ordinary version directory,
+      * retired         — a tombstone page and a `removed.json` beside it
+                          (tools/make-tombstone.py), which is still worth
+                          linking to: it explains itself and names a
+                          replacement,
+      * not deployed    — declared but never built, or built before the site
+                          was rebuilt from scratch. A link there is a 404,
+                          so a selector should not offer it as if it were a
+                          page.
+
+    All three stay in the index. Dropping the retired ones would recreate
+    exactly the silence the tombstone exists to avoid.
+    """
+    for label, entry in versions.items():
+        directory = module_dir / label
+        entry["deployed"] = directory.is_dir()
+
+        marker = load_json(directory / REMOVED_MARKER)
+        if marker:
+            entry["removed"] = True
+            entry["removed_at"] = marker.get("removed_at")
+            entry["successor"] = marker.get("successor")
+            if marker.get("reason"):
+                entry["reason"] = marker["reason"]
+
+
 def sort_versions(labels: list[str]) -> list[str]:
     """`dev` first, then newest release first."""
     def key(label: str):
@@ -124,6 +160,7 @@ def build(site: Path, registry_path: Path) -> dict:
         else:
             metadata = manifest.get("metadata") or {}
             versions = normalise_versions(manifest)
+            annotate_deployment(site / repo, versions)
             merged.update({
                 "deployed": True,
                 "name": metadata.get("name") or entry.get("name") or repo,
