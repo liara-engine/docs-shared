@@ -172,7 +172,9 @@ const modules = (registry.modules ?? []).map((m) => ({
             if (!this.versions || !module?.order?.length) return;
 
             this.versions.replaceChildren(...module.order.map((label) => {
-                const note = label === module.latest ? ' (latest)' : '';
+                const entry = module.versions?.[label] ?? {};
+                const note = entry.removed ? ' (retired)'
+                    : label === module.latest ? ' (latest)' : '';
                 const option = new Option(`${label}${note}`, label);
                 option.selected = label === this.version;
                 return option;
