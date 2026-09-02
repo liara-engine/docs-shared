@@ -22,6 +22,7 @@ on:
       - 'modules-registry.json'
       - 'astro/styles/**'
       - 'astro/package.json'
+      - 'tools/fingerprint.py'
   workflow_dispatch:
 
 jobs:
@@ -51,12 +52,21 @@ jobs:
 
       - run: npm run build
         working-directory: hub
+        env:
+          LIARA_ASSETS_PREFIX: /_cas/
+
+      - name: Relocate assets into the content-addressed store
+        run: python3 tools/fingerprint.py --dist hub/dist --base /
 
       - name: Assemble the artifact
         run: |
           set -euo pipefail
           [ -f hub/dist/index.html ] || { echo "::error::the hub build produced no index"; exit 1; }
           [ -f hub/dist/404.html ]   || echo "::warning::no 404.html — the edge router's custom 404 will be missing"
+          [ -d hub/dist/_cas ]       || { echo "::error::the fingerprint pass produced no store"; exit 1; }
+          if [ -d hub/dist/_astro ]; then
+            echo "::error::_astro survived the fingerprint pass"; exit 1
+          fi
 
           mkdir -p out
           cp -a hub/dist out/site

@@ -158,7 +158,7 @@ def relocate(path: Path, dist: Path, cas_root: Path, cas_prefix: str,
 
     target = cas_root / digest[:2] / f'{digest}{suffix}'
     new_url = f'{cas_prefix}/{digest[:2]}/{digest}{suffix}'
-    old_url = f'{base}/{relative.as_posix()}'
+    old_url = f'{base.rstrip("/")}/{relative.as_posix()}'
     size = path.stat().st_size
 
     if not dry_run:
