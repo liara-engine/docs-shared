@@ -1,0 +1,688 @@
+---
+/**
+ * Liara Engine — the dropdown every switcher in the header is built from.
+ *
+ * There were three of these before and no two of them looked alike: two
+ * native `<select>` elements for module and version, capped at 11ch so their
+ * options were truncated more often than not, and Starlight's own `<select>`
+ * for the theme. A native select paints its popup with the platform's
+ * widgets, so none of the design tokens reach it — the list that drops out of
+ * a pastel header was a grey system menu, in the system font, at the system
+ * size. This component replaces the popup with markup, which is the only way
+ * to style one.
+ *
+ * Two constraints shaped the result:
+ *
+ *   * **It has to escape the header.** Starlight's `.title-wrapper` sets
+ *     `overflow: clip` so a long site title cannot cover the search box, and
+ *     an absolutely positioned panel inside it would be clipped by exactly
+ *     that rule. The panel is therefore a popover — the top layer ignores
+ *     ancestor clipping and stacking contexts alike — with a fixed-position
+ *     fallback for browsers without the API, positioned from the trigger's
+ *     rectangle either way.
+ *
+ *   * **It has to work where the preset does not reach.** The hub is a plain
+ *     Astro site that never installs Starlight, so nothing here may import
+ *     from it: the icons are inline SVG and the styles are global rather
+ *     than scoped, since the option list is re-rendered from JavaScript when
+ *     the registry index comes back and Astro's scoping only marks up the
+ *     elements it rendered itself.
+ *
+ * Options carrying an `href` are anchors, so switching module or version
+ * survives with JavaScript disabled, opens in a new tab on a middle click,
+ * and shows its destination in the status bar. Options without one emit a
+ * `liara-select:change` event instead — that is the theme, which navigates
+ * nowhere.
+ */
+
+export interface LiaraSelectOption {
+    /** Identity, matched against `value` to decide what is selected. */
+    value: string;
+    /** What the option reads as, in the panel and on the trigger. */
+    label: string;
+    /** Secondary line, e.g. what makes this version worth picking. */
+    note?: string;
+    /** Short chip, e.g. `latest`. Shown in the panel and on the trigger. */
+    badge?: string;
+    /** Where picking it goes. Anchors when set, buttons when not. */
+    href?: string;
+}
+
+interface Props {
+    /** Distinguishes one switcher from another in events and styling. */
+    name: string;
+    /** Accessible name of the control, e.g. `Module`. */
+    label: string;
+    /** The currently selected option's `value`. */
+    value: string;
+    options: LiaraSelectOption[];
+    /** Built-in trigger icon. Omit and pass an `icon` slot for anything else. */
+    icon?: keyof typeof ICONS;
+    /** Which edge of the trigger the panel lines up with. */
+    align?: 'start' | 'end';
+    /** Widest the trigger's label may get before it is ellipsised. */
+    valueWidth?: string;
+    class?: string;
+}
+
+/** Inline rather than `@astrojs/starlight/components/Icon.astro`: the hub
+ *  builds this component too, and never installs Starlight. */
+const ICONS = {
+    module: '<path d="M4 7.5 12 3.5l8 4v9L12 20.5l-8-4z"/><path d="m4 7.5 8 4 8-4M12 11.5v9"/>',
+    version: '<path d="M6 5v9"/><circle cx="6" cy="16.5" r="2.5"/><circle cx="6" cy="4" r="2"/>'
+        + '<path d="M18 10v-.5A2.5 2.5 0 0 0 15.5 7H9"/><circle cx="18" cy="12" r="2.5"/>',
+};
+
+const { name, label, value, options, icon, align = 'start', valueWidth, class: className } = Astro.props;
+
+const selected = options.find((option) => option.value === value) ?? options[0];
+---
+
+<liara-select
+    class:list={['liara-select', className]}
+    data-name={name}
+    data-value={value}
+    data-align={align}
+    style={valueWidth ? `--liara-select-value-width: ${valueWidth}` : undefined}
+>
+    <button type="button" class="liara-select__trigger" data-liara-trigger aria-haspopup="listbox" aria-expanded="false">
+        <span class="liara-select__icon" aria-hidden="true">
+            <slot name="icon">
+                {icon && (
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"
+                         stroke-linecap="round" stroke-linejoin="round" set:html={ICONS[icon]} />
+                )}
+            </slot>
+        </span>
+
+        <span class="liara-select__sr">{label}</span>
+        <span class="liara-select__value" data-liara-value>{selected?.label ?? value}</span>
+        <span class="liara-select__badge" data-liara-badge hidden={!selected?.badge}>{selected?.badge}</span>
+
+        <svg class="liara-select__caret" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <polyline points="6 9 12 15 18 9" />
+        </svg>
+    </button>
+
+    <div class="liara-select__panel" data-liara-panel role="listbox" aria-label={label} hidden>
+        {options.map((option) => {
+            const Tag = option.href ? 'a' : 'button';
+            return (
+                <Tag
+                    class:list={['liara-select__option', option.value === value && 'is-selected']}
+                    role="option"
+                    tabindex="-1"
+                    aria-selected={option.value === value ? 'true' : 'false'}
+                    data-value={option.value}
+                    href={option.href}
+                    type={option.href ? undefined : 'button'}
+                >
+                    <svg class="liara-select__check" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                         stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <polyline points="4 12.5 9.5 18 20 6.5" />
+                    </svg>
+                    <span class="liara-select__option-text">
+                        <span class="liara-select__option-label">{option.label}</span>
+                        {option.note && <span class="liara-select__option-note">{option.note}</span>}
+                    </span>
+                    {option.badge && <span class="liara-select__badge">{option.badge}</span>}
+                </Tag>
+            );
+        })}
+    </div>
+</liara-select>
+
+<style is:global>
+    /* Global, not scoped: `syncOptions()` below rebuilds this markup from the
+       registry index at runtime, and Astro's scoping attribute only lands on
+       the elements it rendered itself. */
+
+    .liara-select {
+        position: relative;
+        display: inline-flex;
+        min-width: 0;
+        font-family: var(--liara-font-sans);
+    }
+
+    .liara-select__trigger {
+        display: inline-flex;
+        align-items: center;
+        gap: var(--liara-space-2);
+        min-width: 0;
+        height: 2.125rem;
+        padding-inline: 0.625rem 0.5rem;
+
+        font: inherit;
+        font-size: var(--liara-text-sm);
+        line-height: 1;
+        color: var(--liara-text-secondary);
+
+        background: var(--liara-bg-elevated);
+        border: var(--liara-border-width-default) solid var(--liara-border-default);
+        border-radius: var(--liara-radius-pill);
+        cursor: pointer;
+
+        transition:
+            background-color var(--liara-transition-fast),
+            border-color var(--liara-transition-fast),
+            color var(--liara-transition-fast);
+    }
+
+    .liara-select__trigger:hover {
+        color: var(--liara-text-primary);
+        border-color: var(--liara-brand-primary);
+        background: var(--liara-brand-primary-soft);
+    }
+
+    .liara-select__trigger:focus-visible {
+        outline: var(--liara-focus-ring-width) solid var(--liara-brand-primary);
+        outline-offset: var(--liara-focus-ring-offset);
+        border-radius: var(--liara-radius-pill);
+    }
+
+    .liara-select[data-open] .liara-select__trigger {
+        color: var(--liara-text-primary);
+        border-color: var(--liara-brand-primary);
+        background: var(--liara-brand-primary-soft);
+    }
+
+    .liara-select__icon {
+        display: flex;
+        flex: none;
+        color: var(--liara-brand-primary-dark);
+    }
+
+    .liara-select__icon:empty {
+        display: none;
+    }
+
+    .liara-select__icon > svg {
+        display: block;
+        width: 1rem;
+        height: 1rem;
+    }
+
+    .liara-select__value {
+        max-width: var(--liara-select-value-width, 12rem);
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        font-weight: var(--liara-weight-medium);
+    }
+
+    .liara-select__caret {
+        flex: none;
+        width: 0.875rem;
+        height: 0.875rem;
+        opacity: 0.7;
+        transition: transform var(--liara-transition-fast);
+    }
+
+    .liara-select[data-open] .liara-select__caret {
+        transform: rotate(180deg);
+    }
+
+    /* --- The chip that says `latest`, `retired`, `preview` ----------------- */
+
+    .liara-select__badge {
+        flex: none;
+        padding: 0.1rem 0.4rem;
+        border-radius: var(--liara-radius-pill);
+
+        font-size: 0.6875rem;
+        font-weight: var(--liara-weight-medium);
+        line-height: 1.4;
+        letter-spacing: 0.01em;
+        white-space: nowrap;
+
+        color: var(--liara-brand-secondary-dark);
+        background: var(--liara-brand-secondary-soft);
+    }
+
+    .liara-select__badge[hidden] {
+        display: none;
+    }
+
+    /* --- The panel --------------------------------------------------------
+     * Positioned from JavaScript against the trigger's rectangle, in the top
+     * layer when the popover API is available and in a fixed-position layer
+     * when it is not. Both paths need `position: fixed`, which is also what
+     * gets it out of `.title-wrapper`'s `overflow: clip`.                    */
+
+    .liara-select__panel {
+        /* Hidden by default and shown by the two rules below. A popover is
+           hidden by a UA rule, and any author `display` at all would win over
+           it — so the open states are what carry `display`, not the base. */
+        display: none;
+        position: fixed;
+        inset: auto;
+        z-index: 1000;
+
+        margin: 0;
+        padding: var(--liara-space-1);
+        min-width: 12rem;
+        max-width: min(24rem, calc(100vw - 1.5rem));
+        max-height: min(60vh, 24rem);
+        overflow-y: auto;
+        overscroll-behavior: contain;
+
+        background: var(--liara-bg-elevated);
+        border: var(--liara-border-width-default) solid var(--liara-border-default);
+        border-radius: var(--liara-radius-md);
+        box-shadow: var(--liara-shadow-lg);
+
+        flex-direction: column;
+        gap: 2px;
+    }
+
+    /* Open, in the top layer. Kept in a rule of its own: a selector list is
+       dropped whole when one of its selectors is unknown, and `:popover-open`
+       is exactly the part an older browser would not recognise. */
+    .liara-select__panel:popover-open {
+        display: flex;
+        animation: liara-select-in var(--liara-transition-fast);
+    }
+
+    /* Open, in the fallback path, where visibility is the `hidden` attribute. */
+    .liara-select__panel:not([popover]):not([hidden]) {
+        display: flex;
+        animation: liara-select-in var(--liara-transition-fast);
+    }
+
+    @keyframes liara-select-in {
+        from { opacity: 0; transform: translateY(-0.25rem); }
+        to   { opacity: 1; transform: none; }
+    }
+
+    .liara-select__option {
+        display: flex;
+        align-items: center;
+        gap: var(--liara-space-2);
+        width: 100%;
+        padding: 0.4rem 0.55rem;
+
+        font: inherit;
+        font-size: var(--liara-text-sm);
+        line-height: var(--liara-leading-snug);
+        text-align: start;
+        text-decoration: none;
+        color: var(--liara-text-primary);
+
+        background: transparent;
+        border: 0;
+        border-radius: var(--liara-radius-sm);
+        cursor: pointer;
+    }
+
+    .liara-select__option:hover,
+    .liara-select__option:focus-visible {
+        background: var(--liara-bg-surface);
+        outline: none;
+    }
+
+    .liara-select__option:focus-visible {
+        box-shadow: inset 0 0 0 2px var(--liara-brand-primary);
+    }
+
+    .liara-select__option.is-selected {
+        background: var(--liara-brand-primary-soft);
+        color: var(--liara-brand-primary-dark);
+    }
+
+    .liara-select__check {
+        flex: none;
+        width: 0.875rem;
+        height: 0.875rem;
+        opacity: 0;
+        color: var(--liara-brand-primary-dark);
+    }
+
+    .liara-select__option.is-selected .liara-select__check {
+        opacity: 1;
+    }
+
+    .liara-select__option-text {
+        display: flex;
+        flex-direction: column;
+        gap: 0.1rem;
+        min-width: 0;
+        flex: 1;
+    }
+
+    .liara-select__option-label {
+        white-space: nowrap;
+        font-weight: var(--liara-weight-medium);
+    }
+
+    .liara-select__option-note {
+        font-size: var(--liara-text-xs);
+        color: var(--liara-text-tertiary);
+        white-space: nowrap;
+    }
+
+    .liara-select__sr {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip-path: inset(50%);
+        white-space: nowrap;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .liara-select__panel,
+        .liara-select__caret {
+            animation: none;
+            transition: none;
+        }
+    }
+</style>
+
+<script>
+    /**
+     * The dropdown's behaviour: opening, positioning, keyboard, and the API
+     * `SiteTitle.astro` uses to swap the option list once the live registry
+     * index has been fetched.
+     */
+
+    const OPTION = '.liara-select__option';
+
+    let sequence = 0;
+
+    class LiaraSelect extends HTMLElement {
+        connectedCallback() {
+            if (this.ready) return;
+            this.ready = true;
+
+            this.trigger = this.querySelector('[data-liara-trigger]');
+            this.panel = this.querySelector('[data-liara-panel]');
+            this.valueEl = this.querySelector('[data-liara-value]');
+            this.badgeEl = this.querySelector('[data-liara-badge]');
+            if (!this.trigger || !this.panel) return;
+
+            // Ids are assigned here rather than rendered: a component can be
+            // used twice on one page — the theme switcher is in the header and
+            // in the mobile menu — and two identical ids would wire the second
+            // trigger to the first panel. The loop settles the same question
+            // for an id that came from anywhere else on the page.
+            do {
+                this.panel.id = `liara-select-${++sequence}`;
+            } while (document.getElementById(this.panel.id) !== this.panel);
+            this.trigger.setAttribute('aria-controls', this.panel.id);
+
+            // The top layer is the only reliable way out of an ancestor with
+            // `overflow: clip`. Where it is missing, the same fixed-position
+            // panel is toggled by hand.
+            this.usesPopover = typeof this.panel.showPopover === 'function';
+
+            if (this.usesPopover) {
+                this.panel.setAttribute('popover', 'auto');
+                this.panel.removeAttribute('hidden');
+                this.trigger.setAttribute('popovertarget', this.panel.id);
+                // `popovertarget` toggles it, so no click handler here: one
+                // would fight the light-dismiss that has already closed it.
+                this.panel.addEventListener('beforetoggle', (event) => {
+                    if (event.newState === 'open') this.place();
+                    this.setState(event.newState === 'open');
+                });
+                this.panel.addEventListener('toggle', (event) => {
+                    if (event.newState !== 'open') return;
+                    // The panel now has a width, so the horizontal clamp in
+                    // `place()` can be redone against the real one.
+                    this.place();
+                    this.focusSelected();
+                });
+            } else {
+                this.trigger.addEventListener('click', () => this.toggle(!this.isOpen));
+                this.dismiss = (event) => {
+                    if (this.isOpen && !this.contains(event.target)) this.toggle(false);
+                };
+                document.addEventListener('click', this.dismiss);
+            }
+
+            this.trigger.addEventListener('keydown', (event) => {
+                if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+                    event.preventDefault();
+                    if (this.isOpen) this.focusSelected();
+                    else this.toggle(true);
+                }
+            });
+
+            this.panel.addEventListener('keydown', (event) => this.onPanelKey(event));
+            this.panel.addEventListener('click', (event) => {
+                const option = event.target.closest(OPTION);
+                if (!option) return;
+                this.select(option);
+            });
+
+            // The header is sticky, so an open panel would otherwise drift
+            // away from its trigger as the page scrolls under it.
+            this.reposition = () => { if (this.isOpen) this.place(); };
+            addEventListener('scroll', this.reposition, { passive: true, capture: true });
+            addEventListener('resize', this.reposition, { passive: true });
+        }
+
+        disconnectedCallback() {
+            if (!this.reposition) return;
+            removeEventListener('scroll', this.reposition, { capture: true });
+            removeEventListener('resize', this.reposition);
+            if (this.dismiss) document.removeEventListener('click', this.dismiss);
+        }
+
+        get isOpen() {
+            return this.hasAttribute('data-open');
+        }
+
+        get options() {
+            return [...this.panel.querySelectorAll(OPTION)];
+        }
+
+        setState(open) {
+            this.toggleAttribute('data-open', open);
+            this.trigger.setAttribute('aria-expanded', String(open));
+        }
+
+        toggle(open) {
+            if (this.usesPopover) {
+                // Both throw when the panel is already in the state being
+                // asked for, and `Tab` can ask for a close twice over.
+                if (open === this.panel.matches(':popover-open')) return;
+                if (open) this.panel.showPopover();
+                else this.panel.hidePopover();
+                return;
+            }
+            // Focus is only pulled back to the trigger when it was inside the
+            // panel: closing on an outside click must leave it where the click
+            // put it.
+            const held = this.contains(document.activeElement);
+            this.panel.toggleAttribute('hidden', !open);
+            this.setState(open);
+            if (open) {
+                this.place();
+                this.focusSelected();
+            } else if (held) {
+                this.trigger.focus();
+            }
+        }
+
+        /**
+         * Places the panel against the trigger, flipping above it when the
+         * space below cannot hold a usable list and clamping it into the
+         * viewport on both axes.
+         */
+        place() {
+            const rect = this.trigger.getBoundingClientRect();
+            const gap = 6;
+            const margin = 12;
+            const below = innerHeight - rect.bottom - margin;
+            const above = rect.top - margin;
+            const flip = below < 200 && above > below;
+
+            this.panel.style.maxHeight = `${Math.max(140, Math.min(384, flip ? above : below))}px`;
+            this.panel.style.minWidth = `${Math.max(rect.width, 176)}px`;
+
+            if (flip) {
+                this.panel.style.top = 'auto';
+                this.panel.style.bottom = `${innerHeight - rect.top + gap}px`;
+            } else {
+                this.panel.style.bottom = 'auto';
+                this.panel.style.top = `${rect.bottom + gap}px`;
+            }
+
+            // Width is only known once the panel is displayed; before that
+            // this falls back to the trigger's own width, which is close
+            // enough that the first paint never lands off-screen.
+            const width = this.panel.offsetWidth || rect.width;
+            const start = this.dataset.align === 'end' ? rect.right - width : rect.left;
+            const left = Math.min(Math.max(margin, start), innerWidth - width - margin);
+            this.panel.style.left = `${Math.max(margin, left)}px`;
+        }
+
+        focusSelected() {
+            const options = this.options;
+            const current = options.find((option) => option.getAttribute('aria-selected') === 'true');
+            (current ?? options[0])?.focus();
+        }
+
+        onPanelKey(event) {
+            const options = this.options;
+            const index = options.indexOf(document.activeElement.closest(OPTION));
+
+            switch (event.key) {
+                case 'ArrowDown':
+                    event.preventDefault();
+                    options[Math.min(index + 1, options.length - 1)]?.focus();
+                    break;
+                case 'ArrowUp':
+                    event.preventDefault();
+                    options[Math.max(index - 1, 0)]?.focus();
+                    break;
+                case 'Home':
+                    event.preventDefault();
+                    options[0]?.focus();
+                    break;
+                case 'End':
+                    event.preventDefault();
+                    options[options.length - 1]?.focus();
+                    break;
+                case 'Escape':
+                    // The popover path dismisses itself and restores focus to
+                    // the invoker; the fallback has to do both by hand.
+                    if (!this.usesPopover) {
+                        event.preventDefault();
+                        this.toggle(false);
+                    }
+                    break;
+                case 'Tab':
+                    this.toggle(false);
+                    break;
+            }
+        }
+
+        /**
+         * Applies a choice. Anchors are left to navigate on their own — that
+         * is the whole reason they are anchors — so this only announces
+         * value-only switchers like the theme.
+         */
+        select(option) {
+            const value = option.dataset.value ?? '';
+            if (!option.getAttribute('href')) {
+                this.value = value;
+                this.dispatchEvent(new CustomEvent('liara-select:change', {
+                    bubbles: true,
+                    detail: { name: this.dataset.name, value },
+                }));
+                this.toggle(false);
+            }
+        }
+
+        /** The selected value, reflected onto the trigger and the options. */
+        get value() {
+            return this.dataset.value ?? '';
+        }
+
+        set value(next) {
+            this.dataset.value = next;
+            for (const option of this.options) {
+                const selected = option.dataset.value === next;
+                option.classList.toggle('is-selected', selected);
+                option.setAttribute('aria-selected', String(selected));
+                if (selected) this.showOnTrigger(option);
+            }
+        }
+
+        showOnTrigger(option) {
+            const label = option.querySelector('.liara-select__option-label');
+            const badge = option.querySelector('.liara-select__badge');
+            if (this.valueEl && label) this.valueEl.textContent = label.textContent;
+            if (this.badgeEl) {
+                this.badgeEl.textContent = badge?.textContent ?? '';
+                this.badgeEl.toggleAttribute('hidden', !badge);
+            }
+        }
+
+        /**
+         * Replaces the option list. Used by the switchers once the live
+         * registry index has been fetched, so a page built months ago still
+         * offers today's modules and versions.
+         *
+         * @param {{value: string, label: string, note?: string, badge?: string,
+         *          href?: string}[]} options
+         * @param {string} [value] Selected value; defaults to the current one.
+         */
+        setOptions(options, value = this.value) {
+            const nodes = options.map((option) => {
+                const node = document.createElement(option.href ? 'a' : 'button');
+                node.className = 'liara-select__option';
+                node.setAttribute('role', 'option');
+                node.tabIndex = -1;
+                node.dataset.value = option.value;
+                if (option.href) node.href = option.href; else node.type = 'button';
+
+                const check = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+                check.setAttribute('class', 'liara-select__check');
+                check.setAttribute('viewBox', '0 0 24 24');
+                check.setAttribute('fill', 'none');
+                check.setAttribute('stroke', 'currentColor');
+                check.setAttribute('stroke-width', '2.4');
+                check.setAttribute('stroke-linecap', 'round');
+                check.setAttribute('stroke-linejoin', 'round');
+                check.setAttribute('aria-hidden', 'true');
+                const tick = document.createElementNS('http://www.w3.org/2000/svg', 'polyline');
+                tick.setAttribute('points', '4 12.5 9.5 18 20 6.5');
+                check.append(tick);
+
+                const text = document.createElement('span');
+                text.className = 'liara-select__option-text';
+                const label = document.createElement('span');
+                label.className = 'liara-select__option-label';
+                label.textContent = option.label;
+                text.append(label);
+                if (option.note) {
+                    const note = document.createElement('span');
+                    note.className = 'liara-select__option-note';
+                    note.textContent = option.note;
+                    text.append(note);
+                }
+
+                node.append(check, text);
+                if (option.badge) {
+                    const badge = document.createElement('span');
+                    badge.className = 'liara-select__badge';
+                    badge.textContent = option.badge;
+                    node.append(badge);
+                }
+                return node;
+            });
+
+            if (nodes.length === 0) return;
+            this.panel.replaceChildren(...nodes);
+            this.value = value;
+        }
+    }
+
+    customElements.define('liara-select', LiaraSelect);
+</script>

@@ -223,6 +223,10 @@ export function liaraDocs(options = {}) {
             SiteTitle: '@liara/starlight-preset/components/SiteTitle.astro',
             Banner: '@liara/starlight-preset/components/VersionBanner.astro',
             Search: '@liara/starlight-preset/components/Search.astro',
+            ThemeSelect: '@liara/starlight-preset/components/ThemeSelect.astro',
+            // Where the module and version switchers go once the header is
+            // too narrow to hold them — see MobileMenuFooter.astro.
+            MobileMenuFooter: '@liara/starlight-preset/components/MobileMenuFooter.astro',
         },
         // Left enabled even though a published version ships no index of its
         // own: Starlight's Pagefind settings — its ranking weights — reach the

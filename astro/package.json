@@ -31,6 +31,10 @@
     "./styles/fonts.css": "./styles/fonts.css",
     "./styles/hub.css": "./styles/hub.css",
     "./components/SiteTitle.astro": "./components/SiteTitle.astro",
+    "./components/LiaraSelect.astro": "./components/LiaraSelect.astro",
+    "./components/ModuleSwitchers.astro": "./components/ModuleSwitchers.astro",
+    "./components/ThemeSelect.astro": "./components/ThemeSelect.astro",
+    "./components/MobileMenuFooter.astro": "./components/MobileMenuFooter.astro",
     "./components/VersionBanner.astro": "./components/VersionBanner.astro",
     "./components/Search.astro": "./components/Search.astro",
     "./registry.json": "./registry.json"

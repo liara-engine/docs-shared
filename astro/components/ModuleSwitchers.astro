@@ -1,0 +1,237 @@
+---
+/**
+ * Liara Engine — the module and version switchers.
+ *
+ * Rendering strategy
+ * ------------------
+ * The markup is produced at build time and then corrected at runtime.
+ *
+ * Build time gives an immediate first paint and a navigation that works with
+ * JavaScript disabled — every option is a real link, so the two switchers are
+ * a menu of URLs whether or not the script ever runs. On its own it would go
+ * stale: a module that stops being released stops being rebuilt, and its
+ * pages would advertise whatever the module list looked like on its last
+ * build, forever.
+ *
+ * The runtime pass fixes that. It fetches one aggregated index — see
+ * tools/build-registry-index.py — and reconciles the lists in place. One
+ * request for the whole navigation, shared between every switcher on the
+ * page, and it never blocks the first paint.
+ *
+ * The pair is rendered twice per page: in the header, and in the mobile menu
+ * where the header hides them for want of room. Everything below is written
+ * for as many instances as there are.
+ */
+import LiaraSelect from './LiaraSelect.astro';
+import { isPreviewVersion, parseBase, readManifest, sortVersions } from '../index.mjs';
+import registry from '../registry.json';
+
+interface Props {
+    /** `header` sits next to the site title; `menu` inside the mobile menu. */
+    variant?: 'header' | 'menu';
+}
+
+const { variant = 'header' } = Astro.props;
+
+const INDEX_PATH = '/registry-index.json';
+
+const { repo, version } = parseBase(import.meta.env.BASE_URL);
+
+/** The module's own manifest is authoritative for its version list and is
+ *  right there in the repository being built, so it is read directly. */
+const manifest = readManifest();
+const latest = manifest?.metadata?.latest ?? null;
+
+const versionLabels = manifest?.versions
+    // Preview builds are reachable by URL only and must never be listed.
+    ? sortVersions(Object.keys(manifest.versions).filter((label) => !isPreviewVersion(label)))
+    : [version];
+
+/** What a version is worth knowing beyond its number: the manifest's own
+ *  note where there is one, and what `dev` means where there is not. */
+function noteFor(label) {
+    const entry = manifest?.versions?.[label];
+    const note = entry && typeof entry === 'object' ? entry.note : null;
+    return note || (label === 'dev' ? 'continuous build' : undefined);
+}
+
+function badgeFor(label) {
+    if (isPreviewVersion(label)) return 'preview';
+    return label === latest ? 'latest' : undefined;
+}
+
+const moduleOptions = (registry.modules ?? []).map((module) => ({
+    value: module.repo,
+    label: module.name ?? module.repo,
+    // `latest` is resolved by the edge router, so switching module never
+    // needs to know that module's version list.
+    href: `/${module.repo}/latest/`,
+}));
+
+const versionOptions = versionLabels.map((label) => ({
+    value: label,
+    label,
+    note: noteFor(label),
+    badge: badgeFor(label),
+    href: `/${repo}/${label}/`,
+}));
+
+// The version being read is not always in the manifest it was built from: a
+// preview is deliberately absent, and so is a release cut after this build.
+if (!versionOptions.some((option) => option.value === version) && version) {
+    versionOptions.unshift({
+        value: version,
+        label: version,
+        badge: badgeFor(version),
+        href: `/${repo}/${version}/`,
+    });
+}
+
+const currentModule = moduleOptions.find((option) => option.value === repo);
+---
+
+<liara-switchers class:list={['liara-switchers', `liara-switchers--${variant}`]}
+                 data-index={INDEX_PATH} data-repo={repo} data-version={version}>
+    <LiaraSelect
+        name="module"
+        label="Module"
+        icon="module"
+        value={repo}
+        options={currentModule ? moduleOptions : [{ value: repo, label: repo, href: `/${repo}/latest/` }, ...moduleOptions]}
+        valueWidth={variant === 'menu' ? '14rem' : 'var(--liara-switcher-module-width, 16rem)'}
+    />
+
+    <LiaraSelect
+        name="version"
+        label="Version"
+        icon="version"
+        value={version}
+        options={versionOptions}
+        valueWidth={variant === 'menu' ? '10rem' : 'var(--liara-switcher-version-width, 7.5rem)'}
+    />
+</liara-switchers>
+
+<style is:global>
+    .liara-switchers {
+        display: flex;
+        align-items: center;
+        gap: var(--liara-space-2);
+        min-width: 0;
+    }
+
+    /* Both switchers get the room they need before the site title does: the
+       title is a link home whose text the module switcher repeats anyway,
+       while a truncated version number is a genuine loss of information. */
+    .liara-switchers--header {
+        flex: none;
+    }
+
+    /* Where the header's three columns start fighting. The wide default fits
+       the longest module name the registry holds; from here down the label is
+       ellipsised rather than allowed to squeeze the search box below the width
+       of its own placeholder — the full name is one click away in the panel. */
+    @media (max-width: 72rem) {
+        .liara-switchers--header {
+            --liara-switcher-module-width: 11rem;
+            --liara-switcher-version-width: 6rem;
+        }
+    }
+
+    /* Below this Starlight drops to a two-item header and the mobile menu
+       takes over — see the copy of the switchers in MobileMenuFooter.astro. */
+    @media (max-width: 50rem) {
+        .liara-switchers--header {
+            display: none;
+        }
+    }
+
+    .liara-switchers--menu {
+        flex-wrap: wrap;
+        gap: var(--liara-space-2);
+        padding-block: var(--liara-space-3);
+    }
+</style>
+
+<script>
+    /**
+     * Reconciles the statically rendered switchers against the live index.
+     *
+     * Everything here is best-effort. A failed fetch, a malformed index or a
+     * missing element all leave the build-time markup in place, which is
+     * correct as of the last build — degraded, never broken.
+     */
+
+    /** One request per page, however many switchers are on it. */
+    let indexRequest = null;
+
+    const loadIndex = (path) => (indexRequest ??= fetch(path, { cache: 'no-cache' })
+        .then((response) => (response.ok ? response.json() : null)));
+
+    class LiaraSwitchers extends HTMLElement {
+        connectedCallback() {
+            if (this.ready) return;
+            this.ready = true;
+
+            this.repo = this.dataset.repo ?? '';
+            this.version = this.dataset.version ?? '';
+            this.modules = this.querySelector('[data-name="module"]');
+            this.versions = this.querySelector('[data-name="version"]');
+
+            this.refresh().catch(() => { /* keep the build-time markup */ });
+        }
+
+        async refresh() {
+            // `setOptions` lives on the dropdowns, and nothing orders one
+            // component's module script before another's.
+            await customElements.whenDefined('liara-select');
+
+            const index = await loadIndex(this.dataset.index ?? '/registry-index.json');
+            if (!Array.isArray(index?.modules)) return;
+
+            this.syncModules(index.modules);
+            this.syncVersions(index.modules.find((module) => module.repo === this.repo));
+        }
+
+        syncModules(modules) {
+            const listed = modules.filter((module) => module.deployed !== false);
+            if (!this.modules || listed.length === 0) return;
+
+            this.modules.setOptions(listed.map((module) => ({
+                value: module.repo,
+                label: module.name ?? module.repo,
+                href: `/${module.repo}/latest/`,
+            })), this.repo);
+        }
+
+        syncVersions(module) {
+            if (!this.versions || !module?.order?.length) return;
+
+            const options = module.order.map((label) => {
+                const entry = module.versions?.[label] ?? {};
+                return {
+                    value: label,
+                    label,
+                    note: entry.note || (label === 'dev' ? 'continuous build' : undefined),
+                    badge: entry.removed ? 'retired' : label === module.latest ? 'latest' : undefined,
+                    href: `/${this.repo}/${label}/`,
+                };
+            });
+
+            // A version the index does not know about — a preview, or a
+            // release since removed — would otherwise silently vanish from a
+            // page that is being viewed right now.
+            if (this.version && !module.order.includes(this.version)) {
+                options.unshift({
+                    value: this.version,
+                    label: this.version,
+                    badge: /^pr-\d+$/i.test(this.version) ? 'preview' : undefined,
+                    href: `/${this.repo}/${this.version}/`,
+                });
+            }
+
+            this.versions.setOptions(options, this.version);
+        }
+    }
+
+    customElements.define('liara-switchers', LiaraSwitchers);
+</script>

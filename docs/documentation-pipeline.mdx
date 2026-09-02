@@ -107,7 +107,11 @@ changed" are the same event, which is why one workflow does both
     - doxygen.mjs XML → HTML, without Markdown in between
     - highlight.mjs Shiki over the Liara code tokens
   - components/
-    - SiteTitle.astro module and version switchers
+    - LiaraSelect.astro the dropdown every switcher is built from
+    - ModuleSwitchers.astro the module and version switchers
+    - SiteTitle.astro the site title, with the switchers beside it
+    - ThemeSelect.astro light / dark / auto, on both surfaces
+    - MobileMenuFooter.astro where the switchers go once the header is too narrow
     - VersionBanner.astro the dev / preview / old-release notice
     - Search.astro points Pagefind at the site-wide index
   - styles/ tokens.css, theme.css, fonts.css, hub.css, and the fonts

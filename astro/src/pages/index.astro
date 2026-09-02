@@ -26,14 +26,15 @@ function hrefFor(id) {
 }
 
 const allDocs = await getCollection('docs');
-const bySection = (section) => allDocs.filter((entry) => entry.id.startsWith(`${section}/`));
+const sectionIndex = (section) => allDocs.find((entry) => entry.id === section || entry.id === `${section}/index`) ?? null;
+const bySection = (section) => allDocs.filter((entry) => entry.id === section || entry.id.startsWith(`${section}/`));
 
 const guides = bySection(SECTIONS.guide);
 const apiPages = bySection(SECTIONS.api);
 const aboutPages = bySection(SECTIONS.about)
     .sort((a, b) => (a.data.sidebar?.order ?? 0) - (b.data.sidebar?.order ?? 0) || a.id.localeCompare(b.id));
 
-const firstGuide = guides.find((entry) => entry.id === `${SECTIONS.guide}/index`)
+const firstGuide = sectionIndex(SECTIONS.guide)
     ?? [...guides].sort((a, b) => a.id.localeCompare(b.id))[0]
     ?? null;
 

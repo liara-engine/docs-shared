@@ -1,0 +1,148 @@
+---
+/**
+ * Liara Engine — colour theme switcher.
+ *
+ * Replaces Starlight's own `ThemeSelect` (a native `<select>`, whose popup no
+ * stylesheet can reach) and the hub's three-state cycle button (one control
+ * with an icon that had to be decoded before it could be used). Both surfaces
+ * now show the same dropdown as the module and version switchers beside it.
+ *
+ * The storage contract is Starlight's, unchanged, and that is deliberate:
+ * `localStorage['starlight-theme']` holds `'light'`, `'dark'` or an empty
+ * string for auto, and `data-theme` on `<html>` always carries the *resolved*
+ * value — `auto` never appears there, only on this control, which is what
+ * lets it distinguish three states from two. Keeping the contract is what
+ * makes a preference set on the hub survive into a module's documentation and
+ * back, across two Astro sites that share nothing else at runtime.
+ *
+ * Nothing here imports from Starlight: the hub builds this component too and
+ * never installs it. The pre-paint work — reading storage and setting
+ * `data-theme` before the first frame — is already done by Starlight's own
+ * `ThemeProvider` on documentation pages and by the inline script in
+ * `HubLayout.astro` on the hub, so this file only has to agree with them.
+ */
+import LiaraSelect from './LiaraSelect.astro';
+
+const OPTIONS = [
+    { value: 'auto', label: 'Auto', note: 'follows your system' },
+    { value: 'light', label: 'Light' },
+    { value: 'dark', label: 'Dark' },
+];
+---
+
+<LiaraSelect
+    class="liara-theme-select"
+    name="theme"
+    label="Colour theme"
+    value="auto"
+    options={OPTIONS}
+    align="end"
+    valueWidth="6rem"
+>
+    <Fragment slot="icon">
+        <svg class="liara-theme-icon liara-theme-icon--auto" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <rect x="3" y="5" width="18" height="13" rx="2" /><path d="M8 21h8M12 18v3" />
+        </svg>
+        <svg class="liara-theme-icon liara-theme-icon--light" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="12" cy="12" r="4" />
+            <path d="M12 3v2M12 19v2M3 12h2M19 12h2M5.6 5.6l1.4 1.4M17 17l1.4 1.4M5.6 18.4l1.4-1.4M17 7l1.4-1.4" />
+        </svg>
+        <svg class="liara-theme-icon liara-theme-icon--dark" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z" />
+        </svg>
+    </Fragment>
+</LiaraSelect>
+
+{/* Inlined, like Starlight's own `updatePickers()` call, so the trigger never
+    paints the wrong theme: the module script below is deferred, and until it
+    runs every instance would read "Auto" whatever the reader chose. Written
+    against the DOM rather than the element's `value` setter, which does not
+    exist yet — the custom element upgrades with that same deferred script. */}
+<script is:inline>
+    window.liaraSyncThemeSelects = function () {
+        var stored = null;
+        try { stored = localStorage.getItem('starlight-theme'); } catch (error) { /* private mode */ }
+        var theme = stored === 'light' || stored === 'dark' ? stored : 'auto';
+
+        document.querySelectorAll('.liara-theme-select').forEach(function (select) {
+            select.dataset.value = theme;
+            select.querySelectorAll('.liara-select__option').forEach(function (option) {
+                var selected = option.dataset.value === theme;
+                option.classList.toggle('is-selected', selected);
+                option.setAttribute('aria-selected', String(selected));
+                if (!selected) return;
+                var label = option.querySelector('.liara-select__option-label');
+                var value = select.querySelector('[data-liara-value]');
+                if (label && value) value.textContent = label.textContent;
+            });
+        });
+    };
+
+    window.liaraSyncThemeSelects();
+</script>
+
+<style is:global>
+    /* The trigger carries all three icons and shows the one that matches the
+       choice — including `auto`, which `data-theme` on `<html>` cannot
+       express because it holds the resolved scheme. */
+    .liara-theme-select .liara-theme-icon {
+        display: none;
+    }
+
+    .liara-theme-select[data-value='auto'] .liara-theme-icon--auto,
+    .liara-theme-select[data-value='light'] .liara-theme-icon--light,
+    .liara-theme-select[data-value='dark'] .liara-theme-icon--dark {
+        display: block;
+    }
+</style>
+
+<script>
+    /** Key in `localStorage` to store the colour theme preference at. */
+    const STORAGE_KEY = 'starlight-theme';
+
+    const parse = (theme) => (theme === 'light' || theme === 'dark' ? theme : 'auto');
+
+    const load = () => {
+        try {
+            return parse(localStorage.getItem(STORAGE_KEY));
+        } catch {
+            return 'auto';
+        }
+    };
+
+    const store = (theme) => {
+        try {
+            localStorage.setItem(STORAGE_KEY, theme === 'auto' ? '' : theme);
+        } catch { /* the choice still applies for this load */ }
+    };
+
+    const preferred = () => (matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
+
+    /** Applies a choice everywhere it shows: the page, and every switcher on
+     *  it — the header's and the mobile menu's are the same preference. */
+    async function apply(theme) {
+        document.documentElement.dataset.theme = theme === 'auto' ? preferred() : theme;
+        await customElements.whenDefined('liara-select');
+        for (const select of document.querySelectorAll('.liara-theme-select')) {
+            select.value = theme;
+        }
+    }
+
+    apply(load());
+
+    document.addEventListener('liara-select:change', (event) => {
+        if (event.detail?.name !== 'theme') return;
+        const theme = parse(event.detail.value);
+        store(theme);
+        apply(theme);
+    });
+
+    // React to a system-preference change while `auto` is selected, the same
+    // event Starlight's own ThemeSelect listens for.
+    matchMedia('(prefers-color-scheme: light)').addEventListener('change', () => {
+        if (load() === 'auto') apply('auto');
+    });
+</script>

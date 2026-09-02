@@ -1,0 +1,64 @@
+---
+/**
+ * Liara Engine — the foot of the mobile menu.
+ *
+ * A copy of @astrojs/starlight 0.41.10's `components/MobileMenuFooter.astro`
+ * with the module and version switchers added above its preferences row.
+ *
+ * The header hides those two below 50rem, where its three columns no longer
+ * fit — and until now that was the end of it: the claim that "the mobile menu
+ * already exposes the same navigation" was never true, so a reader on a phone
+ * could reach neither another module nor another version without editing the
+ * URL. This is where that navigation actually lives now.
+ */
+import LanguageSelect from 'virtual:starlight/components/LanguageSelect';
+import SocialIcons from 'virtual:starlight/components/SocialIcons';
+import ThemeSelect from 'virtual:starlight/components/ThemeSelect';
+import ModuleSwitchers from './ModuleSwitchers.astro';
+---
+
+<div class="liara-mobile-switchers">
+    <ModuleSwitchers variant="menu" />
+</div>
+
+<div class="mobile-preferences sl-flex">
+    <div class="social-icons">
+        <SocialIcons />
+    </div>
+    <ThemeSelect />
+    <LanguageSelect />
+</div>
+
+<style>
+    /* Only worth the space where the header has given the switchers up. */
+    .liara-mobile-switchers {
+        display: none;
+        border-top: 1px solid var(--sl-color-gray-6);
+    }
+
+    @media (max-width: 50rem) {
+        .liara-mobile-switchers {
+            display: block;
+        }
+    }
+
+    .social-icons {
+        display: flex;
+        margin-inline-end: auto;
+        gap: 1rem;
+        align-items: center;
+        padding-block: 1rem;
+    }
+
+    .social-icons:empty {
+        display: none;
+    }
+
+    .mobile-preferences {
+        justify-content: space-between;
+        flex-wrap: wrap;
+        border-top: 1px solid var(--sl-color-gray-6);
+        column-gap: 1rem;
+        padding: 0.5rem 0;
+    }
+</style>
