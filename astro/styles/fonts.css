@@ -1,0 +1,319 @@
+/*
+ * Liara Engine — self-hosted fonts.
+ *
+ * Ported from mdbook/theme/fonts/fonts.css (retired with the rest of the
+ * mdBook template), with the URLs changed from the old runtime path —
+ * `/shared-content/fonts/...`, served from the site root at deploy time —
+ * to paths relative to this file. Vite resolves a relative `url()` in an
+ * imported stylesheet against the file's own location and copies the
+ * asset into the build, which works the same whether this file is loaded
+ * from inside this checkout or from `node_modules/@liara/starlight-preset`
+ * in a consumer — the fonts stop being something every deployment has to
+ * remember to also serve at a fixed path, and become an ordinary build
+ * asset like any other.
+ *
+ * `--liara-font-sans` (tokens.css) points at Open Sans, not Inter: Inter
+ * was never one of the fonts actually shipped here, self-hosted or
+ * otherwise — it only ever arrived via a Google Fonts `<link>` a consumer
+ * had to remember to add. Open Sans is the face that's actually present.
+ *
+ * Licenses travel with the font files themselves — see the .txt file
+ * beside each family's .woff2s.
+ */
+
+/* ============================================================================
+ * Open Sans — --liara-font-sans
+ * ========================================================================== */
+
+@font-face {
+    font-family: 'Open Sans';
+    font-style: normal;
+    font-weight: 300;
+    font-display: swap;
+    src: local('Open Sans Light'), local('OpenSans-Light'),
+         url('./fonts/OpenSans-17/open-sans-v17-all-charsets-300.woff2') format('woff2');
+}
+
+@font-face {
+    font-family: 'Open Sans';
+    font-style: italic;
+    font-weight: 300;
+    font-display: swap;
+    src: local('Open Sans Light Italic'), local('OpenSans-LightItalic'),
+         url('./fonts/OpenSans-17/open-sans-v17-all-charsets-300italic.woff2') format('woff2');
+}
+
+@font-face {
+    font-family: 'Open Sans';
+    font-style: normal;
+    font-weight: 400;
+    font-display: swap;
+    src: local('Open Sans Regular'), local('OpenSans-Regular'),
+         url('./fonts/OpenSans-17/open-sans-v17-all-charsets-regular.woff2') format('woff2');
+}
+
+@font-face {
+    font-family: 'Open Sans';
+    font-style: italic;
+    font-weight: 400;
+    font-display: swap;
+    src: local('Open Sans Italic'), local('OpenSans-Italic'),
+         url('./fonts/OpenSans-17/open-sans-v17-all-charsets-italic.woff2') format('woff2');
+}
+
+@font-face {
+    font-family: 'Open Sans';
+    font-style: normal;
+    font-weight: 600;
+    font-display: swap;
+    src: local('Open Sans SemiBold'), local('OpenSans-SemiBold'),
+         url('./fonts/OpenSans-17/open-sans-v17-all-charsets-600.woff2') format('woff2');
+}
+
+@font-face {
+    font-family: 'Open Sans';
+    font-style: italic;
+    font-weight: 600;
+    font-display: swap;
+    src: local('Open Sans SemiBold Italic'), local('OpenSans-SemiBoldItalic'),
+         url('./fonts/OpenSans-17/open-sans-v17-all-charsets-600italic.woff2') format('woff2');
+}
+
+@font-face {
+    font-family: 'Open Sans';
+    font-style: normal;
+    font-weight: 700;
+    font-display: swap;
+    src: local('Open Sans Bold'), local('OpenSans-Bold'),
+         url('./fonts/OpenSans-17/open-sans-v17-all-charsets-700.woff2') format('woff2');
+}
+
+@font-face {
+    font-family: 'Open Sans';
+    font-style: italic;
+    font-weight: 700;
+    font-display: swap;
+    src: local('Open Sans Bold Italic'), local('OpenSans-BoldItalic'),
+         url('./fonts/OpenSans-17/open-sans-v17-all-charsets-700italic.woff2') format('woff2');
+}
+
+@font-face {
+    font-family: 'Open Sans';
+    font-style: normal;
+    font-weight: 800;
+    font-display: swap;
+    src: local('Open Sans ExtraBold'), local('OpenSans-ExtraBold'),
+         url('./fonts/OpenSans-17/open-sans-v17-all-charsets-800.woff2') format('woff2');
+}
+
+@font-face {
+    font-family: 'Open Sans';
+    font-style: italic;
+    font-weight: 800;
+    font-display: swap;
+    src: local('Open Sans ExtraBold Italic'), local('OpenSans-ExtraBoldItalic'),
+         url('./fonts/OpenSans-17/open-sans-v17-all-charsets-800italic.woff2') format('woff2');
+}
+
+/* ============================================================================
+ * JetBrains Mono — --liara-font-mono
+ * ========================================================================== */
+
+@font-face {
+    font-family: 'JetBrains Mono';
+    font-style: normal;
+    font-weight: 100;
+    font-display: swap;
+    src: local('JetBrains Mono Thin'), local('JetBrainsMono-Thin'),
+         url('./fonts/JetBrainsMono-2.304/JetBrainsMono-Thin.woff2') format('woff2');
+}
+
+@font-face {
+    font-family: 'JetBrains Mono';
+    font-style: italic;
+    font-weight: 100;
+    font-display: swap;
+    src: local('JetBrains Mono Thin Italic'), local('JetBrainsMono-ThinItalic'),
+         url('./fonts/JetBrainsMono-2.304/JetBrainsMono-ThinItalic.woff2') format('woff2');
+}
+
+@font-face {
+    font-family: 'JetBrains Mono';
+    font-style: normal;
+    font-weight: 200;
+    font-display: swap;
+    src: local('JetBrains Mono ExtraLight'), local('JetBrainsMono-ExtraLight'),
+         url('./fonts/JetBrainsMono-2.304/JetBrainsMono-ExtraLight.woff2') format('woff2');
+}
+
+@font-face {
+    font-family: 'JetBrains Mono';
+    font-style: italic;
+    font-weight: 200;
+    font-display: swap;
+    src: local('JetBrains Mono ExtraLight Italic'), local('JetBrainsMono-ExtraLightItalic'),
+         url('./fonts/JetBrainsMono-2.304/JetBrainsMono-ExtraLightItalic.woff2') format('woff2');
+}
+
+@font-face {
+    font-family: 'JetBrains Mono';
+    font-style: normal;
+    font-weight: 300;
+    font-display: swap;
+    src: local('JetBrains Mono Light'), local('JetBrainsMono-Light'),
+         url('./fonts/JetBrainsMono-2.304/JetBrainsMono-Light.woff2') format('woff2');
+}
+
+@font-face {
+    font-family: 'JetBrains Mono';
+    font-style: italic;
+    font-weight: 300;
+    font-display: swap;
+    src: local('JetBrains Mono Light Italic'), local('JetBrainsMono-LightItalic'),
+         url('./fonts/JetBrainsMono-2.304/JetBrainsMono-LightItalic.woff2') format('woff2');
+}
+
+@font-face {
+    font-family: 'JetBrains Mono';
+    font-style: normal;
+    font-weight: 400;
+    font-display: swap;
+    src: local('JetBrains Mono Regular'), local('JetBrainsMono-Regular'),
+         url('./fonts/JetBrainsMono-2.304/JetBrainsMono-Regular.woff2') format('woff2');
+}
+
+@font-face {
+    font-family: 'JetBrains Mono';
+    font-style: italic;
+    font-weight: 400;
+    font-display: swap;
+    src: local('JetBrains Mono Italic'), local('JetBrainsMono-Italic'),
+         url('./fonts/JetBrainsMono-2.304/JetBrainsMono-Italic.woff2') format('woff2');
+}
+
+@font-face {
+    font-family: 'JetBrains Mono';
+    font-style: normal;
+    font-weight: 500;
+    font-display: swap;
+    src: local('JetBrains Mono Medium'), local('JetBrainsMono-Medium'),
+         url('./fonts/JetBrainsMono-2.304/JetBrainsMono-Medium.woff2') format('woff2');
+}
+
+@font-face {
+    font-family: 'JetBrains Mono';
+    font-style: italic;
+    font-weight: 500;
+    font-display: swap;
+    src: local('JetBrains Mono Medium Italic'), local('JetBrainsMono-MediumItalic'),
+         url('./fonts/JetBrainsMono-2.304/JetBrainsMono-MediumItalic.woff2') format('woff2');
+}
+
+@font-face {
+    font-family: 'JetBrains Mono';
+    font-style: normal;
+    font-weight: 600;
+    font-display: swap;
+    src: local('JetBrains Mono SemiBold'), local('JetBrainsMono-SemiBold'),
+         url('./fonts/JetBrainsMono-2.304/JetBrainsMono-SemiBold.woff2') format('woff2');
+}
+
+@font-face {
+    font-family: 'JetBrains Mono';
+    font-style: italic;
+    font-weight: 600;
+    font-display: swap;
+    src: local('JetBrains Mono SemiBold Italic'), local('JetBrainsMono-SemiBoldItalic'),
+         url('./fonts/JetBrainsMono-2.304/JetBrainsMono-SemiBoldItalic.woff2') format('woff2');
+}
+
+@font-face {
+    font-family: 'JetBrains Mono';
+    font-style: normal;
+    font-weight: 700;
+    font-display: swap;
+    src: local('JetBrains Mono Bold'), local('JetBrainsMono-Bold'),
+         url('./fonts/JetBrainsMono-2.304/JetBrainsMono-Bold.woff2') format('woff2');
+}
+
+@font-face {
+    font-family: 'JetBrains Mono';
+    font-style: italic;
+    font-weight: 700;
+    font-display: swap;
+    src: local('JetBrains Mono Bold Italic'), local('JetBrainsMono-BoldItalic'),
+         url('./fonts/JetBrainsMono-2.304/JetBrainsMono-BoldItalic.woff2') format('woff2');
+}
+
+@font-face {
+    font-family: 'JetBrains Mono';
+    font-style: normal;
+    font-weight: 800;
+    font-display: swap;
+    src: local('JetBrains Mono ExtraBold'), local('JetBrainsMono-ExtraBold'),
+         url('./fonts/JetBrainsMono-2.304/JetBrainsMono-ExtraBold.woff2') format('woff2');
+}
+
+@font-face {
+    font-family: 'JetBrains Mono';
+    font-style: italic;
+    font-weight: 800;
+    font-display: swap;
+    src: local('JetBrains Mono ExtraBold Italic'), local('JetBrainsMono-ExtraBoldItalic'),
+         url('./fonts/JetBrainsMono-2.304/JetBrainsMono-ExtraBoldItalic.woff2') format('woff2');
+}
+
+/* ============================================================================
+ * OpenDyslexic — --liara-font-sans under [data-liara-a11y-dyslexia='true']
+ * ========================================================================== */
+
+@font-face {
+    font-family: 'OpenDyslexic';
+    font-style: normal;
+    font-weight: 400;
+    font-display: swap;
+    src: local('OpenDyslexic Regular'), local('OpenDyslexic-Regular'),
+         url('./fonts/opendyslexic-0.92/OpenDyslexic-Regular.woff2') format('woff2');
+}
+
+@font-face {
+    font-family: 'OpenDyslexic';
+    font-style: italic;
+    font-weight: 400;
+    font-display: swap;
+    src: local('OpenDyslexic Italic'), local('OpenDyslexic-Italic'),
+         url('./fonts/opendyslexic-0.92/OpenDyslexic-Italic.woff2') format('woff2');
+}
+
+@font-face {
+    font-family: 'OpenDyslexic';
+    font-style: normal;
+    font-weight: 700;
+    font-display: swap;
+    src: local('OpenDyslexic Bold'), local('OpenDyslexic-Bold'),
+         url('./fonts/opendyslexic-0.92/OpenDyslexic-Bold.woff2') format('woff2');
+}
+
+@font-face {
+    font-family: 'OpenDyslexic';
+    font-style: italic;
+    font-weight: 700;
+    font-display: swap;
+    src: local('OpenDyslexic Bold Italic'), local('OpenDyslexic-BoldItalic'),
+         url('./fonts/opendyslexic-0.92/OpenDyslexic-BoldItalic.woff2') format('woff2');
+}
+
+/* ============================================================================
+ * Source Code Pro — not referenced by any token yet; wired for parity with
+ * the fonts.css this replaces, and in case a future token wants it as a
+ * second mono face. Costs nothing unused: @font-face is lazy, the file is
+ * only fetched once something actually renders in this family.
+ * ========================================================================== */
+
+@font-face {
+    font-family: 'Source Code Pro';
+    font-style: normal;
+    font-weight: 500;
+    font-display: swap;
+    src: url('./fonts/SourceCodePro-11/source-code-pro-v11-all-charsets-500.woff2') format('woff2');
+}

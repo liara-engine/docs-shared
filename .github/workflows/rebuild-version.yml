@@ -1,0 +1,74 @@
+name: rebuild-version
+
+# Rebuilds one published version of one module, on demand.
+#
+# The site is a pile of frozen builds: a version directory is written once and
+# then never touched again, which is what makes an old URL keep working. The
+# cost is that a change to the shared templates only reaches the versions that
+# happen to be rebuilt afterwards — `dev` and `latest` are refreshed on every
+# docs-shared release (see image.yml), and everything older is this workflow's
+# job.
+#
+# The canonical manifest — what `/<module>/latest/` resolves through — is left
+# alone unless the rebuilt version is the one it already calls latest, so
+# rebuilding an old release cannot roll `latest` backwards.
+
+on:
+  workflow_dispatch:
+    inputs:
+      module:
+        description: 'Module repository name, e.g. liara-core'
+        required: true
+        type: string
+
+      version:
+        description: 'Version to rebuild: dev, or X.Y.Z (built from the tag vX.Y.Z)'
+        required: true
+        type: string
+
+      ref:
+        description: 'Override the ref to build (default: the default branch for dev, vX.Y.Z otherwise)'
+        required: false
+        type: string
+        default: ''
+
+      image:
+        description: 'Builder image to build with'
+        required: false
+        type: string
+        default: ghcr.io/liara-engine/liara-documentation-builder:latest
+
+      update-manifest:
+        description: 'Whether this build becomes the module''s canonical manifest'
+        required: false
+        type: choice
+        default: auto
+        options: [auto, always, never]
+
+      skip-api:
+        description: 'Build the prose only, even if the module ships a Doxyfile'
+        required: false
+        type: boolean
+        default: false
+
+jobs:
+  rebuild:
+    permissions:
+      contents: read
+      packages: read
+
+    uses: liara-engine/.github/.github/workflows/reusable-docs.yml@v2
+    with:
+      image: ${{ inputs.image }}
+      output-repository: liara-engine/liara-docs
+      source-repository: liara-engine/${{ inputs.module }}
+      source-ref: ${{ inputs.ref }}
+      repo: ${{ inputs.module }}
+      version: ${{ inputs.version }}
+      update-manifest: ${{ inputs.update-manifest }}
+      skip-api: ${{ inputs.skip-api }}
+
+    secrets:
+      ghcr-token: ${{ secrets.GITHUB_TOKEN }}
+      push-token: ${{ secrets.DOCS_PUSH_TOKEN }}
+      read-token: ${{ secrets.ORG_READ_TOKEN }}

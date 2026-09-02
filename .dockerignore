@@ -1,9 +1,8 @@
-# Build context for docker/liara-documentation-builder/Dockerfile.
+# Build context for the documentation builder image (Dockerfile at the root).
 #
-# The Dockerfile COPYs only docker/, mdbook/, doxygen/, and
-# shared-content/assets/ — everything below is genuinely unused at build
-# time and would otherwise be uploaded to the docker daemon for nothing
-# (shared-content/fonts/ especially, which is sizeable).
+# The Dockerfile COPYs only astro/, tools/, build-docs.sh and
+# modules-registry.json — everything below is genuinely unused at build time
+# and would otherwise be uploaded to the docker daemon for nothing.
 
 .git
 .github
@@ -14,12 +13,9 @@ docs
 hub
 tests
 
-shared-content/doxygen
-shared-content/fonts
-shared-content/hub
-shared-content/mdbook
-shared-content/navbar
-shared-content/tokens
+**/node_modules
+**/dist
+**/.astro
 
 *.log
 *.tmp

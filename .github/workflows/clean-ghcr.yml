@@ -10,7 +10,7 @@ jobs:
       contents: read
       packages: write
 
-    uses: liara-engine/.github/.github/workflows/reusable-clean-ghcr.yml@v1
+    uses: liara-engine/.github/.github/workflows/reusable-clean-ghcr.yml@v2
     with:
       package-name: liara-documentation-builder
       min-versions-to-keep: 3

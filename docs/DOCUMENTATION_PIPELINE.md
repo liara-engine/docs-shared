@@ -129,7 +129,6 @@ docs-shared/
 └── hub/                   # the central landing page (deployed to the site root)
     ├── index.html
     ├── css/style.css
-    ├── js/liara-hub.js
     └── 404.html           # custom not-found page (served at the site root)
 ```
 
@@ -215,7 +214,7 @@ CI lives as **reusable workflows** in `.github`, called by a thin caller in each
 
 * `dev` tracks the development branch; `x.y.z` are releases.
 * Each version is a directory under `site/<repo>/`, so nothing is overwritten on release — `/<repo>/1.0.0/` and `/<repo>/dev/` coexist.
-* `manifest.metadata.latest` records the newest version; the hub's `version.json` and the `modules-registry.json` (both at the site root) drive the navbar's version selector and module list.
+* `manifest.metadata.latest` records the newest version; the `modules-registry.json` (at the site root) drive the navbar's version selector and module list.
 
 ## 7. Hosting
 
@@ -227,18 +226,18 @@ CI lives as **reusable workflows** in `.github`, called by a thin caller in each
 
 ### 7.1 URL surface (quick reference)
 
-| URL                                                                | Result                               |
-|--------------------------------------------------------------------|--------------------------------------|
-| `/`                                                                | The hub landing page                 |
-| `/<repo>/<version>/book/…`                                         | mdBook page (static)                 |
-| `/<repo>/<version>/doxygen/…`                                      | Doxygen page (static)                |
-| `/<repo>/<version>/`                                               | → `book/` (or `doxygen/`)            |
-| `/<repo>/latest/…`                                                 | → resolved version from the manifest |
-| `/<repo>` or `/<repo>/`                                            | → latest → `book/`                   |
-| `/<repo>/pr-<n>/…`                                                 | A PR preview (see §8)                |
-| `/shared-content/…`                                                | Runtime shared assets                |
-| `/modules-registry.json`, `/version.json`, `/<repo>/manifest.json` | Metadata consumed by the navbar      |
-| anything else                                                      | The custom 404 page                  |
+| URL                                               | Result                               |
+|---------------------------------------------------|--------------------------------------|
+| `/`                                               | The hub landing page                 |
+| `/<repo>/<version>/book/…`                        | mdBook page (static)                 |
+| `/<repo>/<version>/doxygen/…`                     | Doxygen page (static)                |
+| `/<repo>/<version>/`                              | → `book/` (or `doxygen/`)            |
+| `/<repo>/latest/…`                                | → resolved version from the manifest |
+| `/<repo>` or `/<repo>/`                           | → latest → `book/`                   |
+| `/<repo>/pr-<n>/…`                                | A PR preview (see §8)                |
+| `/shared-content/…`                               | Runtime shared assets                |
+| `/modules-registry.json`, `/<repo>/manifest.json` | Metadata consumed by the navbar      |
+| anything else                                     | The custom 404 page                  |
 
 ## 8. PR previews
 

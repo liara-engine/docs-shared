@@ -1,0 +1,18 @@
+{
+  "name": "@liara/hub",
+  "private": true,
+  "type": "module",
+  "version": "1.0.0",
+
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "astro": "astro"
+  },
+
+  "dependencies": {
+    "@liara/starlight-preset": "file:../astro",
+    "astro": "^7.2.9"
+  }
+}

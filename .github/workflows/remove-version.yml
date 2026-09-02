@@ -1,0 +1,74 @@
+name: remove-version
+
+# Takes one published version of one module offline, on demand.
+#
+# Its pages are deleted and replaced by a single page saying so and naming the
+# version to read instead; the edge router answers every deep link into the
+# version with that page and a 410. Nothing is edited in the module's
+# repository: the version stays in its manifest, stays in the navigation index
+# flagged as retired, and the next deploy of that module cannot bring back
+# pages that no longer exist.
+#
+# The intended use is pruning the minor releases of a superseded major — the
+# 0.1.x line once 0.2 is out — where the alternative is a version selector
+# full of entries nobody should be reading.
+#
+# `dev` and the module's own `latest` are refused unless `force` is set:
+# `/<module>/latest/` resolves through the manifest, so retiring what it points
+# at would leave the module's front door answering 410.
+
+on:
+  workflow_dispatch:
+    inputs:
+      module:
+        description: 'Module repository name, e.g. liara-core'
+        required: true
+        type: string
+
+      version:
+        description: 'Version to retire, e.g. 0.1.4'
+        required: true
+        type: string
+
+      reason:
+        description: 'Shown on the page. One sentence, e.g. "Superseded by the 0.2 line."'
+        required: false
+        type: string
+        default: ''
+
+      successor:
+        description: 'Version to send readers to (default: the newest compatible one still online)'
+        required: false
+        type: string
+        default: ''
+
+      force:
+        description: 'Allow retiring dev or the module''s own latest'
+        required: false
+        type: boolean
+        default: false
+
+      dry-run:
+        description: 'Report what would happen and push nothing'
+        required: false
+        type: boolean
+        default: false
+
+jobs:
+  remove:
+    permissions:
+      contents: read
+
+    uses: liara-engine/.github/.github/workflows/reusable-docs-remove.yml@v2
+    with:
+      module: ${{ inputs.module }}
+      version: ${{ inputs.version }}
+      reason: ${{ inputs.reason }}
+      successor: ${{ inputs.successor }}
+      force: ${{ inputs.force }}
+      dry-run: ${{ inputs.dry-run }}
+      output-repository: liara-engine/liara-docs
+
+    secrets:
+      push-token: ${{ secrets.DOCS_PUSH_TOKEN }}
+      read-token: ${{ secrets.ORG_READ_TOKEN }}
