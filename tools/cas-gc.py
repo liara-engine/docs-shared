@@ -13,7 +13,7 @@ site, collects the store paths they reference, and removes what nothing
 points to. It is the counterpart of tools/fingerprint.py, which only ever
 adds, and it belongs at the end of the preview cleanup workflow.
 
-Two safety properties matter more here than anywhere else in the pipeline,
+Three safety properties matter more here than anywhere else in the pipeline,
 because the failure mode is silent: a wrongly deleted entry does not break
 the build, it breaks a page that nobody is looking at yet.
 
@@ -22,17 +22,30 @@ the build, it breaks a page that nobody is looking at yet.
     than to mean the site genuinely uses no assets.
   * `--dry-run` and `--check` report without touching the tree, so the same
     invocation can gate a workflow before it is trusted to run for real.
+  * Nothing is deleted the first time it is seen unreferenced. Reachability
+    is computed from the *committed* tree, and a deploy that is in flight is
+    not in it yet — its pages are still on a runner somewhere. That is not a
+    rare alignment: closing a pull request usually means merging it, so the
+    preview teardown and the deploy of the branch that superseded it run at
+    the same moment, over assets that are byte-identical. An entry therefore
+    has to be seen unreferenced in one run, and still be unreferenced
+    `--grace-days` later, before it is collected. The waiting list lives in
+    `.cas-quarantine.json` at the site root, deliberately holding bare store
+    keys rather than URLs so that the file cannot itself count as a
+    reference.
 
 Usage:
     cas-gc.py <site-dir> [--cas-prefix /_cas] [--dry-run] [--check]
-                         [--min-references N]
+                         [--min-references N] [--grace-days N]
 """
 
 from __future__ import annotations
 
 import argparse
+import json
 import re
 import sys
+from datetime import date, timedelta
 from pathlib import Path
 
 # File types that may hold a reference. Binary assets never reference the
@@ -45,6 +58,13 @@ SCANNED_SUFFIXES = frozenset({
 # Below this many references, the scan is assumed to have gone wrong rather
 # than the site to have gone empty.
 DEFAULT_MIN_REFERENCES = 1
+
+# How long an entry has to stay unreferenced before it is collected, and
+# where that waiting list is kept. A week is far longer than any deploy, and
+# the store is measured in kilobytes per entry: there is nothing to gain from
+# being prompt, and a page to lose from being early.
+DEFAULT_GRACE_DAYS = 7
+QUARANTINE_NAME = '.cas-quarantine.json'
 
 
 def reference_pattern(cas_prefix: str) -> re.Pattern[str]:
@@ -145,6 +165,35 @@ def store_entries(site: Path, cas_prefix: str) -> dict[str, Path]:
     }
 
 
+def read_quarantine(path: Path) -> dict[str, str]:
+    try:
+        with path.open(encoding='utf-8') as handle:
+            loaded = json.load(handle)
+    except (FileNotFoundError, json.JSONDecodeError):
+        return {}
+    return {key: value for key, value in loaded.items()
+            if isinstance(key, str) and isinstance(value, str)}
+
+
+def write_quarantine(path: Path, quarantine: dict[str, str]) -> None:
+    if not quarantine:
+        path.unlink(missing_ok=True)
+        return
+    serialised = json.dumps(dict(sorted(quarantine.items())), indent=2) + '\n'
+    path.write_text(serialised, encoding='utf-8')
+
+
+def due(quarantine: dict[str, str], entry: str, today: date, grace_days: int) -> bool:
+    """Has this entry been unreferenced for long enough to collect?"""
+    if grace_days <= 0:
+        return True
+    try:
+        first_seen = date.fromisoformat(quarantine[entry])
+    except (KeyError, ValueError):
+        return False
+    return today - first_seen >= timedelta(days=grace_days)
+
+
 def prune_empty_directories(root: Path) -> int:
     removed = 0
     for path in sorted(root.rglob('*'), key=lambda p: -len(p.parts)):
@@ -165,6 +214,9 @@ def main(argv: list[str] | None = None) -> int:
                         help='exit 1 if anything is unreferenced; remove nothing')
     parser.add_argument('--min-references', type=int, default=DEFAULT_MIN_REFERENCES,
                         help='refuse to delete when fewer references than this are found')
+    parser.add_argument('--grace-days', type=int, default=DEFAULT_GRACE_DAYS,
+                        help='days an entry must stay unreferenced before it is '
+                             'collected (0 collects immediately)')
     args = parser.parse_args(argv)
 
     if not args.site.is_dir():
@@ -202,8 +254,25 @@ def main(argv: list[str] | None = None) -> int:
     unreferenced = sorted(set(entries) - referenced)
     reclaimed = sum(entries[path].stat().st_size for path in unreferenced)
 
+    quarantine_path = args.site / QUARANTINE_NAME
+    quarantine = read_quarantine(quarantine_path)
+    today = date.today()
+
+    # An entry that came back into use leaves the waiting list, so a version
+    # that is rebuilt after a spell out of favour does not carry an expiry
+    # date from its previous life.
+    quarantine = {entry: seen for entry, seen in quarantine.items()
+                  if entry in set(unreferenced)}
+    for entry in unreferenced:
+        quarantine.setdefault(entry, today.isoformat())
+
+    collectable = [entry for entry in unreferenced
+                   if due(quarantine, entry, today, args.grace_days)]
+    waiting = len(unreferenced) - len(collectable)
+
     if not unreferenced:
         print('\nnothing to collect')
+        write_quarantine(quarantine_path, quarantine)
         return 0
 
     print(f'\n  unreferenced {len(unreferenced)} entries, {reclaimed / 1024:.1f} KiB')
@@ -211,6 +280,8 @@ def main(argv: list[str] | None = None) -> int:
         print(f'    {path}')
     if len(unreferenced) > 10:
         print(f'    … and {len(unreferenced) - 10} more')
+    if waiting:
+        print(f'  {waiting} of them are inside the {args.grace_days}-day grace period')
 
     if args.check:
         print('\nerror: the store holds unreferenced entries; run without --check to collect',
@@ -221,10 +292,14 @@ def main(argv: list[str] | None = None) -> int:
         print('\ndry run: nothing removed')
         return 0
 
-    for path in unreferenced:
+    for path in collectable:
         entries[path].unlink()
+        quarantine.pop(path, None)
+
+    write_quarantine(quarantine_path, quarantine)
     pruned = prune_empty_directories(args.site / args.cas_prefix.strip('/'))
-    print(f'\nremoved {len(unreferenced)} entries and {pruned} empty directories')
+    print(f'\nremoved {len(collectable)} entries and {pruned} empty directories; '
+          f'{len(quarantine)} waiting')
     return 0
 
 
