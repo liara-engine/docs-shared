@@ -1,14 +1,28 @@
 # ============================================================================
-# Project Related Configuration
+# Preview fixtures — Doxyfile
 # ============================================================================
-PROJECT_NAME           = "Docs-Shared Preview Fixtures"
-PROJECT_BRIEF          = "Synthetic API surface to exercise the Doxygen template"
-PROJECT_ICON           = docs-shared/shared-content/assets/logo.svg
-OUTPUT_DIRECTORY       = build/doxygen
+#
+# This is also the reference shape for a module's Doxyfile. Only two things
+# matter here: what to read, and how to read it.
+#
+# `build-docs` overrides the rest at run time — INPUT, OUTPUT_DIRECTORY,
+# GENERATE_XML, GENERATE_HTML, GENERATE_LATEX, XML_PROGRAMLISTING and QUIET —
+# because Doxygen no longer generates any HTML. Its XML is read by the shared
+# Astro preset and rendered as ordinary Starlight pages, so there is no
+# HTML_HEADER, HTML_FOOTER or theme path to point anywhere.
+#
+# See docs/authoring-a-module.mdx §5.
+# ============================================================================
 
-# ============================================================================
-# Input and Parsing Configuration
-# ============================================================================
+# ---------------------------------------------------------------------------
+# Project
+# ---------------------------------------------------------------------------
+PROJECT_NAME           = "Docs-Shared Preview Fixtures"
+PROJECT_BRIEF          = "Synthetic API surface to exercise the shared preset"
+
+# ---------------------------------------------------------------------------
+# Input and parsing
+# ---------------------------------------------------------------------------
 INPUT                  = include
 INPUT_ENCODING         = UTF-8
 RECURSIVE              = YES
@@ -23,31 +37,24 @@ OPTIMIZE_OUTPUT_FOR_C  = NO
 BUILTIN_STL_SUPPORT    = YES
 MARKDOWN_SUPPORT       = YES
 
-# ============================================================================
-# Build and Navigation Settings
-# ============================================================================
-GENERATE_HTML          = YES
-GENERATE_LATEX         = NO
-GENERATE_TREEVIEW      = YES
-DISABLE_INDEX          = NO
-FULL_SIDEBAR           = YES
-NUM_PROC_THREADS       = 0
-
-# Structure de tri
+# ---------------------------------------------------------------------------
+# Ordering
+# ---------------------------------------------------------------------------
 SORT_MEMBER_DOCS       = YES
 SORT_BRIEF_DOCS        = NO
 TOC_INCLUDE_HEADINGS   = 3
 
-# ============================================================================
-# Preprocessor Configuration
-# ============================================================================
+# ---------------------------------------------------------------------------
+# Preprocessor
+# ---------------------------------------------------------------------------
 ENABLE_PREPROCESSING   = YES
 MACRO_EXPANSION        = YES
-EXPAND_ONLY_SELECTIVELY= YES
 SEARCH_INCLUDES        = YES
 
-# ============================================================================
-# Custom Tags & Aliases
-# ============================================================================
+# ---------------------------------------------------------------------------
+# Custom sections
+# ---------------------------------------------------------------------------
+# A project-specific admonition, to prove that aliases survive the XML round
+# trip and are rendered by the preset like Doxygen's own.
 ALIASES               += "threadsafety=<dl class='section threadsafety'><dt>Thread Safety</dt><dd>"
 ALIASES               += "endthreadsafety=</dd></dl>"

@@ -1,0 +1,105 @@
+---
+title: Prose and layout
+description: A deliberately dense page — every plain Markdown construct the shared theme has to render cleanly.
+sidebar:
+  order: 1
+---
+
+A deliberately dense page. Every construct here should render cleanly with the shared theme, in light mode, in dark mode, and with the dyslexia-friendly fonts enabled.
+
+## Headings carry the type scale
+
+### Level three
+
+#### Level four
+
+##### Level five
+
+The display, body and mono pairing and the heading rhythm all live in `astro/styles/theme.css`, on top of the tokens in `tokens.css`.
+
+## Inline text
+
+Regular, **bold**, *italic*, ***bold italic***, ~~strikethrough~~, `inline code`, and a [link to the overview](../) plus an [external link](https://github.com/liara-engine/docs-shared) — which should carry an external-link affordance.
+
+A very long line of `inline code that should wrap rather than overflow its container on a narrow viewport, because API names get long`.
+
+## Lists
+
+Unordered, nested:
+
+- Rendering
+    - Render packets
+    - Frame graph
+        - Pass scheduling
+- Assets
+    - Streaming
+    - Hot reload
+
+Ordered:
+
+1. Parse
+2. Validate
+3. Emit
+
+Task list:
+
+- [x] Tokens applied
+- [x] Dark mode bridged
+- [ ] Your regression, hopefully not here
+
+Definition-style, via nesting:
+
+- **`liara_result`**
+    - The status code every C entry point returns.
+- **`liara_version`**
+    - A `major.minor.patch` triple with an ABI-compatibility rule attached.
+
+## Table
+
+| Subsystem  | Status      | ABI | Notes                          |
+|------------|-------------|----:|--------------------------------|
+| Interfaces | Stable      | dev | The contract everyone compiles |
+| Renderer   | In progress | dev | Vulkan backend only            |
+| Audio      | Planned     |   — | Not started                    |
+
+A table wider than its container must scroll inside itself rather than push
+the page sideways:
+
+| Symbol | Kind | Since | Deprecated | Replacement | Header | Notes |
+|---|---|---|---|---|---|---|
+| `liara_version_provides` | function | 0.1.0 | — | — | `liara/version.h` | The single definition of ABI compatibility |
+| `liara_result_message` | function | 0.1.0 | — | — | `liara/result.h` | Never returns `NULL` |
+| `liara_module_init_v1` | function | 0.0.1 | 0.2.0 | `liara_module_init_v2` | `liara/module.h` | Kept for one more minor |
+
+## Blockquote
+
+> Premature optimization is the root of all evil — but so is shipping a styling regression to every module at once.
+>
+> — the reason this page exists
+
+## Footnotes
+
+The frame graph schedules passes by dependency[^fg], not by submission order[^order].
+
+[^fg]: A directed acyclic graph of render passes.
+[^order]: Submission order is only a tiebreaker.
+
+## Horizontal rule
+
+---
+
+## Images
+
+An image referenced from the module's own `public/` or by absolute URL. The logo below is served from the content-addressed store, like every other asset on the site:
+
+![The Liara Engine logo](https://liara-engine.liara-engine-documentation.workers.dev/favicon.svg)
+
+## Inline HTML
+
+<kbd>Ctrl</kbd> + <kbd>K</kbd> opens search. Superscripts (x<sup>2</sup>),
+subscripts (H<sub>2</sub>O) and <abbr title="Application Binary Interface">ABI</abbr>
+abbreviations all survive the Markdown pipeline.
+
+## Long paragraph
+
+The measure of a body column should stay readable without the reader having to track a line back across the full width of a desktop display; this paragraph exists to make that visible at a glance, and to give the dyslexia-friendly font something long enough to be judged on. If the line length here looks comfortable in every theme, at every width, then the layout tokens are doing their job and nothing on this page needs attention.

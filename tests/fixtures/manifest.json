@@ -1,13 +1,14 @@
 {
-  "$schema": "https://liara-engine.github.io/liara/schemas/module-manifest.schema.json",
+  "$schema": "https://liara-engine.github.io/liara/schemas/module-manifest-v2.schema.json",
+  "manifest_version": 2,
+  "kind": "infrastructure",
   "metadata": {
     "name": "Docs-Shared Preview Fixtures",
-    "description": "Synthetic module used only to exercise the shared documentation templates and assets in CI. Not a real engine module.",
+    "description": "Synthetic module used only to exercise the shared documentation preset in CI. Not a real engine module.",
+    "repo": "docs-shared",
     "latest": "dev"
   },
   "versions": {
-    "dev": {
-      "abi_compatibility": ["dev"]
-    }
+    "dev": {}
   }
 }

@@ -1,0 +1,171 @@
+---
+title: Components
+description: Every Starlight component the preset styles, in every variant — the page to check after a token or theme change.
+sidebar:
+  order: 3
+---
+
+import { Aside, Badge, Card, CardGrid, FileTree, Icon, LinkButton, LinkCard, Steps, TabItem, Tabs } from '@astrojs/starlight/components';
+
+Everything Starlight gives an author, rendered once each. A token change that looks fine on prose can still break one of these.
+
+## Asides
+
+Both spellings produce the same thing — the directive form works in plain `.md`, the component form only in `.mdx`.
+
+<Aside type="note">Default title, note variant.</Aside>
+<Aside type="tip" title="With a custom title">Tip variant.</Aside>
+<Aside type="caution">Caution variant.</Aside>
+<Aside type="danger" title="Read this one">Danger variant.</Aside>
+
+<Aside type="note" title="Nesting">
+An aside can contain a list:
+
+- with items
+- and `inline code`
+
+and a fence:
+
+```c
+liara_result_t r = liara_init(&desc);
+```
+</Aside>
+
+## Tabs
+
+Independent:
+
+<Tabs>
+<TabItem label="C">
+
+```c
+liara_version_t v;
+liara_version_current(&v);
+```
+
+</TabItem>
+<TabItem label="C++">
+
+```cpp
+const auto v = liara::version::current();
+```
+
+</TabItem>
+<TabItem label="CMake">
+
+```cmake
+find_package(Liara REQUIRED COMPONENTS core)
+```
+
+</TabItem>
+</Tabs>
+
+Synchronised — picking a tab here switches the group below it too:
+
+<Tabs syncKey="os">
+<TabItem label="Linux" icon="linux">Uses `XDG_DATA_HOME`.</TabItem>
+<TabItem label="macOS" icon="apple">Uses `~/Library/Application Support`.</TabItem>
+</Tabs>
+
+<Tabs syncKey="os">
+<TabItem label="Linux" icon="linux">
+
+```bash frame="terminal"
+export LIARA_ASSET_ROOT="$XDG_DATA_HOME/liara"
+```
+
+</TabItem>
+<TabItem label="macOS" icon="apple">
+
+```bash frame="terminal"
+export LIARA_ASSET_ROOT="$HOME/Library/Application Support/liara"
+```
+
+</TabItem>
+</Tabs>
+
+## Steps
+
+<Steps>
+
+1. **Write the manifest.** One `dev` version is enough to start.
+
+2. **Write a page.** `docs/index.md` with a `title` in its front matter.
+
+    A step can carry more than one paragraph, and a fence:
+
+    ```bash frame="terminal"
+    git add docs/ manifest.json
+    ```
+
+3. **Open a pull request** and read the preview.
+
+</Steps>
+
+## Cards
+
+<CardGrid>
+	<Card title="Contract" icon="approve-check-circle">
+		Versions **are** ABI versions.
+	</Card>
+	<Card title="Module" icon="puzzle">
+		Targets one or more ABI versions.
+	</Card>
+	<Card title="Host" icon="rocket">
+		Loads modules and owns the loop.
+	</Card>
+	<Card title="Infrastructure" icon="setting">
+		No ABI relation at all.
+	</Card>
+</CardGrid>
+
+<CardGrid stagger>
+	<LinkCard title="Prose and layout" href="../prose/" description="Markdown constructs." />
+	<LinkCard title="Code and diagrams" href="../code/" description="Frames, grammars, Mermaid." />
+</CardGrid>
+
+## Badges
+
+Inline: <Badge text="stable" variant="success" />
+<Badge text="preview" variant="note" />
+<Badge text="deprecated" variant="caution" />
+<Badge text="removed" variant="danger" />
+<Badge text="default" />
+<Badge text="large" variant="tip" size="large" />
+
+In a table, where they earn their place:
+
+| Version | ABI | State |
+| --- | --- | --- |
+| `dev` | 0.2.0 | <Badge text="compatible" variant="success" /> |
+| `0.2.3` | 0.2.0 | <Badge text="compatible" variant="success" /> |
+| `0.1.4` | 0.1.0 | <Badge text="degraded" variant="caution" /> |
+| `0.0.1` | — | <Badge text="retired" variant="danger" /> |
+
+## File tree
+
+<FileTree>
+- include/
+  - liara/
+    - preview/
+      - **sample.hpp** the one header this fixture documents
+      - internal/ …
+- docs/
+  - index.mdx
+  - prose.mdx
+  - code.mdx
+  - components.mdx
+- manifest.json
+- Doxyfile
+</FileTree>
+
+## Icons and buttons
+
+<Icon name="rocket" size="1.5rem" /> <Icon name="puzzle" size="1.5rem" />
+<Icon name="magnifier" size="1.5rem" /> <Icon name="github" size="1.5rem" />
+<Icon name="warning" size="1.5rem" color="var(--liara-semantic-warning-fg)" />
+
+<LinkButton href="../../api/">Read the API reference</LinkButton>
+<LinkButton href="https://github.com/liara-engine/docs-shared" variant="secondary" icon="external">
+	docs-shared on GitHub
+</LinkButton>

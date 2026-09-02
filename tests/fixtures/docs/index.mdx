@@ -1,0 +1,48 @@
+---
+title: Preview fixtures
+description: A synthetic module built by every docs-shared pull request, so a change to the shared preset can be seen before it reaches every site.
+sidebar:
+  label: Overview
+  order: 0
+---
+
+import { Aside, CardGrid, LinkCard } from '@astrojs/starlight/components';
+
+This module exists for one reason: to render **everything the shared preset is expected to support**, so a `docs-shared` pull request can be looked at before it ships to every module at once.
+
+If something here looks wrong in a preview build, the change in the pull request probably caused it. That is the whole point.
+
+<Aside type="caution" title="Synthetic">
+Nothing here describes real engine behaviour. The API surface is a fake header, the guides are a test bench, and the numbers are made up.
+</Aside>
+
+<CardGrid>
+	<LinkCard
+		title="Prose and layout"
+		href="./prose/"
+		description="Headings, lists, tables, footnotes, images, inline HTML — everything a plain Markdown page can contain."
+	/>
+	<LinkCard
+		title="Code and diagrams"
+		href="./code/"
+		description="Expressive Code frames, every grammar the project uses, and Mermaid."
+	/>
+	<LinkCard
+		title="Components"
+		href="./components/"
+		description="Asides, tabs, steps, cards, file trees and badges, in every variant."
+	/>
+	<LinkCard
+		title="API reference"
+		href="../api/"
+		description="Generated from the fixture header — the other half of the pipeline."
+	/>
+</CardGrid>
+
+## What a reviewer should check
+
+- The **navbar** lists the modules and offers a version selector.
+- The **version banner** says this is a preview, and its text does *not* appear in search results.
+- The **sidebar** shows About, Guide and API reference, in that order.
+- **Search** finds a phrase from each page below — and only from this preview, since a preview indexes itself.
+- **Light, dark and dyslexia-friendly** modes all read correctly, including inside code blocks and diagrams.
