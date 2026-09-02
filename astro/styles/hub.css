@@ -331,6 +331,23 @@ html, body {
     border-color: var(--liara-brand-primary-dark);
 }
 
+/* The lavender role, for an action that has to stand out from the page
+   without competing with the primary call to action beside it — the way back
+   to the hub is a different kind of move, not a lesser one. */
+.hub-button--tertiary {
+    background: var(--liara-brand-secondary-soft);
+    color: var(--liara-brand-secondary-dark);
+    border-color: var(--liara-brand-secondary);
+}
+
+.hub-button--tertiary:hover {
+    background: var(--liara-brand-secondary);
+    color: var(--liara-text-on-primary);
+    border-color: var(--liara-brand-secondary-dark);
+    transform: translateY(-1px);
+    text-decoration: none;
+}
+
 .hub-button--secondary {
     background: var(--liara-bg-elevated);
     color: var(--liara-text-primary);

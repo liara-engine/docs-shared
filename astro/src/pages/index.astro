@@ -91,14 +91,21 @@ const versionLabels = manifest?.versions
                             <span>{exploreCards[0].title === 'Guide' ? 'Read the guide' : 'Browse the API reference'}</span>
                         </a>
                     )}
+                    {/* The way out of this module, and the only link on the page
+                        that leaves it. It used to read "All modules", which named
+                        a list rather than the place that list lives on. */}
+                    <a class="hub-button hub-button--tertiary" href="/">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                             stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <line x1="19" y1="12" x2="5" y2="12" /><polyline points="12 19 5 12 12 5" />
+                        </svg>
+                        <span>Back to the documentation hub</span>
+                    </a>
                     {registryEntry && (
                         <a class="hub-button hub-button--secondary" href={`https://github.com/liara-engine/${repo}`} target="_blank" rel="noopener">
                             <span>View on GitHub</span>
                         </a>
                     )}
-                    <a class="hub-button hub-button--secondary" href="/">
-                        <span>All modules</span>
-                    </a>
                 </div>
             </div>
         </section>
