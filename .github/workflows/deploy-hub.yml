@@ -42,8 +42,10 @@ jobs:
           cache: npm
           cache-dependency-path: hub/package-lock.json
 
-      # The preset is a `file:` dependency, so this also installs Starlight
-      # and the shared styles from ../astro.
+      # The preset is a `file:` dependency, so ../astro is symlinked into the
+      # hub's node_modules and its shared styles come along — but its own
+      # dependencies are never installed here, which is why ../astro/tsconfig.json
+      # has to stand on its own (Vite reads it when it resolves those styles).
       - run: npm ci
         working-directory: hub
 
