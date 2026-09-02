@@ -1,0 +1,258 @@
+---
+title: CI and deployment
+description: How a page gets from a module's repository onto the documentation site, and how to rebuild or retire one that is already there.
+sidebar:
+  order: 4
+---
+
+import { Aside, Code, FileTree, LinkCard, Steps, TabItem, Tabs } from '@astrojs/starlight/components';
+
+Everything at `liara-engine.liara-engine-documentation.workers.dev` is
+produced by CI. This page is the map: which workflow runs when, what it puts
+where, and which of them you run by hand.
+
+## 1. The shape of the site
+
+<FileTree>
+- site/
+  - index.html the hub, built from `hub/`
+  - 404.html
+  - modules-registry.json module identities, from `docs-shared`
+  - registry-index.json **the registry and every manifest, joined**
+  - \_cas/ content-addressed assets, shared by every version
+  - pagefind/ **the site-wide search index**
+  - liara-core/
+    - manifest.json canonical — what `latest` resolves through
+    - dev/ one directory per build, frozen
+    - 0.2.3/
+    - 0.1.0/
+    - pr-42/ a preview, reachable by direct URL only
+</FileTree>
+
+Four properties drive every workflow below.
+
+<Steps>
+
+1. **A version directory is written once.** That is what keeps a published URL
+   working, and it is also why a template change does not reach an old version
+   until somebody rebuilds it (§4).
+
+2. **Assets do not live in the version directory.** `tools/fingerprint.py`
+   moves them to `_cas/` at build time and rewrites the references, so two
+   versions with identical bytes occupy one path. The deploy splits `_cas/`
+   out of the build and merges it into the site root; nothing ever overwrites
+   an entry there, because an identical name means identical bytes.
+
+3. **The navigation is served from one file.** `registry-index.json` is the
+   join of the registry and every module's manifest, rebuilt at the end of
+   every deploy. The navbar makes one request for it instead of `1 + N`.
+
+4. **So is search.** `site/pagefind/` is one index over `dev` and `latest` of
+   every module, rebuilt in the same step — see [Search](../search/).
+
+</Steps>
+
+## 2. Who runs what
+
+| Workflow (`docs-shared`) | Trigger | What it does |
+| --- | --- | --- |
+| `image.yml` | push to `main`, release tag, PR touching the image | Builds and pushes the builder image, **then** rebuilds the documentation that image produces (§3) |
+| `deploy-hub.yml` | `hub/**`, `modules-registry.json`, `astro/styles/**` | Builds the hub with Node and deploys it to the site root |
+| `preview.yml` | any pull request | Builds the image *from the PR* and the fixtures with it → `/docs-shared/pr-<n>/` |
+| `preview-cleanup.yml` | pull request closed | Removes the preview and the `pr-<n>` image, collects the store |
+| `rebuild-version.yml` | manual | Rebuilds one version of one module (§4) |
+| `remove-version.yml` | manual | Retires one version of one module (§5) |
+| `clean-ghcr.yml` | weekly | Prunes old image versions, keeps the last 3 |
+| `release-please.yml` | push to `main` | Maintains the release pull request and cuts the tag |
+| `commitlint.yml` | any pull request | Enforces Conventional Commits |
+
+A module repository calls the org-level reusable workflows and needs nothing
+else:
+
+```yaml title=".github/workflows/docs.yml"
+jobs:
+  docs:
+    permissions: { contents: read, packages: read }
+    uses: liara-engine/.github/.github/workflows/reusable-docs.yml@v2
+    with:
+      image: ghcr.io/liara-engine/liara-documentation-builder:latest
+      output-repository: liara-engine/liara-docs
+      deployment-version: ${{ github.ref_type == 'tag' && github.ref_name || 'dev' }}
+    secrets:
+      ghcr-token: ${{ secrets.GITHUB_TOKEN }}
+      push-token: ${{ secrets.DOCS_PUSH_TOKEN }}
+```
+
+In `.github`, the reusable half is:
+
+| Workflow | Role |
+| --- | --- |
+| `reusable-build-docs.yml` | Builds one (module, version) into one self-describing artifact |
+| `reusable-deploy-docs.yml` | Places one artifact, refreshes the site, pushes |
+| `reusable-docs.yml` | The two above, in order — the module-facing entry point |
+| `reusable-docs-preview.yml` | A build at `pr-<n>` that never touches the canonical manifest |
+| `reusable-docs-preview-cleanup.yml` | Teardown + store collection |
+| `reusable-docs-remove.yml` | Retires a version (§5) |
+| `reusable-generate-docker.yml` | Builds and pushes the builder image |
+| `.github/actions/site-refresh` | Registry, navigation index, search index, optional store collection |
+
+The build artifact is what keeps those independent:
+
+<FileTree>
+- \<artifact\>/
+  - deploy.json `{"repo": …, "version": …, "root": false}`
+  - manifest.json the module manifest this build was made from
+  - site/ the built output, `_cas/` included
+</FileTree>
+
+The deploy reads `deploy.json` and needs to know nothing else — which is also
+how the hub, built by an entirely different toolchain, goes through the same
+deploy with `root: true`.
+
+### 2.1 What a deploy refreshes
+
+Placing the artifact is only half of a deploy. The `site-refresh` action then
+rebuilds the two things that span the whole site, in this order:
+
+<Steps>
+
+1. `tools/build-registry-index.py site` — joins the registry with every
+   deployed manifest, annotates which versions are actually on disk, flags
+   retired ones, and adds ABI compatibility verdicts.
+
+2. `tools/search-index.py site` — builds `site/pagefind/` over `dev` and
+   `latest` of every module. It reads the index written in step 1, so the
+   order matters.
+
+</Steps>
+
+<Aside type="caution" title="Wiring the search step">
+Step 2 is the one part of this design that lives outside `docs-shared`. The
+tool ships here; the call site is in the `.github` repository's
+`site-refresh` action, immediately after the registry index:
+
+```yaml title=".github/actions/site-refresh/action.yml"
+- name: Rebuild the site-wide search index
+  shell: bash
+  run: python3 "${TOOLS}/search-index.py" "${SITE_DIR}"
+```
+
+Until that step exists, published versions render a search box that fetches a
+`/pagefind/` which is not there. Deploy the two together.
+</Aside>
+
+## 3. Why the image and the docs are one workflow
+
+Almost all of this repository is baked into the builder image: the Astro
+preset, the styles, `build-docs.sh`, `tools/`. So "the templates changed" and
+"the image changed" are the same event, and a docs build running in parallel
+with the image build would silently use the previous image. `image.yml` orders
+them with `needs`:
+
+<Tabs>
+<TabItem label="Push to main">
+
+Image `dev` + `latest`, then `docs-shared`'s own `dev`.
+
+</TabItem>
+<TabItem label="Release tag">
+
+Image `vX.Y.Z` + `latest`, then this release, plus `dev` and `latest` of every
+module the site already serves.
+
+The list comes from the deployed `registry-index.json`, so it needs no hand
+maintenance. Older releases are deliberately left alone — they are rebuilt on
+demand (§4).
+
+</TabItem>
+<TabItem label="Pull request">
+
+The image only. The preview builds its own (§6).
+
+</TabItem>
+</Tabs>
+
+## 4. Rebuilding a version
+
+`rebuild-version.yml` → *Run workflow* → module, version.
+
+`dev` builds the module's default branch; `X.Y.Z` builds the tag `vX.Y.Z`. The
+result replaces what is deployed, at the same URL. The canonical manifest is
+left alone unless the rebuilt version is already the one it calls `latest`, so
+rebuilding an old release cannot roll `latest` backwards.
+
+<Aside type="tip">
+This is the workflow to use to bring versions published by the previous
+mdBook/Doxygen toolchain over to Astro: one run per (module, version), each
+independent of the others.
+</Aside>
+
+## 5. Retiring a version
+
+`remove-version.yml` → *Run workflow* → module, version, and a one-sentence
+reason.
+
+The version's pages are deleted and replaced by a page that says so and names
+the version to read instead — the newest one still online in the same ABI line
+(same major, or same minor while the major is 0), falling back to `latest`.
+Beside it goes `removed.json`, and that marker is what the rest of the system
+reads:
+
+- the **edge router** answers every deep link into the version with that page
+  and a `410 Gone`, so an old bookmark explains itself instead of landing on a
+  generic 404;
+- the **navigation index** flags the version, and the version selector shows it
+  as `0.1.4 (retired)` rather than dropping an entry a reader may be looking
+  for;
+- the **search index** skips it, so nothing sends a reader to pages that are
+  gone;
+- the **store** is collected afterwards, which is where the space actually
+  comes back.
+
+Nothing is edited in the module's repository: the version stays in its
+manifest, and the next deploy of that module cannot resurrect pages that no
+longer exist.
+
+<Aside type="danger">
+`dev` and a module's own `latest` are refused unless `force` is set, because
+`/<module>/latest/` resolves through the manifest and would otherwise answer
+410. `dry-run` reports without pushing.
+</Aside>
+
+## 6. Previews
+
+Any pull request on a module repository publishes to `/<module>/pr-<n>/`,
+hidden from the navigation by construction — `pr-`-prefixed versions are
+skipped by the index builder — and invisible to the canonical manifest.
+
+`docs-shared`'s own preview is the exception, for the reason in §3: it builds
+the image from the pull request and runs it against `tests/fixtures/`, a
+synthetic module with prose, headers and a `Doxyfile` — enough to exercise the
+whole toolchain against the preset the pull request is changing.
+
+Previews are removed when the pull request closes, and a weekly sweep in
+`liara-docs` prunes anything whose pull request is closed or has been idle for
+more than 30 days. Both collect the content-addressed store afterwards, which
+is where a preview leaves most of its weight.
+
+## 7. Secrets
+
+| Secret | Used for |
+| --- | --- |
+| `DOCS_PUSH_TOKEN` | Pushing to `liara-docs`' `cloudflare-pages` branch |
+| `ORG_READ_TOKEN` | Reading other repositories and the ABI oracle release; optional, `GITHUB_TOKEN` covers public ones |
+| `ORG_RELEASE_PLEASE_TOKEN` | Opening and updating the release pull request |
+| `GITHUB_TOKEN` | GHCR, PR comments |
+
+The ABI oracle is downloaded from the latest `liara-interfaces` release by the
+`site-refresh` action, and fed the small set of version pairs the navbar can
+ever need. It is the single definition of compatibility (ADR 0005) and is
+never reimplemented in Python or JavaScript. A release without the asset is a
+warning, not a failure: the index is still correct, it just carries no
+compatibility verdicts.
+
+<LinkCard
+	title="The documentation pipeline"
+	href="../documentation-pipeline/"
+	description="What the builder image actually does between checkout and artifact."
+/>

@@ -1,0 +1,88 @@
+---
+title: The documentation system
+description: How every Liara Engine documentation site is built, published, searched, and retired — and where to change each of those things.
+sidebar:
+  label: Overview
+  order: 0
+---
+
+import { Aside, Badge, CardGrid, LinkCard } from '@astrojs/starlight/components';
+
+Every documentation site in the project — this one included — is built from
+one shared Astro preset, by one container image, and published to one hosting
+repository served at the edge. Nothing about a module's documentation is
+specific to that module except its own prose, its own headers, and a manifest.
+
+These pages are the documentation of that machinery. They are also, quite
+deliberately, a demonstration of it: everything Starlight gives an author is
+used here at least once, so a page you are reading doubles as a page you can
+copy.
+
+<CardGrid>
+	<LinkCard
+		title="The documentation pipeline"
+		href="./documentation-pipeline/"
+		description="The architecture: which repository owns what, how a header becomes an API page, and what the builder image bakes in."
+	/>
+	<LinkCard
+		title="Authoring a module's documentation"
+		href="./authoring-a-module/"
+		description="The practical half: the files a module provides, the manifest formats, and everything you can write on a page."
+	/>
+	<LinkCard
+		title="Search"
+		href="./search/"
+		description="Why the site has one search index instead of one per version, and what that means for old releases."
+	/>
+	<LinkCard
+		title="CI and deployment"
+		href="./ci-and-deployment/"
+		description="Which workflow runs when, what it puts where, and how to rebuild or retire a version by hand."
+	/>
+</CardGrid>
+
+## Start here
+
+If you are **writing documentation for a module**, you need
+[Authoring a module's documentation](./authoring-a-module/) and nothing else.
+The rest is infrastructure you should be able to ignore.
+
+If you are **changing how the documentation looks or is built**, start with
+[The documentation pipeline](./documentation-pipeline/): almost all of this
+repository is baked into the builder image, so the blast radius of a change
+here is every site at once.
+
+If you are **operating the site** — rebuilding an old version, retiring one,
+chasing a deploy — go to [CI and deployment](./ci-and-deployment/).
+
+<Aside type="note" title="Astro and Starlight">
+These pages describe the current toolchain. Documentation used to be built by
+mdBook (for prose) and Doxygen's own HTML generator (for the API reference),
+stitched together by a shared theme and a runtime `/shared-content/` bundle.
+All of that is gone: one Astro site per module now renders both halves, and
+the API reference is generated from Doxygen's **XML** rather than its HTML.
+
+Versions published by the previous toolchain are still online and still
+readable. They are brought over one at a time, on demand — see
+[Rebuilding a version](./ci-and-deployment/#4-rebuilding-a-version).
+</Aside>
+
+## The five-line summary
+
+<Badge text="1" variant="tip" /> A module repository holds `manifest.json`,
+its prose in `docs/`, and — if it has a public API — a `Doxyfile` and headers.
+
+<Badge text="2" variant="tip" /> CI runs the builder image against it. The
+image carries the shared Astro preset, so the module needs no Astro
+configuration of its own.
+
+<Badge text="3" variant="tip" /> The build is fingerprinted: every asset moves
+into a site-wide content-addressed store, so two versions that produce
+identical bytes occupy one path.
+
+<Badge text="4" variant="tip" /> The result is pushed to `liara-docs` under
+`site/<repo>/<version>/`, written once and never rewritten — which is what
+keeps a published URL working.
+
+<Badge text="5" variant="tip" /> A deploy then refreshes the two things that
+span the whole site: the navigation index, and the search index.
