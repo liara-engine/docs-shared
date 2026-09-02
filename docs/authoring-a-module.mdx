@@ -357,6 +357,13 @@ ALIASES               += "endthreadsafety=</dd></dl>"
 Doxygen no longer generates HTML at all. Its XML is read by the preset and
 rendered as ordinary Starlight pages.
 
+Three more are set for reasons the preset depends on. `INTERNAL_DOCS = YES`
+keeps `@internal` markers in the XML so the generator can act on them instead
+of finding them already stripped; `SORT_MEMBER_DOCS = NO` and
+`SORT_BRIEF_DOCS = NO` keep declaration order, because a struct's field order
+is its memory layout and a header's function order is how you grouped them.
+The preset groups members by kind itself and leaves each group as written.
+
 `build-docs` also *clears* `HTML_HEADER`, `HTML_FOOTER`, `HTML_STYLESHEET`,
 `HTML_EXTRA_STYLESHEET`, `HTML_EXTRA_FILES`, `LAYOUT_FILE` and the `LATEX_*`
 equivalents, so a Doxyfile still pointing at the retired shared theme builds
@@ -369,24 +376,91 @@ tidier, not required.
 
 ### 5.1 Documenting headers
 
-Javadoc-style comments. Groups, classes, templates, enums, parameter tables
-and the standard admonitions (`@note`, `@warning`, `@deprecated`) all render:
+Javadoc-style comments. Everything below renders, and renders in a fixed
+place on the page — you cannot get the order wrong:
 
-```cpp title="include/liara/ring_buffer.hpp"
+```c title="include/liara/channel.h"
 /**
- * @brief Appends an element, overwriting the oldest if full.
- * @param value The element to store.
- * @return @c true if an element was overwritten.
- * @warning Not safe for concurrent writers.
- * @threadsafety Serialise pushes externally.@endthreadsafety
+ * @brief Opens a preview channel.
+ *
+ * @param[out] channel Receives the opened channel. Never written on failure.
+ * @param[in]  id      Channel index, below @ref LIARA_MAX_CHANNELS.
+ *
+ * @return A status code.
+ * @retval LIARA_OK     The channel is open and owned by the caller.
+ * @retval LIARA_EINVAL @p id is out of range.
+ *
+ * @pre  The subsystem has been initialised.
+ * @post On success, the caller owns @p channel until it closes it.
+ * @note Opening a channel does not allocate.
+ * @since 0.1.0
+ * @see liara_close
+ *
+ * @threadsafety Safe from any thread. @endthreadsafety
  */
-bool push(const T& value) noexcept;
+liara_status liara_open(struct liara_channel *channel, unsigned id);
 ```
 
-Custom aliases like `@threadsafety` let you add project-specific sections
-without touching anything shared.
+`@param`, `@retval`, `@exception` and `@tparam` become tables under their own
+headings — **Parameters**, **Returns**, **Throws** — with the real parameter
+types taken from the declaration and every type name that resolves to a
+documented symbol turned into a link.
 
-### 5.2 Choosing a layout
+`@note`, `@warning` and `@attention` become Starlight callouts. Everything
+else Doxygen calls a section — `@pre`, `@post`, `@invariant`, `@since`,
+`@see`, `@remark`, `@deprecated`, `@todo`, `@bug`, `@par` — becomes a labelled
+block where you wrote it, coloured by what it promises.
+
+<Aside type="tip" title="Project-specific sections">
+Two spellings, one result. `@par Thread safety:` is Doxygen's own and needs no
+setup. An alias expanding to raw HTML —
+
+```ini
+ALIASES += "threadsafety=<dl class='section threadsafety'><dt>Thread Safety</dt><dd>"
+ALIASES += "endthreadsafety=</dd></dl>"
+```
+
+— is what every Liara module already carries, and Doxygen parses it back into
+a variable list. Both arrive at the generator as the same thing and come out
+as the same labelled block. There is nothing to change in an existing
+Doxyfile.
+</Aside>
+
+### 5.2 Keeping things out of the reference
+
+`EXTRACT_ALL` means Doxygen reports everything, including things that were
+never part of your surface. Most of them are removed for you: the header CMake
+generates to hold an export macro, anything under `detail/`, `internal/` or
+`impl/`, the `std` namespace an include dragged in, and the macro invocations
+at file scope — a `LIARA_STATIC_ASSERT(…)` line — that Doxygen reads as
+function declarations.
+
+For anything else, mark it in the code:
+
+```c title="include/liara/scratch.h"
+/**
+ * @file scratch.h
+ * @brief Allocation scratch space.
+ * @internal Implementation detail; not part of the ABI.
+ */
+```
+
+`@internal` in a file's own doc block keeps the whole header out; on a single
+symbol it keeps that symbol out. Prefer it to a pattern in a Doxyfile: it
+travels with the code, so the header can be renamed or moved without anyone
+remembering to update a list somewhere else. `EXCLUDE_PATTERNS` in your
+Doxyfile still works and is the right tool for a whole directory that has no
+doc comments to mark.
+
+<Aside type="note" title="Undocumented is not hidden">
+A public symbol with no doc comment still appears — name and declaration only,
+in a collapsed **Also declared here** list at the foot of its page. It is part
+of your surface, so hiding it would misrepresent the module; it says nothing,
+so it does not get a card. If a whole header has nothing documented in it and
+no `@file` description, it gets no page at all.
+</Aside>
+
+### 5.3 Choosing a layout
 
 The loader supports two layouts. `file` gives one page per header, and it is
 what every module is built with today: a C header is a coherent unit, and the

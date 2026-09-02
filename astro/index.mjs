@@ -209,6 +209,7 @@ export function liaraDocs(options = {}) {
             '@liara/starlight-preset/styles/fonts.css',
             '@liara/starlight-preset/styles/tokens.css',
             '@liara/starlight-preset/styles/theme.css',
+            '@liara/starlight-preset/styles/api.css',
             '@liara/starlight-preset/styles/hub.css',
         ],
         social: [{

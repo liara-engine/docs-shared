@@ -85,7 +85,7 @@ export async function createHighlight(language = 'c') {
     return (code, lang = language) => {
         const source = String(code).trimEnd();
         if (!highlighter) {
-            return `<pre class="doxygen-code"><code>${escapeHtml(source)}</code></pre>`;
+            return `<pre class="lapi-code"><code>${escapeHtml(source)}</code></pre>`;
         }
         try {
             return highlighter.codeToHtml(source, {
@@ -93,12 +93,12 @@ export async function createHighlight(language = 'c') {
                 theme: LIARA_SHIKI_THEME.name,
             });
         } catch {
-            return `<pre class="doxygen-code"><code>${escapeHtml(source)}</code></pre>`;
+            return `<pre class="lapi-code"><code>${escapeHtml(source)}</code></pre>`;
         }
     };
 }
 
 /** Highlighter used when none is supplied: escapes, never colours. */
 export function plainHighlight(code) {
-    return `<pre class="doxygen-code"><code>${escapeHtml(String(code).trimEnd())}</code></pre>`;
+    return `<pre class="lapi-code"><code>${escapeHtml(String(code).trimEnd())}</code></pre>`;
 }

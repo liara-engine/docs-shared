@@ -126,61 +126,9 @@
 /* ============================================================================
  * Generated API reference
  *
- * The pages under /api/ are produced by the Doxygen loader and emit HTML
- * directly, so they sit outside Expressive Code's reach — it only sees
- * Markdown code fences. These few rules give the generated blocks the same
- * weight and rhythm as the rest of the page. Everything is expressed in
- * tokens, so the two sections cannot drift apart when the palette changes.
+ * Its layout lives in styles/api.css, scoped to `.lapi`. It is a stylesheet
+ * of its own rather than a section of this one because this file has a
+ * single job — binding Starlight's `--sl-*` properties to the `--liara-*`
+ * tokens — and the API reference is the one part of the site whose markup
+ * this project writes itself, so it needs rules rather than a mapping.
  * ========================================================================== */
-
-.sl-markdown-content .doxygen-signature pre,
-.sl-markdown-content pre.doxygen-code {
-    background: var(--liara-code-bg);
-    border: 1px solid var(--liara-border-default);
-    border-left: 3px solid var(--liara-brand-primary);
-    border-radius: var(--liara-radius-md);
-    padding: 0.6rem 0.9rem;
-    overflow-x: auto;
-    font-size: var(--sl-text-sm);
-}
-
-/* A signature is a declaration, not a snippet: it belongs to the heading
-   above it rather than floating between two paragraphs. */
-.sl-markdown-content .doxygen-signature {
-    margin-block: 0.4rem 1rem;
-}
-
-.sl-markdown-content .doxygen-params,
-.sl-markdown-content .doxygen-enum {
-    display: table;
-    width: 100%;
-    font-size: var(--sl-text-sm);
-}
-
-.sl-markdown-content .doxygen-params td:first-child,
-.sl-markdown-content .doxygen-enum td:first-child {
-    white-space: nowrap;
-}
-
-.sl-markdown-content .doxygen-dir {
-    color: var(--liara-text-tertiary);
-    font-size: var(--sl-text-xs);
-}
-
-.sl-markdown-content .doxygen-returns {
-    border-left: 3px solid var(--liara-border-strong);
-    padding-left: 0.75rem;
-    color: var(--liara-text-secondary);
-}
-
-/* Where the symbol is declared. Useful, but never the point of the page. */
-.sl-markdown-content .doxygen-source {
-    font-size: var(--sl-text-xs);
-    color: var(--liara-text-tertiary);
-    margin-block-start: 0.25rem;
-}
-
-.sl-markdown-content .doxygen-xref {
-    border-left: 3px solid var(--liara-brand-secondary);
-    padding-left: 0.75rem;
-}

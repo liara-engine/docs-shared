@@ -28,6 +28,7 @@
     "./api": "./api/loader.mjs",
     "./styles/tokens.css": "./styles/tokens.css",
     "./styles/theme.css": "./styles/theme.css",
+    "./styles/api.css": "./styles/api.css",
     "./styles/fonts.css": "./styles/fonts.css",
     "./styles/hub.css": "./styles/hub.css",
     "./components/SiteTitle.astro": "./components/SiteTitle.astro",

@@ -198,12 +198,13 @@ layout, same sidebar, same theme, same search.
 flowchart LR
     H["include/*.h"] -->|"doxygen<br/>GENERATE_XML"| X["build/xml/xml/*.xml"]
     X -->|"api/doxygen.mjs"| M["compound model"]
-    M -->|"api/pages.mjs"| P["page HTML + headings"]
+    M -->|"api/filter.mjs"| F["what is published"]
+    F -->|"api/pages.mjs<br/>api/render.mjs"| P["page HTML + headings"]
     P -->|"api/loader.mjs"| S["the `docs` collection<br/>(rendered.html pre-populated)"]
     S --> R["/&lt;repo&gt;/&lt;version&gt;/api/…"]
 ```
 
-Three decisions in there are worth knowing about, because they are not
+Four decisions in there are worth knowing about, because they are not
 obvious and they are load-bearing:
 
 <Steps>
@@ -220,7 +221,15 @@ obvious and they are load-bearing:
    a URL built from it would break on a refactor that changed nothing a reader
    can see. Slugs are derived from names, and disambiguated on collision.
 
-3. **Layout is chosen per module.** `split: 'file'` gives one page per header —
+3. **Cross-references are resolved last, not as they are read.** A `@ref` can
+   name a symbol in a file that has not been parsed yet, one that is about to
+   be filtered out, or a typedef about to be folded into the type it names —
+   and an anchor is not final until every member of its compound is. So the
+   renderer emits a placeholder and `resolveReferences` turns it into a link
+   once nothing can change, or unwraps it back to plain code. Nothing in the
+   API section links to a page that was never generated.
+
+4. **Layout is chosen per module.** `split: 'file'` gives one page per header —
    right for a C surface, where the reader already thinks in terms of
    `liara_version.h`. `split: 'symbol'` gives one page per symbol, for a C++
    surface large enough that a per-header page becomes a wall. It costs
@@ -228,10 +237,85 @@ obvious and they are load-bearing:
 
 </Steps>
 
-Generated pages are highlighted by Shiki using a theme whose colours are
-`var(--liara-code-*)` references rather than literals, so light and dark
-switching is free and the project's own nine-role code palette stays in use.
-Prose code fences go through Expressive Code, as everywhere else in Starlight.
+### 5.1 What a page is made of
+
+`api/render.mjs` builds every page out of the same parts, in the same order,
+because a reference is read by someone looking for one symbol rather than
+front to back:
+
+| Part | What it is |
+| --- | --- |
+| Header band | A badge for the kind, and the path in the source tree, linked |
+| Lead | The `@brief`, set apart from the prose that elaborates on it |
+| `#include` | Recovered from the path — the one thing Doxygen never states |
+| Synopsis | The whole compound on one screen, one row per symbol |
+| Member cards | A bordered card per symbol, spined in the colour of its kind |
+| Also declared | Undocumented symbols, collapsed at the foot of the page |
+
+Inside a card the order never varies: badge and name, the declaration, the
+prose, then **Parameters**, **Returns**, **Throws**, **Enumerators**, and last
+the source location. `@param`, `@retval`, `@exception`, `@tparam` and
+`@return` are *lifted* out of the description into those tables, so they are
+always in the same place whatever order they were written in.
+
+Everything else Doxygen calls a section — `@pre`, `@post`, `@since`, `@see`,
+`@deprecated`, `@todo`, `@par`, and the variable lists a project's own
+`ALIASES` expand into — stays where the author put it and is rendered as a
+**labelled block**, coloured by what it promises: rose for a contract the
+caller must honour, lavender for a section the project invented, blue for a
+pointer elsewhere, red for a deprecation. Losing that label is what used to
+make a precondition read as an ordinary sentence, and a `@threadsafety` block
+indistinguishable from the paragraph above it.
+
+A struct is the exception to the card layout: its fields are one table, and
+the declaration is rebuilt above it from `type` + `name` + `args`, the way
+Doxygen renders a declaration anywhere else — so arrays and function pointers,
+where the name sits in the middle of the type, come out right. Field order is
+declaration order, because for a C struct that order *is* the layout, which is
+why `build-docs` switches `SORT_MEMBER_DOCS` off.
+
+All of it is scoped to `.lapi` and styled by `astro/styles/api.css`. Starlight
+puts its content styles in a cascade layer, so an unlayered one-class selector
+there wins without having to out-specify anything — and nothing in that file
+can reach a hand-written page.
+
+Declarations and the code blocks inside doc comments are highlighted by Shiki,
+using a theme whose colours are `var(--liara-code-*)` references rather than
+literals — so light and dark switching is free and the project's own nine-role
+code palette stays in use. Prose code fences go through Expressive Code, as
+everywhere else in Starlight, which only ever sees Markdown. A signature wraps
+rather than scrolls: it is the line the reader came for, and a C prototype
+clipped at the edge of its card is the one thing on the page that must never
+be half-visible.
+
+### 5.2 What never reaches a page
+
+Doxygen is asked to read everything (`EXTRACT_ALL`), because the alternative
+is a reference that silently omits whatever nobody remembered to comment. The
+cost is that it also reports things that were never part of the surface, and
+`api/filter.mjs` is where they stop:
+
+| Left out | Why it appears at all |
+| --- | --- |
+| `@internal` headers and symbols | The module said so — see below |
+| `*_export.h`, `detail/`, `internal/`, `impl/` | Generated or conventionally private |
+| Compounds with nothing documented in them | A page listing only undescribed symbols is the absence of a page |
+| `std`, `__gnu_cxx`, `*::detail` | `BUILTIN_STL_SUPPORT` picked them up from an include |
+| Anonymous compounds | Doxygen names them `@0123…` or `Parent::[union].field` |
+| Macro invocations read as functions | A file-scope `LIARA_STATIC_ASSERT(…)` is a function with no return type, which C cannot declare |
+
+Undocumented symbols are *not* in that list. They are part of the surface, so
+hiding them would misrepresent the module; they carry no information, so
+putting them among the documented ones buries what does. They are listed —
+name and declaration only — in a collapsed disclosure at the foot of their
+page, each row carrying its anchor so a cross-reference still lands on it.
+
+`@internal` works because `build-docs` forces `INTERNAL_DOCS = YES`. Doxygen's
+default is to strip everything after the marker while it writes the XML, which
+means the loader never learns the header was marked at all. Keeping it in the
+XML is what lets the filter act on it — and nothing marked internal is ever
+rendered, so switching the tag on publishes nothing that was not published
+before.
 
 ## 6. The builder image
 

@@ -83,6 +83,23 @@ if [ "$SKIP_API" -eq 0 ] && [ -f "${SRC}/Doxyfile" ]; then
         echo 'GENERATE_HTML = NO'
         echo 'GENERATE_LATEX = NO'
         echo 'XML_PROGRAMLISTING = NO'
+
+        # `\internal` is how a module says "this is not part of the surface"
+        # without moving the code. With INTERNAL_DOCS off — Doxygen's default
+        # — everything after the marker is stripped while it writes the XML,
+        # so the loader never learns the header was marked at all. Keeping it
+        # in the XML is what lets api/filter.mjs act on it; nothing marked
+        # internal is ever rendered, so switching this on publishes nothing
+        # that was not published before.
+        echo 'INTERNAL_DOCS = YES'
+
+        # Declaration order is information: a struct's field order is its
+        # memory layout, and a header's function order is how its author
+        # grouped them. The preset groups members by kind itself and keeps
+        # what is inside a group as written, so Doxygen must not have
+        # alphabetised it first.
+        echo 'SORT_MEMBER_DOCS = NO'
+        echo 'SORT_BRIEF_DOCS = NO'
         echo "OUTPUT_DIRECTORY = $(dirname "${DEST_XML}")"
         echo "XML_OUTPUT = $(basename "${DEST_XML}")"
         echo 'QUIET = YES'

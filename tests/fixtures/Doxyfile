@@ -42,8 +42,12 @@ MARKDOWN_SUPPORT       = YES
 # ---------------------------------------------------------------------------
 # Ordering
 # ---------------------------------------------------------------------------
+# Deliberately wrong, like the HTML settings at the foot of this file:
+# `build-docs` forces both of these off so that declaration order survives —
+# a struct's field order is its memory layout. Leaving them on here is what
+# keeps that override exercised on every pull request.
 SORT_MEMBER_DOCS       = YES
-SORT_BRIEF_DOCS        = NO
+SORT_BRIEF_DOCS        = YES
 TOC_INCLUDE_HEADINGS   = 3
 
 # ---------------------------------------------------------------------------
@@ -56,8 +60,10 @@ SEARCH_INCLUDES        = YES
 # ---------------------------------------------------------------------------
 # Custom sections
 # ---------------------------------------------------------------------------
-# A project-specific admonition, to prove that aliases survive the XML round
-# trip and are rendered by the preset like Doxygen's own.
+# A project-specific admonition, in the raw-HTML form every Liara module
+# carries. Doxygen parses it back into a <variablelist>, which the preset
+# renders as the same labelled block `@par Thread safety:` produces — so both
+# spellings are exercised, and neither dissolves into the surrounding prose.
 ALIASES               += "threadsafety=<dl class='section threadsafety'><dt>Thread Safety</dt><dd>"
 ALIASES               += "endthreadsafety=</dd></dl>"
 

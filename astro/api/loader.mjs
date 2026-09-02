@@ -83,6 +83,11 @@ export function composeLoaders(...loaders) {
  * @param {string} [options.sourceUrl] Base URL for "declared in" links, e.g.
  *                 `https://github.com/liara-engine/liara-interfaces/blob/main`.
  * @param {string} [options.label='API reference'] Title of the section index.
+ * @param {string[]} [options.exclude] Glob patterns replacing the default set
+ *                 of generated headers and implementation directories — see
+ *                 api/filter.mjs. A module rarely needs this: `@internal` in a
+ *                 header's `@file` block travels with the code, and a
+ *                 Doxyfile's own `EXCLUDE_PATTERNS` covers the rest.
  * @param {boolean} [options.required=true] Whether a missing XML directory is
  *                 an error. Left true by default: a module configured for an
  *                 API reference that silently ships without one is the kind of
@@ -95,6 +100,7 @@ export function doxygenLoader(options = {}) {
         split = 'file',
         sourceUrl,
         label = 'API reference',
+        exclude,
         required = true,
     } = options;
 
@@ -121,7 +127,16 @@ export function doxygenLoader(options = {}) {
                 : `/${API_DIRECTORY}`;
 
             const highlight = await createHighlight(split === 'symbol' ? 'cpp' : 'c');
-            const pages = buildApiPages(directory, { split, apiBase, sourceUrl, highlight });
+
+            // What was left out is worth saying out loud. A header missing
+            // from the reference is otherwise indistinguishable from a header
+            // the generator failed on, and the difference matters to whoever
+            // wonders where their page went.
+            const skipped = [];
+            const pages = buildApiPages(directory, {
+                split, apiBase, sourceUrl, highlight, exclude,
+                onSkip: (name, reason) => skipped.push(`${name} (${reason})`),
+            });
 
             for (const [position, page] of pages.entries()) {
                 const id = `${API_DIRECTORY}/${page.slug}`;
@@ -169,6 +184,9 @@ export function doxygenLoader(options = {}) {
             }
 
             logger.info(`Generated ${pages.length} API page(s) from ${xmlDir} (${split} split)`);
+            if (skipped.length > 0) {
+                logger.info(`Left out of the API reference: ${skipped.join(', ')}`);
+            }
 
             // In dev, regenerate when Doxygen re-runs. Without this the API
             // section is frozen at the first build of the session, which looks
@@ -180,5 +198,7 @@ export function doxygenLoader(options = {}) {
 
 export { API_DIRECTORY };
 export * from './pages.mjs';
+export * from './render.mjs';
+export * from './filter.mjs';
 export * from './highlight.mjs';
 export * from './doxygen.mjs';

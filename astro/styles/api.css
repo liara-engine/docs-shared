@@ -1,0 +1,515 @@
+/*
+ * Liara Engine — the generated API reference.
+ *
+ * The pages under `/api/` are produced by the Doxygen loader and emit HTML
+ * directly, so they sit outside Expressive Code's reach — it only ever sees
+ * Markdown code fences — and outside the shapes Starlight's content styles
+ * were written for. This file gives the generated markup its own layout,
+ * expressed entirely in `--liara-*` tokens so the reference cannot drift
+ * from the rest of the site when the palette changes.
+ *
+ * Two things make this possible without a single `!important` or a
+ * Starlight selector being fought:
+ *
+ *   Everything generated lives inside `.lapi`, so nothing here can reach a
+ *   hand-written page.
+ *
+ *   Starlight puts its content styles in the `starlight.content` cascade
+ *   layer, and unlayered rules beat layered ones whatever their
+ *   specificity. A one-class selector below therefore wins over
+ *   Starlight's without having to out-specify it — which is why the
+ *   spacing rules read as plainly as they do.
+ *
+ * The colour of a symbol is its kind, and the colour of a note is what kind
+ * of promise it makes. Both are set as `--lapi-*-{bg,fg,line}` triples on a
+ * modifier class and consumed by shared rules, so a badge, a card's spine
+ * and a callout's rule are guaranteed to agree.
+ */
+
+/* ==========================================================================
+ * Kind colours — one triple per thing a symbol can be
+ * ========================================================================== */
+
+.lapi-badge, .lapi-member { --lapi-kind-bg: var(--liara-bg-surface);
+                            --lapi-kind-fg: var(--liara-text-secondary);
+                            --lapi-kind-line: var(--liara-border-strong); }
+
+.lapi-badge--function, .lapi-member--function,
+.lapi-badge--signal, .lapi-badge--slot {
+    --lapi-kind-bg: var(--liara-brand-primary-soft);
+    --lapi-kind-fg: var(--liara-brand-primary-dark);
+    --lapi-kind-line: var(--liara-brand-primary);
+}
+
+.lapi-badge--enum, .lapi-member--enum,
+.lapi-badge--struct, .lapi-badge--union, .lapi-badge--class, .lapi-badge--interface {
+    --lapi-kind-bg: var(--liara-brand-secondary-soft);
+    --lapi-kind-fg: var(--liara-brand-secondary-dark);
+    --lapi-kind-line: var(--liara-brand-secondary);
+}
+
+.lapi-badge--define, .lapi-member--define {
+    --lapi-kind-bg: var(--liara-semantic-warning-bg);
+    --lapi-kind-fg: var(--liara-semantic-warning-fg);
+    --lapi-kind-line: var(--liara-semantic-warning-border);
+}
+
+.lapi-badge--typedef, .lapi-member--typedef {
+    --lapi-kind-bg: var(--liara-semantic-info-bg);
+    --lapi-kind-fg: var(--liara-semantic-info-fg);
+    --lapi-kind-line: var(--liara-semantic-info-border);
+}
+
+.lapi-badge--variable, .lapi-member--variable, .lapi-badge--property {
+    --lapi-kind-bg: var(--liara-semantic-success-bg);
+    --lapi-kind-fg: var(--liara-semantic-success-fg);
+    --lapi-kind-line: var(--liara-semantic-success-border);
+}
+
+/* ==========================================================================
+ * Page furniture
+ * ========================================================================== */
+
+.lapi-meta {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: var(--liara-space-2);
+    margin-block-end: var(--liara-space-3);
+}
+
+.lapi-meta__path {
+    font-size: var(--liara-text-sm);
+    color: var(--liara-text-tertiary);
+}
+
+.lapi-meta__path code {
+    background: none;
+    border: none;
+    padding: 0;
+    color: inherit;
+}
+
+a.lapi-meta__path:hover code { color: var(--liara-text-link); }
+
+/* The one-line summary Doxygen calls a brief. It is the answer to "what is
+   this", so it is set apart from the prose that elaborates on it. */
+.lapi-lead {
+    font-size: var(--liara-text-lg);
+    line-height: var(--liara-leading-snug);
+    color: var(--liara-text-secondary);
+}
+
+.lapi-lead > :first-child { margin-block-start: 0; }
+.lapi-lead > :last-child { margin-block-end: 0; }
+.lapi-lead p { font-size: inherit; }
+
+/* How to include a header: the first thing a C reader needs and the one
+   thing Doxygen never writes down. */
+.lapi-include {
+    margin-block: var(--liara-space-4);
+    padding: var(--liara-space-2) var(--liara-space-3);
+    background: var(--liara-code-bg);
+    border: 1px solid var(--liara-border-default);
+    border-inline-start: 3px solid var(--liara-brand-secondary);
+    border-radius: var(--liara-radius-sm);
+    font-size: var(--liara-text-sm);
+}
+
+.lapi-include code {
+    background: none;
+    border: none;
+    padding: 0;
+    color: var(--liara-text-primary);
+}
+
+.lapi h2 {
+    margin-block: var(--liara-space-6) var(--liara-space-4);
+    padding-block-end: var(--liara-space-2);
+    border-block-end: 1px solid var(--liara-border-strong);
+    font-size: var(--sl-text-h4);
+    letter-spacing: -0.01em;
+}
+
+.lapi-subheading {
+    font-weight: var(--liara-weight-bold);
+    color: var(--liara-text-primary);
+}
+
+/* ==========================================================================
+ * Badges and chips
+ * ========================================================================== */
+
+.lapi-badge {
+    display: inline-block;
+    padding: 0.1em 0.55em;
+    border: 1px solid var(--lapi-kind-line);
+    border-radius: var(--liara-radius-pill);
+    background: var(--lapi-kind-bg);
+    color: var(--lapi-kind-fg);
+    font-family: var(--liara-font-mono);
+    font-size: var(--liara-text-xs);
+    font-weight: var(--liara-weight-medium);
+    line-height: 1.6;
+    white-space: nowrap;
+}
+
+.lapi-flags {
+    display: inline-flex;
+    gap: var(--liara-space-1);
+    flex-wrap: wrap;
+}
+
+.lapi-flag {
+    padding: 0.05em 0.45em;
+    border: 1px dashed var(--liara-border-strong);
+    border-radius: var(--liara-radius-sm);
+    color: var(--liara-text-tertiary);
+    font-family: var(--liara-font-mono);
+    font-size: var(--liara-text-xs);
+    font-weight: 400;
+    white-space: nowrap;
+}
+
+.lapi-count {
+    display: inline-block;
+    margin-inline-end: var(--liara-space-2);
+    padding: 0.05em 0.5em;
+    border-radius: var(--liara-radius-pill);
+    background: var(--liara-bg-surface);
+    color: var(--liara-text-secondary);
+    font-size: var(--liara-text-xs);
+    white-space: nowrap;
+}
+
+/* A parameter's direction: real information, but never the point. */
+.lapi-dir {
+    color: var(--liara-text-tertiary);
+    font-size: var(--liara-text-xs);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.lapi-default { color: var(--liara-text-tertiary); font-size: var(--liara-text-xs); }
+
+/* ==========================================================================
+ * Member cards
+ * ========================================================================== */
+
+.lapi-member {
+    margin-block: var(--liara-space-4);
+    padding: var(--liara-space-4);
+    border: 1px solid var(--liara-border-default);
+    border-inline-start: 3px solid var(--lapi-kind-line);
+    border-radius: var(--liara-radius-md);
+    background: var(--liara-bg-elevated);
+    box-shadow: var(--liara-shadow-sm);
+}
+
+.lapi-member__title {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: var(--liara-space-2);
+    margin: 0 0 var(--liara-space-3);
+    font-size: var(--liara-text-lg);
+    line-height: var(--liara-leading-snug);
+    scroll-margin-block-start: calc(var(--sl-nav-height) + var(--liara-space-4));
+}
+
+.lapi-member__title code {
+    padding: 0;
+    border: none;
+    background: none;
+    color: var(--liara-text-primary);
+    font-size: 1em;
+    font-weight: 600;
+    overflow-wrap: anywhere;
+}
+
+.lapi-permalink {
+    margin-inline-start: auto;
+    color: var(--liara-text-tertiary);
+    font-family: var(--liara-font-mono);
+    font-weight: 400;
+    text-decoration: none;
+    opacity: 0;
+    transition: opacity var(--liara-transition-fast);
+}
+
+.lapi-member__title:hover .lapi-permalink,
+.lapi-permalink:focus-visible { opacity: 1; }
+
+.lapi-prose > :first-child { margin-block-start: 0; }
+.lapi-prose > :last-child { margin-block-end: 0; }
+
+/* --- The declaration itself ------------------------------------------- */
+
+.lapi-signature {
+    margin-block: 0 var(--liara-space-3);
+}
+
+.lapi-signature pre,
+pre.lapi-code {
+    margin: 0;
+    padding: var(--liara-space-3);
+    background: var(--liara-code-bg);
+    border: 1px solid var(--liara-border-default);
+    border-radius: var(--liara-radius-sm);
+    font-size: var(--liara-text-sm);
+    line-height: var(--liara-leading-snug);
+    overflow-x: auto;
+}
+
+/* A declaration wraps rather than scrolls. It is the line the reader came
+   for, and a signature clipped at the edge of its card — which is what a
+   long C prototype does at any sane page width — is the one thing on the
+   page that must never be half-visible. Breaks happen at the spaces the
+   declaration already has; nothing is broken mid-identifier. Sample code
+   keeps scrolling: there, the author chose the line breaks. */
+.lapi-signature pre,
+.lapi-signature code {
+    font-family: var(--liara-font-mono);
+    white-space: pre-wrap;
+    overflow-wrap: break-word;
+}
+
+/* --- Labelled blocks: Parameters, Returns, Enumerators ----------------- */
+
+.lapi-block { margin-block-start: var(--liara-space-4); }
+
+.lapi-block__title {
+    margin: 0 0 var(--liara-space-2);
+    color: var(--liara-text-tertiary);
+    font-size: var(--liara-text-xs);
+    font-weight: var(--liara-weight-bold);
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+}
+
+.lapi-returns__type { margin: 0 0 var(--liara-space-2); }
+.lapi-returns__prose > :first-child { margin-block-start: 0; }
+.lapi-returns__prose > :last-child { margin-block-end: var(--liara-space-2); }
+
+/* A type is rendered markup, not a string: every name in it that resolves
+   to a documented symbol is already a link wrapped in its own <code>. The
+   chip is therefore a <span> that sets the type face once, and the links
+   inside it are flattened rather than boxed a second time. */
+.lapi-type {
+    display: inline-block;
+    padding: 0.05em 0.4em;
+    border: 1px solid var(--liara-border-default);
+    border-radius: var(--liara-radius-sm);
+    background: var(--liara-bg-surface);
+    color: var(--liara-text-secondary);
+    font-family: var(--liara-font-mono);
+    font-size: 0.9em;
+}
+
+.lapi-type code {
+    padding: 0;
+    border: none;
+    background: none;
+    color: inherit;
+    font-size: 1em;
+}
+
+.lapi-param-name {
+    background: none;
+    border: none;
+    padding: 0;
+    color: var(--liara-text-primary);
+    font-weight: 600;
+}
+
+/* ==========================================================================
+ * Tables
+ * ========================================================================== */
+
+.lapi-scroll { overflow-x: auto; }
+
+.lapi table.lapi-table {
+    /* Starlight makes content tables `display: block` so they can scroll
+       themselves. A block box sized to its content is not a table sized to
+       its container, so a two-column table ends up hugging the left margin.
+       These tables scroll inside `.lapi-scroll` instead and stay tables. */
+    display: table;
+    width: 100%;
+    margin: 0;
+    border-collapse: collapse;
+    font-size: var(--liara-text-sm);
+    line-height: var(--liara-leading-snug);
+}
+
+.lapi table.lapi-table th {
+    padding: var(--liara-space-1) var(--liara-space-3);
+    border-block-end: 1px solid var(--liara-border-strong);
+    background: none;
+    color: var(--liara-text-tertiary);
+    font-size: var(--liara-text-xs);
+    font-weight: var(--liara-weight-bold);
+    letter-spacing: 0.08em;
+    text-align: start;
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+
+.lapi table.lapi-table td {
+    padding: var(--liara-space-2) var(--liara-space-3);
+    border-block-end: 1px solid var(--liara-border-subtle);
+    vertical-align: baseline;
+}
+
+.lapi table.lapi-table tbody tr:last-child td { border-block-end: none; }
+.lapi table.lapi-table tbody tr:nth-child(even) { background: var(--liara-bg-surface); }
+.lapi table.lapi-table td > :first-child { margin-block-start: 0; }
+.lapi table.lapi-table td > :last-child { margin-block-end: 0; }
+
+/* The first column of a parameter, enumerator or synopsis table names the
+   thing; wrapping a symbol name across two lines helps nobody. */
+.lapi table.lapi-fields td:first-child,
+.lapi table.lapi-params td:first-child,
+.lapi table.lapi-enum td:first-child,
+.lapi table.lapi-retvals td:first-child,
+.lapi table.lapi-synopsis td:nth-child(2) { white-space: nowrap; }
+
+.lapi table.lapi-synopsis td:first-child { width: 1%; }
+.lapi table.lapi-synopsis code { background: none; border: none; padding: 0; }
+.lapi-synopsis__suffix {
+    color: var(--liara-text-tertiary);
+    font-family: var(--liara-font-mono);
+    font-size: var(--liara-text-xs);
+}
+
+.lapi table.lapi-index td:first-child { white-space: nowrap; }
+.lapi table.lapi-index td:last-child { width: 1%; }
+
+/* ==========================================================================
+ * Labelled notes — @pre, @post, @since, @deprecated, @par, aliases
+ * ========================================================================== */
+
+.lapi-tag {
+    --lapi-tag-bg: var(--liara-bg-surface);
+    --lapi-tag-fg: var(--liara-text-secondary);
+    --lapi-tag-line: var(--liara-border-strong);
+
+    display: grid;
+    grid-template-columns: minmax(0, max-content) 1fr;
+    gap: 0 var(--liara-space-3);
+    align-items: baseline;
+    margin-block: var(--liara-space-3);
+    padding: var(--liara-space-2) var(--liara-space-3);
+    border-inline-start: 3px solid var(--lapi-tag-line);
+    border-radius: 0 var(--liara-radius-sm) var(--liara-radius-sm) 0;
+    background: var(--lapi-tag-bg);
+}
+
+.lapi-tag__label {
+    margin: 0;
+    color: var(--lapi-tag-fg);
+    font-size: var(--liara-text-xs);
+    font-weight: var(--liara-weight-bold);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+
+.lapi-tag__body { min-width: 0; font-size: var(--liara-text-sm); }
+.lapi-tag__body > :first-child { margin-block-start: 0; }
+.lapi-tag__body > :last-child { margin-block-end: 0; }
+
+/* What the caller has to hold up their end of. */
+.lapi-tag--require {
+    --lapi-tag-bg: var(--liara-brand-primary-soft);
+    --lapi-tag-fg: var(--liara-brand-primary-dark);
+    --lapi-tag-line: var(--liara-brand-primary);
+}
+
+/* A section the project invented — `@par Thread safety:`, or an alias
+   expanding to one. Given a colour of its own precisely because the
+   previous rendering let it dissolve into the paragraph above it. */
+.lapi-tag--custom {
+    --lapi-tag-bg: var(--liara-brand-secondary-soft);
+    --lapi-tag-fg: var(--liara-brand-secondary-dark);
+    --lapi-tag-line: var(--liara-brand-secondary);
+}
+
+.lapi-tag--info {
+    --lapi-tag-bg: var(--liara-semantic-info-bg);
+    --lapi-tag-fg: var(--liara-semantic-info-fg);
+    --lapi-tag-line: var(--liara-semantic-info-border);
+}
+
+.lapi-tag--warning {
+    --lapi-tag-bg: var(--liara-semantic-warning-bg);
+    --lapi-tag-fg: var(--liara-semantic-warning-fg);
+    --lapi-tag-line: var(--liara-semantic-warning-border);
+}
+
+.lapi-tag--danger {
+    --lapi-tag-bg: var(--liara-semantic-danger-bg);
+    --lapi-tag-fg: var(--liara-semantic-danger-fg);
+    --lapi-tag-line: var(--liara-semantic-danger-border);
+}
+
+/* `@since`, `@author`, `@copyright`: true, useful, and never urgent. */
+.lapi-tag--meta {
+    --lapi-tag-bg: transparent;
+    --lapi-tag-fg: var(--liara-text-tertiary);
+    --lapi-tag-line: var(--liara-border-default);
+}
+
+@media (max-width: 40rem) {
+    .lapi-tag {
+        grid-template-columns: 1fr;
+        gap: var(--liara-space-1) 0;
+    }
+}
+
+/* ==========================================================================
+ * Where it comes from, and what has no description
+ * ========================================================================== */
+
+.lapi-source {
+    margin-block: var(--liara-space-3) 0;
+    color: var(--liara-text-tertiary);
+    font-family: var(--liara-font-mono);
+    font-size: var(--liara-text-xs);
+    text-align: end;
+}
+
+.lapi-source a { color: inherit; text-decoration: none; }
+.lapi-source a:hover { color: var(--liara-text-link); text-decoration: underline; }
+
+/* Part of the surface, so it is listed; described by nobody, so it is
+   listed out of the way. */
+.lapi-undocumented {
+    margin-block-start: var(--liara-space-6);
+    border: 1px dashed var(--liara-border-strong);
+    border-radius: var(--liara-radius-md);
+    background: var(--liara-bg-surface);
+}
+
+.lapi-undocumented > summary {
+    padding: var(--liara-space-2) var(--liara-space-3);
+    color: var(--liara-text-secondary);
+    font-size: var(--liara-text-sm);
+    cursor: pointer;
+}
+
+.lapi-undocumented > summary:hover { color: var(--liara-text-primary); }
+.lapi-undocumented .lapi-scroll { padding: 0 var(--liara-space-3) var(--liara-space-3); }
+.lapi-undocumented__signature { color: var(--liara-text-tertiary); }
+
+/* ==========================================================================
+ * Prose carried over from doc comments
+ * ========================================================================== */
+
+.lapi-formula { font-style: italic; }
+
+.lapi table.lapi-table caption {
+    margin-block-end: var(--liara-space-2);
+    color: var(--liara-text-tertiary);
+    font-size: var(--liara-text-xs);
+    text-align: start;
+}
