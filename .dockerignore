@@ -1,10 +1,8 @@
-# Build context for docker/liara-documentation-builder/Dockerfile.
+# Build context for the documentation builder image (Dockerfile at the root).
 #
-# The Dockerfile COPYs only tools/, docker/scripts/, astro/, and
-# modules-registry.json — everything below is genuinely unused at build
-# time and would otherwise be uploaded to the docker daemon for nothing
-# (node_modules especially, which is sizeable and gets reinstalled inside
-# the image regardless via `npm ci`).
+# The Dockerfile COPYs only astro/, tools/, build-docs.sh and
+# modules-registry.json — everything below is genuinely unused at build time
+# and would otherwise be uploaded to the docker daemon for nothing.
 
 .git
 .github
@@ -15,9 +13,9 @@ docs
 hub
 tests
 
-node_modules
-dist
-.astro
+**/node_modules
+**/dist
+**/.astro
 
 *.log
 *.tmp

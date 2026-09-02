@@ -19,7 +19,7 @@
 #   -v .:/src \
 #   -e LIARA_DOCS_REPO="<your-repo-name>" \
 #   -e LIARA_DOCS_VERSION="<your-docs-version>" \
-#   -e LIARA_DOCS_OUTPUT_SITE="<your-output-site-url>" \
+#   -e LIARA_DOCS_SITE="<your-output-site-url>" \
 #   -e LIARA_DOCS_ASSETS_PREFIX="/_cas/" \
 #   liara-docs-builder
 #

@@ -100,7 +100,7 @@ export LIARA_DOCS_API
 
 mapfile -t md_files < <(find "${DEST_ABOUT}" "${DEST_GUIDES}" -name '*.md')
 for md_file in "${md_files[@]}"; do
-    if ! grep -qE '^---\ntitle: .+\n---' "${md_file}"; then
+    if [ "$(head -n 1 "${md_file}")" != "---" ]; then
         log "adding front matter to ${md_file}"
         title=$(basename "${md_file}" .md)
         sed -i "1s|^|---\ntitle: ${title}\n---\n\n|" "${md_file}"
