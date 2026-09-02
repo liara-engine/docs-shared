@@ -84,7 +84,29 @@ if [ "$SKIP_API" -eq 0 ] && [ -f "${SRC}/Doxyfile" ]; then
         echo 'GENERATE_LATEX = NO'
         echo 'XML_PROGRAMLISTING = NO'
         echo "OUTPUT_DIRECTORY = $(dirname "${DEST_XML}")"
+        echo "XML_OUTPUT = $(basename "${DEST_XML}")"
         echo 'QUIET = YES'
+
+        # A Doxyfile written for the retired mdBook/Doxygen toolchain still
+        # generates HTML with a theme that no longer exists — HTML_HEADER,
+        # HTML_FOOTER and the rest pointing into a shared checkout that is not
+        # mounted any more. Doxygen validates those paths while it reads the
+        # configuration, before it gets as far as noticing that HTML output is
+        # switched off, and exits: `error: tag HTML_HEADER: header file '...'
+        # does not exist`. Rebuilding an old release therefore failed on a
+        # file the build would never have opened. Clearing the tags restores
+        # Doxygen's built-in defaults, which need no files at all, and costs
+        # nothing for a module whose Doxyfile never mentioned them.
+        echo 'HTML_HEADER ='
+        echo 'HTML_FOOTER ='
+        echo 'HTML_STYLESHEET ='
+        echo 'HTML_EXTRA_STYLESHEET ='
+        echo 'HTML_EXTRA_FILES ='
+        echo 'LAYOUT_FILE ='
+        echo 'LATEX_HEADER ='
+        echo 'LATEX_FOOTER ='
+        echo 'LATEX_EXTRA_STYLESHEET ='
+        echo 'LATEX_EXTRA_FILES ='
     } | doxygen - || die "Doxygen failed"
 
     [ -f "${DEST_XML}/index.xml" ] \

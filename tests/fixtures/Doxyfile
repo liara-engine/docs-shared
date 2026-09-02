@@ -6,10 +6,12 @@
 # matter here: what to read, and how to read it.
 #
 # `build-docs` overrides the rest at run time — INPUT, OUTPUT_DIRECTORY,
-# GENERATE_XML, GENERATE_HTML, GENERATE_LATEX, XML_PROGRAMLISTING and QUIET —
-# because Doxygen no longer generates any HTML. Its XML is read by the shared
-# Astro preset and rendered as ordinary Starlight pages, so there is no
-# HTML_HEADER, HTML_FOOTER or theme path to point anywhere.
+# GENERATE_XML, GENERATE_HTML, GENERATE_LATEX, XML_PROGRAMLISTING, XML_OUTPUT
+# and QUIET — because Doxygen no longer generates any HTML. Its XML is read by
+# the shared Astro preset and rendered as ordinary Starlight pages, so there is
+# no HTML_HEADER, HTML_FOOTER or theme path to point anywhere.
+#
+# The last section of this file is the exception, and is deliberately wrong.
 #
 # See docs/authoring-a-module.mdx §5.
 # ============================================================================
@@ -58,3 +60,25 @@ SEARCH_INCLUDES        = YES
 # trip and are rendered by the preset like Doxygen's own.
 ALIASES               += "threadsafety=<dl class='section threadsafety'><dt>Thread Safety</dt><dd>"
 ALIASES               += "endthreadsafety=</dd></dl>"
+
+# ---------------------------------------------------------------------------
+# Legacy output settings — deliberately wrong, do not copy
+# ---------------------------------------------------------------------------
+# What a Doxyfile written for the retired mdBook/Doxygen toolchain still
+# carries: HTML output themed by a shared checkout that no longer exists
+# anywhere. Doxygen validates these paths as it reads the configuration and
+# exits before it ever reaches `GENERATE_HTML = NO`, so rebuilding an old
+# release used to fail here — `error: tag HTML_HEADER: header file
+# 'docs-shared/doxygen/header.html' does not exist`. `build-docs` clears them,
+# and their presence in the fixtures is what keeps that true: every pull
+# request builds this module, so the compatibility path is exercised on every
+# change to the builder.
+GENERATE_HTML          = YES
+HTML_HEADER            = docs-shared/doxygen/header.html
+HTML_FOOTER            = docs-shared/doxygen/footer.html
+HTML_EXTRA_STYLESHEET  = docs-shared/doxygen/liara.css
+LAYOUT_FILE            = docs-shared/doxygen/DoxygenLayout.xml
+
+# Same idea for where the XML lands: an old Doxyfile that named its own output
+# directory must not be able to hide it from the loader.
+XML_OUTPUT             = legacy-xml-output

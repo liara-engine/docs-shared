@@ -184,7 +184,9 @@ rebuilding an old release cannot roll `latest` backwards.
 <Aside type="tip">
 This is the workflow to use to bring versions published by the previous
 mdBook/Doxygen toolchain over to Astro: one run per (module, version), each
-independent of the others.
+independent of the others. Nothing in the old tag needs editing first — a
+`Doxyfile` still pointing at the retired shared theme is handled by the
+builder, see [What the builder overrides](../authoring-a-module/#5-the-api-reference).
 </Aside>
 
 ## 5. Retiring a version

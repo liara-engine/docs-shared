@@ -352,10 +352,19 @@ ALIASES               += "endthreadsafety=</dd></dl>"
 
 <Aside type="note" title="What the builder overrides">
 `GENERATE_XML`, `GENERATE_HTML`, `GENERATE_LATEX`, `XML_PROGRAMLISTING`,
-`OUTPUT_DIRECTORY`, `INPUT` and `QUIET` are all set by `build-docs`. There is
-no `HTML_HEADER` or `HTML_FOOTER` to wire up any more — Doxygen no longer
-generates HTML at all. Its XML is read by the preset and rendered as ordinary
-Starlight pages.
+`OUTPUT_DIRECTORY`, `XML_OUTPUT`, `INPUT` and `QUIET` are all set by
+`build-docs`. There is no `HTML_HEADER` or `HTML_FOOTER` to wire up any more —
+Doxygen no longer generates HTML at all. Its XML is read by the preset and
+rendered as ordinary Starlight pages.
+
+`build-docs` also *clears* `HTML_HEADER`, `HTML_FOOTER`, `HTML_STYLESHEET`,
+`HTML_EXTRA_STYLESHEET`, `HTML_EXTRA_FILES`, `LAYOUT_FILE` and the `LATEX_*`
+equivalents, so a Doxyfile still pointing at the retired shared theme builds
+here unchanged. Doxygen checks those paths exist while it reads the
+configuration — before it reaches `GENERATE_HTML = NO` — and exits if they do
+not, which is what used to stop a rebuild of an old release. You do not need
+to edit an old Doxyfile to bring its version over; deleting the dead tags is
+tidier, not required.
 </Aside>
 
 ### 5.1 Documenting headers

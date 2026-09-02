@@ -259,7 +259,11 @@ It expects a module's sources mounted at `/src` and writes the built site to
 
 3. **Extract the API surface.** If there is a `Doxyfile` and `--skip-api` was
    not passed, run Doxygen with `GENERATE_XML=YES` and `GENERATE_HTML=NO` into
-   `/working/build/xml`, and fail if it produces no `index.xml`.
+   `/working/build/xml`, and fail if it produces no `index.xml`. The module's
+   Doxyfile is inherited whole; every tag describing *output* is restated
+   afterwards, and the theme tags of the retired toolchain (`HTML_HEADER` and
+   friends) are cleared, because Doxygen validates their paths before it ever
+   notices that HTML is switched off.
 
 4. **Add front matter.** Any `.md` or `.mdx` page that does not start with
    `---` gets a minimal front matter block, titled after its file name.
