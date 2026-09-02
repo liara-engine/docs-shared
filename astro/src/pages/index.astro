@@ -1,0 +1,199 @@
+---
+/**
+ * Liara Engine — per-module landing page.
+ */
+import StarlightPage from '@astrojs/starlight/components/StarlightPage.astro';
+import { getCollection } from 'astro:content';
+import { parseBase, readManifest, SECTIONS, sortVersions } from '@liara/starlight-preset';
+import registry from '../../registry.json';
+
+const KIND_LABELS = { contract: 'Contract', module: 'Module', host: 'Host', infrastructure: 'Infrastructure' };
+
+const { repo, version } = parseBase(import.meta.env.BASE_URL);
+const base = import.meta.env.BASE_URL;
+
+const manifest = readManifest();
+const registryEntry = (registry.modules ?? []).find((m) => m.repo === repo) ?? null;
+
+const title = manifest?.metadata?.name || registryEntry?.name || repo;
+const description = manifest?.metadata?.description || '';
+const kindLabel = KIND_LABELS[manifest?.kind] ?? null;
+const latest = manifest?.metadata?.latest ?? null;
+
+function hrefFor(id) {
+    const slug = id.replace(/(^|\/)index$/, '');
+    return `${base}${slug ? `${slug}/` : ''}`;
+}
+
+const allDocs = await getCollection('docs');
+const bySection = (section) => allDocs.filter((entry) => entry.id.startsWith(`${section}/`));
+
+const guides = bySection(SECTIONS.guide);
+const apiPages = bySection(SECTIONS.api);
+const aboutPages = bySection(SECTIONS.about)
+    .sort((a, b) => (a.data.sidebar?.order ?? 0) - (b.data.sidebar?.order ?? 0) || a.id.localeCompare(b.id));
+
+const firstGuide = guides.find((entry) => entry.id === `${SECTIONS.guide}/index`)
+    ?? [...guides].sort((a, b) => a.id.localeCompare(b.id))[0]
+    ?? null;
+
+const exploreCards = [
+    firstGuide && {
+        title: 'Guide',
+        description: 'Tutorials, concepts, and how-tos for this module.',
+        href: hrefFor(firstGuide.id),
+    },
+    apiPages.length > 0 && {
+        title: 'API reference',
+        description: 'Generated from the annotated headers — cannot drift from the code.',
+        href: hrefFor(`${SECTIONS.api}/index`),
+    },
+].filter(Boolean);
+
+const versionLabels = manifest?.versions
+    ? sortVersions(Object.keys(manifest.versions).filter((v) => !v.startsWith('pr-')))
+    : [version];
+---
+
+<StarlightPage
+    frontmatter={{
+        title,
+        description,
+        template: 'splash',
+        tableOfContents: false,
+        editUrl: false,
+        pagefind: false,
+    }}
+>
+    <main class="hub">
+        <section class="hub-hero">
+            <div class="hub-hero__decor" aria-hidden="true">
+                <div class="hub-hero__blob hub-hero__blob--pink"></div>
+                <div class="hub-hero__blob hub-hero__blob--lavender"></div>
+            </div>
+
+            <div class="hub-hero__inner">
+                {(kindLabel || version) && (
+                    <p class="hub-hero__eyebrow">
+                        <span class="hub-hero__status-dot" aria-hidden="true"></span>
+                        <span>{[kindLabel, version].filter(Boolean).join(' · ')}</span>
+                    </p>
+                )}
+
+                <h1 class="hub-hero__title">{title}</h1>
+
+                {description && <p class="hub-hero__tagline">{description}</p>}
+
+                <div class="hub-hero__cta">
+                    {exploreCards[0] && (
+                        <a class="hub-button hub-button--primary" href={exploreCards[0].href}>
+                            <span>{exploreCards[0].title === 'Guide' ? 'Read the guide' : 'Browse the API reference'}</span>
+                        </a>
+                    )}
+                    {registryEntry && (
+                        <a class="hub-button hub-button--secondary" href={`https://github.com/liara-engine/${repo}`} target="_blank" rel="noopener">
+                            <span>View on GitHub</span>
+                        </a>
+                    )}
+                    <a class="hub-button hub-button--secondary" href="/">
+                        <span>All modules</span>
+                    </a>
+                </div>
+            </div>
+        </section>
+
+        {exploreCards.length > 0 && (
+            <section class="hub-section">
+                <header class="hub-section__header">
+                    <h2 class="hub-section__title">Explore</h2>
+                </header>
+                <div class="hub-modules">
+                    {exploreCards.map((card) => (
+                        <a class="hub-card hub-card--resource" href={card.href}>
+                            <h3 class="hub-card__title">{card.title}</h3>
+                            <p class="hub-card__description">{card.description}</p>
+                        </a>
+                    ))}
+                </div>
+            </section>
+        )}
+
+        {aboutPages.length > 0 && (
+            <section class="hub-section">
+                <header class="hub-section__header">
+                    <h2 class="hub-section__title">About</h2>
+                </header>
+                <div class="hub-resources">
+                    {aboutPages.map((entry) => (
+                        <a class="hub-card hub-card--resource" href={hrefFor(entry.id)}>
+                            <h3 class="hub-card__title">{entry.data.title}</h3>
+                            {entry.data.description && <p class="hub-card__description">{entry.data.description}</p>}
+                        </a>
+                    ))}
+                </div>
+            </section>
+        )}
+
+        {versionLabels.length > 0 && (
+            <section class="hub-section">
+                <header class="hub-section__header">
+                    <h2 class="hub-section__title">Versions</h2>
+                </header>
+                <div class="hub-versions" data-liara-versions-list data-liara-repo={repo} data-liara-version={version}>
+                    {versionLabels.map((label) => (
+                        <a
+                            class:list={['hub-version', label === version && 'hub-version--current', label === latest && label !== version && 'hub-version--latest']}
+                            href={`/${repo}/${label}/`}
+                        >
+                            <span class="hub-version__label">{label}</span>
+                            {(label === version || label === latest) && (
+                                <span class="hub-version__note">{label === version ? 'Currently viewing' : 'Latest release'}</span>
+                            )}
+                        </a>
+                    ))}
+                </div>
+            </section>
+        )}
+    </main>
+</StarlightPage>
+
+<script>
+    /**
+     * Corrects the build-time version list against the live registry.
+     */
+    async function reconcile() {
+        const list = document.querySelector('[data-liara-versions-list]');
+        if (!list) return;
+
+        const response = await fetch('/registry-index.json', { cache: 'no-cache' });
+        if (!response.ok) return;
+        const index = await response.json();
+        const module = index?.modules?.find?.((m) => m.repo === list.dataset.liaraRepo);
+        if (!module?.order?.length) return;
+
+        const current = list.dataset.liaraVersion;
+        list.replaceChildren(...module.order.map((label) => {
+            const a = document.createElement('a');
+            const isCurrent = label === current;
+            const isLatest = !isCurrent && label === module.latest;
+            a.className = ['hub-version', isCurrent && 'hub-version--current', isLatest && 'hub-version--latest']
+                .filter(Boolean).join(' ');
+            a.href = `/${list.dataset.liaraRepo}/${label}/`;
+
+            const value = document.createElement('span');
+            value.className = 'hub-version__label';
+            value.textContent = label;
+            a.append(value);
+
+            if (isCurrent || isLatest) {
+                const note = document.createElement('span');
+                note.className = 'hub-version__note';
+                note.textContent = isCurrent ? 'Currently viewing' : 'Latest release';
+                a.append(note);
+            }
+            return a;
+        }));
+    }
+
+    reconcile().catch(() => { /* keep the build-time markup */ });
+</script>

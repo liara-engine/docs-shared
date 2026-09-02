@@ -1,0 +1,189 @@
+---
+/**
+ * Liara Engine — hub not-found page.
+ */
+import HubLayout from '../layouts/HubLayout.astro';
+import { NOT_FOUND_MESSAGES } from '../data/not-found-messages.js';
+---
+
+<HubLayout title="404 — Liara Engine" description="This page could not be found.">
+    <main class="nf">
+        <div class="nf__decor" aria-hidden="true">
+            <div class="nf__blob nf__blob--pink"></div>
+            <div class="nf__blob nf__blob--lavender"></div>
+        </div>
+
+        <div class="nf__inner">
+            <p class="nf__eyebrow">Error 404 — Page not found</p>
+
+            <p class="nf__code" aria-hidden="true">4<span class="nf__code-zero">0</span>4</p>
+
+            <h1 class="nf__title">Even Liara couldn't dig this one up.</h1>
+
+            <p class="nf__message" data-nf-message>{NOT_FOUND_MESSAGES[0]}</p>
+
+            <code class="nf__path" data-nf-path hidden></code>
+
+            <div class="nf__cta">
+                <a class="hub-button hub-button--primary" href="/">Back to the hub</a>
+                <a class="hub-button hub-button--secondary" href="https://github.com/liara-engine/liara/issues">Report a broken link</a>
+            </div>
+        </div>
+    </main>
+</HubLayout>
+
+<script define:vars={{ messages: NOT_FOUND_MESSAGES }}>
+    (function () {
+        'use strict';
+
+        const path = document.querySelector('[data-nf-path]');
+        if (path) {
+            const current = window.location.pathname + window.location.search;
+            if (current && current !== '/') {
+                path.textContent = current;
+                path.hidden = false;
+            }
+        }
+
+        const message = document.querySelector('[data-nf-message]');
+        if (message && messages.length > 0) {
+            message.textContent = messages[Math.floor(Math.random() * messages.length)];
+        }
+    })();
+</script>
+
+<style>
+    .nf {
+        position: relative;
+        min-height: calc(100vh - 68px);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+        padding: var(--liara-space-8) var(--liara-space-5);
+        box-sizing: border-box;
+    }
+
+    .nf__decor {
+        position: absolute;
+        inset: 0;
+        overflow: hidden;
+        z-index: 0;
+        pointer-events: none;
+    }
+
+    .nf__blob {
+        position: absolute;
+        width: 480px;
+        height: 480px;
+        border-radius: 50%;
+        filter: blur(80px);
+        opacity: 0.45;
+    }
+
+    .nf__blob--pink {
+        background: var(--liara-brand-primary);
+        top: -160px;
+        right: -120px;
+    }
+
+    .nf__blob--lavender {
+        background: var(--liara-brand-secondary);
+        bottom: -180px;
+        left: -140px;
+        opacity: 0.35;
+    }
+
+    [data-theme="dark"] .nf__blob { opacity: 0.25; }
+
+    .nf__inner {
+        position: relative;
+        z-index: 1;
+        max-width: 640px;
+        text-align: center;
+    }
+
+    .nf__code {
+        font-family: var(--liara-font-mono);
+        font-weight: var(--liara-weight-bold);
+        font-size: clamp(5rem, 18vw + 1rem, 11rem);
+        line-height: 1;
+        letter-spacing: -0.04em;
+        color: var(--liara-brand-primary-dark);
+        margin: 0;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.06em;
+    }
+
+    .nf__code-zero {
+        color: var(--liara-brand-secondary-dark);
+        animation: nf-drift 6s ease-in-out infinite;
+    }
+
+    @keyframes nf-drift {
+        0%, 100% { transform: translateY(0) rotate(0deg); }
+        50%      { transform: translateY(-10px) rotate(-6deg); }
+    }
+
+    .nf__eyebrow {
+        display: inline-flex;
+        align-items: center;
+        gap: var(--liara-space-2);
+        background: var(--liara-brand-primary-soft);
+        color: var(--liara-brand-primary-dark);
+        padding: var(--liara-space-1) var(--liara-space-3);
+        border-radius: var(--liara-radius-pill);
+        font-size: var(--liara-text-xs);
+        font-family: var(--liara-font-mono);
+        font-weight: var(--liara-weight-medium);
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        margin: 0 0 var(--liara-space-5);
+    }
+
+    .nf__title {
+        font-size: var(--liara-text-2xl);
+        font-weight: var(--liara-weight-bold);
+        letter-spacing: -0.01em;
+        margin: var(--liara-space-5) 0 var(--liara-space-3);
+    }
+
+    .nf__message {
+        font-size: var(--liara-text-lg);
+        color: var(--liara-text-secondary);
+        line-height: var(--liara-leading-relaxed);
+        max-width: 48ch;
+        margin: 0 auto var(--liara-space-3);
+        min-height: 3.4em;
+    }
+
+    .nf__path {
+        font-family: var(--liara-font-mono);
+        font-size: var(--liara-text-sm);
+        color: var(--liara-text-tertiary);
+        background: var(--liara-bg-surface);
+        border: var(--liara-border-width-thin) solid var(--liara-border-default);
+        border-radius: var(--liara-radius-sm);
+        padding: var(--liara-space-1) var(--liara-space-3);
+        display: inline-block;
+        max-width: 100%;
+        overflow-wrap: anywhere;
+        margin: 0 0 var(--liara-space-6);
+    }
+
+    .nf__cta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: var(--liara-space-3);
+        justify-content: center;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .nf__code-zero { animation: none; }
+    }
+
+    @media (max-width: 30rem) {
+        .nf__cta { flex-direction: column; align-items: stretch; }
+    }
+</style>

@@ -1,0 +1,237 @@
+---
+/**
+ * Liara Engine — version / preview banner.
+ *
+ * Overrides Starlight's `Banner` slot (see `Page.astro`: `<Banner />` is
+ * rendered inside `<main>` on every page, splash template included).
+ * Restores what the retired shared-content/navbar/version-banner.js did —
+ * flag a page that isn't the one a reader should trust by default:
+ *
+ *   - a PR preview   (version looks like `pr-123`)          -> "preview"
+ *   - the dev continuous build (version is `dev`)           -> "dev"
+ *   - an old release (a x.y.z that isn't metadata.latest)   -> "old"
+ *
+ * The current `latest` gets no banner at all.
+ *
+ * Classification and the "go to latest" link are built at render time
+ * from the same manifest.json every other per-module page already reads —
+ * no fetch needed for that part, unlike the old banner, which had no
+ * build-time knowledge and fetched the module's manifest.json over the
+ * network on every page view just to find its `latest`. `latest` is still
+ * corrected against /registry-index.json client-side, same as everywhere
+ * else in this preset: manifest.json is frozen at this build's moment, and
+ * a `dev` build stays deployed and keeps rendering this page for however
+ * many releases ship after it.
+ */
+import { parseBase, readManifest } from '../index.mjs';
+import { VERSION_BANNER_EXPLAIN, VERSION_BANNER_MESSAGES } from './version-banner-messages.js';
+
+const PREVIEW_RE = /^pr-\d+$/i;
+const RELEASE_RE = /^\d+\.\d+\.\d+$/;
+
+function classify(version, latest) {
+    if (!latest || version === latest) return null;
+    if (PREVIEW_RE.test(version)) return 'preview';
+    if (version === 'dev') return 'dev';
+    if (RELEASE_RE.test(version)) return 'old';
+    return null;
+}
+
+const { starlightRoute } = Astro.locals;
+const isNotFound = starlightRoute.entry.id === '404' || starlightRoute.entry.id.endsWith('/404');
+
+const { repo, version } = parseBase(import.meta.env.BASE_URL);
+const manifest = readManifest();
+const latest = manifest?.metadata?.latest ?? null;
+const kind = isNotFound ? null : classify(version, latest);
+---
+
+{kind && (
+    <div class={`liara-version-banner liara-version-banner--${kind}`} role="status"
+         data-liara-version-banner data-liara-repo={repo} data-liara-version={version}>
+        <span class="liara-version-banner__icon" aria-hidden="true">{kind === 'preview' ? '🧪' : kind === 'dev' ? '🛰️' : '📅'}</span>
+        <span class="liara-version-banner__message" data-liara-vb-message></span>
+        <span class="liara-version-banner__help">
+            <button type="button" class="liara-version-banner__info" aria-label="What does this mean?">ⓘ</button>
+            <span class="liara-version-banner__tooltip" role="tooltip">{VERSION_BANNER_EXPLAIN[kind]}</span>
+        </span>
+        <a class="liara-version-banner__link" data-liara-vb-link href={`/${repo}/latest/`}>Go to the latest version →</a>
+        <button type="button" class="liara-version-banner__dismiss" aria-label="Dismiss this notice">×</button>
+    </div>
+)}
+
+<script define:vars={{ messages: kind ? VERSION_BANNER_MESSAGES[kind] : [] }}>
+    (function () {
+        'use strict';
+        const bar = document.querySelector('[data-liara-version-banner]');
+        if (!bar) return;
+
+        const message = bar.querySelector('[data-liara-vb-message]');
+        if (message && messages.length > 0) {
+            message.textContent = messages[Math.floor(Math.random() * messages.length)];
+        }
+
+        bar.querySelector('.liara-version-banner__info')?.addEventListener('click', (event) => {
+            event.preventDefault();
+            bar.querySelector('.liara-version-banner__help')?.classList.toggle('is-open');
+        });
+
+        bar.querySelector('.liara-version-banner__dismiss')?.addEventListener('click', () => bar.remove());
+
+        fetch('/registry-index.json', { cache: 'no-cache' })
+            .then((response) => (response.ok ? response.json() : null))
+            .then((index) => {
+                const module = index?.modules?.find?.((m) => m.repo === bar.dataset.liaraRepo);
+                if (module?.latest && module.latest === bar.dataset.liaraVersion) bar.remove();
+            })
+            .catch(() => { /* keep the build-time banner */ });
+    })();
+</script>
+
+<style>
+    .liara-version-banner {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: var(--liara-space-2) var(--liara-space-3);
+        padding: var(--liara-space-2) var(--liara-space-5);
+        font-family: var(--liara-font-sans);
+        font-size: var(--liara-text-sm);
+        line-height: var(--liara-leading-snug);
+        border-bottom: var(--liara-border-width-default) solid transparent;
+    }
+
+    .liara-version-banner__icon {
+        flex: 0 0 auto;
+        font-size: var(--liara-text-base);
+    }
+
+    .liara-version-banner__message {
+        flex: 1 1 auto;
+        min-width: 12rem;
+        color: var(--liara-text-primary);
+    }
+
+    .liara-version-banner__help {
+        position: relative;
+        display: inline-flex;
+        flex: 0 0 auto;
+    }
+
+    .liara-version-banner__info {
+        appearance: none;
+        border: none;
+        background: transparent;
+        cursor: help;
+        padding: 0;
+        font-size: var(--liara-text-base);
+        line-height: 1;
+        color: var(--liara-text-tertiary);
+        border-radius: var(--liara-radius-pill);
+    }
+
+    .liara-version-banner__info:hover,
+    .liara-version-banner__info:focus-visible {
+        color: var(--liara-text-primary);
+    }
+
+    .liara-version-banner__tooltip {
+        position: absolute;
+        top: calc(100% + var(--liara-space-2));
+        left: 50%;
+        transform: translateX(-50%);
+        width: max-content;
+        max-width: 22rem;
+        padding: var(--liara-space-2) var(--liara-space-3);
+        background: var(--liara-bg-elevated);
+        color: var(--liara-text-primary);
+        border: var(--liara-border-width-thin) solid var(--liara-border-default);
+        border-radius: var(--liara-radius-md);
+        box-shadow: var(--liara-shadow-md);
+        font-size: var(--liara-text-xs);
+        font-weight: 400;
+        line-height: var(--liara-leading-normal);
+        text-align: left;
+        white-space: normal;
+        opacity: 0;
+        visibility: hidden;
+        transition: opacity var(--liara-transition-fast), visibility var(--liara-transition-fast);
+        z-index: 1000;
+    }
+
+    .liara-version-banner__help:hover .liara-version-banner__tooltip,
+    .liara-version-banner__help:focus-within .liara-version-banner__tooltip,
+    .liara-version-banner__help.is-open .liara-version-banner__tooltip {
+        opacity: 1;
+        visibility: visible;
+    }
+
+    .liara-version-banner__link {
+        flex: 0 0 auto;
+        font-weight: var(--liara-weight-medium);
+        text-decoration: none;
+        white-space: nowrap;
+    }
+
+    .liara-version-banner__link:hover {
+        text-decoration: underline;
+    }
+
+    .liara-version-banner__dismiss {
+        flex: 0 0 auto;
+        appearance: none;
+        border: none;
+        background: transparent;
+        cursor: pointer;
+        font-size: var(--liara-text-lg);
+        line-height: 1;
+        padding: 0 var(--liara-space-1);
+        color: var(--liara-text-tertiary);
+        border-radius: var(--liara-radius-sm);
+    }
+
+    .liara-version-banner__dismiss:hover {
+        color: var(--liara-text-primary);
+    }
+
+    /* --- Old release: peach / warning --------------------------------- */
+    .liara-version-banner--old {
+        background: var(--liara-semantic-warning-bg);
+        border-bottom-color: var(--liara-semantic-warning-border);
+    }
+    .liara-version-banner--old .liara-version-banner__link {
+        color: var(--liara-semantic-warning-fg);
+    }
+
+    /* --- Preview build: periwinkle / info ------------------------------ */
+    .liara-version-banner--preview {
+        background: var(--liara-semantic-info-bg);
+        border-bottom-color: var(--liara-semantic-info-border);
+    }
+    .liara-version-banner--preview .liara-version-banner__link {
+        color: var(--liara-semantic-info-fg);
+    }
+
+    /* --- Dev build: green / success ------------------------------------ */
+    .liara-version-banner--dev {
+        background: var(--liara-semantic-success-bg);
+        border-bottom-color: var(--liara-semantic-success-border);
+    }
+    .liara-version-banner--dev .liara-version-banner__link {
+        color: var(--liara-semantic-success-fg);
+    }
+
+    @media (max-width: 30rem) {
+        .liara-version-banner {
+            padding: var(--liara-space-2) var(--liara-space-4);
+        }
+        .liara-version-banner__link {
+            flex-basis: 100%;
+        }
+        .liara-version-banner__tooltip {
+            left: 0;
+            transform: none;
+            max-width: 16rem;
+        }
+    }
+</style>

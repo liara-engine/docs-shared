@@ -1,29 +1,86 @@
 name: hub
 
+# The landing page at the site root.
+#
+# The hub is the one Astro site the builder image cannot build: the image
+# carries the Starlight preset and expects a module's sources at /src, and the
+# hub is neither. It is a small standalone Astro project that imports the
+# preset from this same checkout, so it is built here with plain Node and
+# handed to the same deploy as everything else — `root: true` in its
+# deploy.json is the only thing that tells them apart.
+#
+# `modules-registry.json` is in the triggers because the hub reads it at build
+# time to lay out its module cards, and because the deploy republishes it to
+# the site root, where the navigation index is built from it.
+
 on:
   push:
     branches: [main]
     paths:
       - '.github/workflows/deploy-hub.yml'
       - 'hub/**'
+      - 'modules-registry.json'
+      - 'astro/styles/**'
+      - 'astro/package.json'
   workflow_dispatch:
 
 jobs:
-  docs:
-    permissions:
-        contents: write
-        packages: read
+  build:
+    runs-on: ubuntu-24.04
 
-    uses: liara-engine/.github/.github/workflows/reusable-docs.yml@v1
+    permissions:
+      contents: read
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          # Matches the Node the builder image ships, so the hub and the
+          # module sites are built by the same toolchain.
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: hub/package-lock.json
+
+      # The preset is a `file:` dependency, so this also installs Starlight
+      # and the shared styles from ../astro.
+      - run: npm ci
+        working-directory: hub
+
+      - run: npm run build
+        working-directory: hub
+
+      - name: Assemble the artifact
+        run: |
+          set -euo pipefail
+          [ -f hub/dist/index.html ] || { echo "::error::the hub build produced no index"; exit 1; }
+          [ -f hub/dist/404.html ]   || echo "::warning::no 404.html — the edge router's custom 404 will be missing"
+
+          mkdir -p out
+          cp -a hub/dist out/site
+          cp manifest.json out/manifest.json
+          jq -n '{repo: "docs-shared", version: "", root: true}' > out/deploy.json
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: docs-hub
+          path: out
+          include-hidden-files: true
+          retention-days: 7
+
+  publish:
+    needs: build
+
+    permissions:
+      contents: read
+
+    uses: liara-engine/.github/.github/workflows/reusable-deploy-docs.yml@v2
     with:
-      image: ghcr.io/liara-engine/liara-documentation-builder:latest
       output-repository: liara-engine/liara-docs
-      output-branch: cloudflare-pages
-      deployment-version: ${{ github.ref_type == 'tag' && github.ref_name || 'dev' }}
-      erase-existing-output: true
-      additional-dir-to-deploy: "hub"
-      deploy-as-hub: true
+      artifact-name: docs-hub
+      update-manifest: never
+      docs-shared-ref: ${{ github.sha }}
 
     secrets:
-      ghcr-token: ${{ secrets.GITHUB_TOKEN }}
       push-token: ${{ secrets.DOCS_PUSH_TOKEN }}
+      read-token: ${{ secrets.ORG_READ_TOKEN }}

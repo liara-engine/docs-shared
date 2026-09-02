@@ -7,12 +7,12 @@ jobs:
   commitlint:
     permissions:
       pull-requests: write
-    uses: liara-engine/.github/.github/workflows/reusable-commitlint.yml@v1
+    uses: liara-engine/.github/.github/workflows/reusable-commitlint.yml@v2
 
   manifest-validation:
     permissions:
       contents: read
       pull-requests: write
-    uses: liara-engine/.github/.github/workflows/reusable-validate-manifest.yml@v1
+    uses: liara-engine/.github/.github/workflows/reusable-validate-manifest.yml@v2
     with:
       package: '.'

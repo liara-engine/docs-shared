@@ -1,0 +1,43 @@
+{
+  "name": "@liara/starlight-preset",
+  "type": "module",
+  "version": "0.1.0",
+  "license": "MIT",
+
+  "scripts": {
+    "dev": "astro dev",
+    "start": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "astro": "astro",
+    "predev": "node scripts/generate-config.mjs",
+    "prebuild": "node scripts/generate-config.mjs"
+  },
+
+  "dependencies": {
+    "@astrojs/starlight": "^0.41.10",
+    "astro": "^7.2.9",
+    "sharp": "^0.35.3",
+    "@xmldom/xmldom": "^0.9.12",
+    "astro-mermaid": "^2.1.0"
+  },
+
+  "exports": {
+    ".": "./index.mjs",
+    "./api": "./api/loader.mjs",
+    "./styles/tokens.css": "./styles/tokens.css",
+    "./styles/theme.css": "./styles/theme.css",
+    "./styles/fonts.css": "./styles/fonts.css",
+    "./styles/hub.css": "./styles/hub.css",
+    "./components/SiteTitle.astro": "./components/SiteTitle.astro",
+    "./components/VersionBanner.astro": "./components/VersionBanner.astro",
+    "./registry.json": "./registry.json"
+  },
+  "files": [
+    "index.mjs",
+    "api",
+    "styles",
+    "components",
+    "registry.json"
+  ]
+}

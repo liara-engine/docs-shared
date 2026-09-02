@@ -39,12 +39,6 @@ SORT_BRIEF_DOCS        = NO
 TOC_INCLUDE_HEADINGS   = 3
 
 # ============================================================================
-# Theme & Custom Layout
-# ============================================================================
-HTML_HEADER            = docs-shared/doxygen/header.html
-HTML_FOOTER            = docs-shared/doxygen/footer.html
-
-# ============================================================================
 # Preprocessor Configuration
 # ============================================================================
 ENABLE_PREPROCESSING   = YES
