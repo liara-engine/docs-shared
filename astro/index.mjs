@@ -32,6 +32,13 @@
  *     LIARA_ASSETS_PREFIX root path of the content-addressed asset store
  *
  * The defaults make `npm run dev` work with no environment at all.
+ *
+ * Search
+ * ------
+ * `LIARA_DOCS_VERSION` also decides where search comes from. A published
+ * version ships no index of its own and queries the site-wide one at
+ * `/pagefind/`; a pull request preview ships and queries its own. See
+ * `searchScope` below, build-docs.sh, and tools/search-index.py.
  */
 
 import mermaid from 'astro-mermaid';
@@ -43,6 +50,51 @@ const DEFAULT_SITE = 'https://liara-engine.liara-engine-documentation.workers.de
 const HERE = dirname(fileURLToPath(import.meta.url));
 
 export const SECTIONS = Object.freeze({ about: 'about', guide: 'guides', api: 'api' });
+
+/** Where the site-wide search index is deployed, relative to the site root. */
+export const SEARCH_BUNDLE_PATH = '/pagefind/';
+
+const PREVIEW_VERSION = /^pr-\d+$/i;
+
+/**
+ * Whether a version segment names a pull request preview rather than a
+ * published version. Previews live beside real versions and are reachable
+ * by direct URL only, so several things in this preset have to tell them
+ * apart: the version banner, and which search index a page queries.
+ */
+export function isPreviewVersion(version) {
+    return PREVIEW_VERSION.test(version ?? '');
+}
+
+/**
+ * Resolves the two paths Pagefind needs: where to fetch the index from, and
+ * what to prefix the URLs it stores with.
+ *
+ * A published version searches the site-wide index, which is built over the
+ * deployed site and therefore stores URLs already carrying `/<repo>/<version>/`
+ * — so nothing may be prefixed onto them, and `baseUrl` is the site root. It
+ * is the reason a version directory ships no search files at all: most of a
+ * bundle was identical in every version, and the rest grew with the number of
+ * versions published rather than with the amount of documentation written.
+ *
+ * A preview searches itself. Its pages exist nowhere else, so the site-wide
+ * index cannot know about them, and Starlight's own per-site bundle — stored
+ * URLs relative to the preview's own base — is exactly right.
+ *
+ * `scope` names which of the two a page got, so the search box can say so —
+ * see components/search-scope-messages.js.
+ *
+ * @param {string} base Astro's `base`, with its trailing slash (`BASE_URL`).
+ * @returns {{scope: 'global'|'preview', bundlePath: string, baseUrl: string}}
+ */
+export function searchScope(base) {
+    const { version } = parseBase(base);
+    if (!isPreviewVersion(version)) {
+        return { scope: 'global', bundlePath: SEARCH_BUNDLE_PATH, baseUrl: '/' };
+    }
+    const local = `/${base.replace(/^\/+|\/+$/g, '')}/`;
+    return { scope: 'preview', bundlePath: `${local}pagefind/`, baseUrl: local };
+}
 
 /**
  * Reads the module registry, wherever a copy of it can be found.
@@ -170,7 +222,14 @@ export function liaraDocs(options = {}) {
         components: {
             SiteTitle: '@liara/starlight-preset/components/SiteTitle.astro',
             Banner: '@liara/starlight-preset/components/VersionBanner.astro',
+            Search: '@liara/starlight-preset/components/Search.astro',
         },
+        // Left enabled even though a published version ships no index of its
+        // own: Starlight's Pagefind settings — its ranking weights — reach the
+        // search UI through this option, and turning it off empties them. The
+        // per-version bundle is discarded after the build instead, by
+        // build-docs.sh, so that a preview and a release configure search
+        // identically and a preview can still catch a regression in it.
         sidebar,
         pagination: true,
         lastUpdated: true,

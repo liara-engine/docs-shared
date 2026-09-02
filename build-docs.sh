@@ -98,11 +98,12 @@ fi
 
 export LIARA_DOCS_API
 
-mapfile -t md_files < <(find "${DEST_ABOUT}" "${DEST_GUIDES}" -name '*.md')
+mapfile -t md_files < <(find "${DEST_ABOUT}" "${DEST_GUIDES}" \
+                             \( -name '*.md' -o -name '*.mdx' \))
 for md_file in "${md_files[@]}"; do
     if [ "$(head -n 1 "${md_file}")" != "---" ]; then
         log "adding front matter to ${md_file}"
-        title=$(basename "${md_file}" .md)
+        title=$(basename "${md_file}"); title="${title%.*}"
         sed -i "1s|^|---\ntitle: ${title}\n---\n\n|" "${md_file}"
     fi
 done
@@ -119,14 +120,52 @@ cd "${SRC}" || die "failed to cd back into ${SRC}"
 
 
 # ---------------------------------------------------------------------------
-# 3. Fingerprint
+# 3. Search
+# ---------------------------------------------------------------------------
+
+# Starlight builds one Pagefind bundle per site, and this is where it is
+# decided what happens to it. The two cases match `isPreviewVersion` in
+# astro/index.mjs, which is what tells the search UI where to look.
+#
+#   published  The site-wide index at /pagefind/ already covers this version
+#              (tools/search-index.py), so the local bundle is discarded and
+#              the version directory ships no search files at all. Building it
+#              first costs a second and is what keeps a preview and a release
+#              configured identically — see the note in astro/index.mjs.
+#
+#   pr-<n>     Deployed nowhere else, so it indexes itself and keeps the
+#              bundle. Pagefind writes its own search UIs beside the index and
+#              Starlight fetches none of them — it bundles @pagefind/default-ui
+#              into its own JavaScript — so those go either way.
+
+if [ -d "/working/dist/pagefind" ]; then
+    case "${LIARA_DOCS_VERSION}" in
+        pr-[0-9]*)
+            log "keeping this preview's own search bundle"
+            rm -f /working/dist/pagefind/pagefind-ui.js \
+                  /working/dist/pagefind/pagefind-ui.css \
+                  /working/dist/pagefind/pagefind-modular-ui.js \
+                  /working/dist/pagefind/pagefind-modular-ui.css \
+                  /working/dist/pagefind/pagefind-component-ui.js \
+                  /working/dist/pagefind/pagefind-component-ui.css \
+                  /working/dist/pagefind/pagefind-highlight.js
+            ;;
+        *)
+            log "discarding the local search bundle: /pagefind/ covers this version"
+            rm -rf /working/dist/pagefind
+            ;;
+    esac
+fi
+
+# ---------------------------------------------------------------------------
+# 4. Fingerprint
 # ---------------------------------------------------------------------------
 
 log "relocating assets into the content-addressed store"
 python3 "${TOOLS}/fingerprint.py" --dist "/working/dist" --base "${BASE}"
 
 # ---------------------------------------------------------------------------
-# 4. Hand over
+# 5. Hand over
 # ---------------------------------------------------------------------------
 
 rm -rf "${OUTPUT}"

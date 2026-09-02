@@ -13,6 +13,13 @@
  *
  * The current `latest` gets no banner at all.
  *
+ * `data-pagefind-ignore` matches what Starlight's own `Banner` carries, and
+ * it is not cosmetic: this banner renders inside `<main>`, which is the
+ * element marked `data-pagefind-body`. Without it, every indexed page of
+ * every non-latest version opened with "This page documents an older
+ * release..." — search excerpts led with the banner instead of the page, and
+ * two versions of an unchanged page could not produce the same index entry.
+ *
  * Classification and the "go to latest" link are built at render time
  * from the same manifest.json every other per-module page already reads —
  * no fetch needed for that part, unlike the old banner, which had no
@@ -23,15 +30,14 @@
  * a `dev` build stays deployed and keeps rendering this page for however
  * many releases ship after it.
  */
-import { parseBase, readManifest } from '../index.mjs';
+import { isPreviewVersion, parseBase, readManifest } from '../index.mjs';
 import { VERSION_BANNER_EXPLAIN, VERSION_BANNER_MESSAGES } from './version-banner-messages.js';
 
-const PREVIEW_RE = /^pr-\d+$/i;
 const RELEASE_RE = /^\d+\.\d+\.\d+$/;
 
 function classify(version, latest) {
     if (!latest || version === latest) return null;
-    if (PREVIEW_RE.test(version)) return 'preview';
+    if (isPreviewVersion(version)) return 'preview';
     if (version === 'dev') return 'dev';
     if (RELEASE_RE.test(version)) return 'old';
     return null;
@@ -48,6 +54,7 @@ const kind = isNotFound ? null : classify(version, latest);
 
 {kind && (
     <div class={`liara-version-banner liara-version-banner--${kind}`} role="status"
+         data-pagefind-ignore
          data-liara-version-banner data-liara-repo={repo} data-liara-version={version}>
         <span class="liara-version-banner__icon" aria-hidden="true">{kind === 'preview' ? '🧪' : kind === 'dev' ? '🛰️' : '📅'}</span>
         <span class="liara-version-banner__message" data-liara-vb-message></span>

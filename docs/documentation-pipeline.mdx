@@ -264,9 +264,9 @@ It expects a module's sources mounted at `/src` and writes the built site to
 
 5. **Build.** `npm run build` in `/working`.
 
-6. **Prune search.** A published version builds no index at all; a preview
-   keeps its own, minus the Pagefind UI bundles Starlight never fetches
-   ([Search](../search/)).
+6. **Resolve search.** A published version's own Pagefind bundle is discarded
+   — the site-wide index covers it — while a preview keeps its own, minus the
+   Pagefind UI bundles Starlight never fetches ([Search](../search/)).
 
 7. **Fingerprint.** Relocate every asset into the content-addressed store and
    rewrite the references (§7.1).

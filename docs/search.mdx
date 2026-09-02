@@ -91,10 +91,38 @@ configuration — it spreads that configuration *before* setting them.
 `astro/components/Search.astro` is a copy of the upstream component with those
 two expressions changed and the provenance recorded at the top of the file.
 
-Overriding it has a second effect the design depends on: Starlight renders the
-search UI when Pagefind is enabled **or** when the Search component is
-overridden, so the preset can set `pagefind: false` — suppressing the
-per-version index entirely — and still have a search box.
+Nothing else about that configuration is touched. Pagefind stays *enabled* for
+every build, ranking weights included, and the per-version bundle is discarded
+afterwards by `build-docs.sh` instead. Disabling Pagefind would have skipped
+the indexing pass, but it would also have emptied the settings the search UI
+reads — leaving a preview configured differently from a release, which is the
+one thing a preview must never be.
+</Aside>
+
+### 2.1 Saying so
+
+One index for every published version is not what a reader would assume from
+the page they opened the search on. Searching from `0.1.4` and getting `latest`
+back looks like a bug unless it is announced, so the modal says what it covers
+before anyone types:
+
+<Aside type="note" title="Searching dev and latest of every module.">
+Older releases are not in here. They had their turn.
+</Aside>
+
+The first sentence is fixed and rendered at build time — it is the part that
+has to be true at a glance. The remark after it rotates, picked from
+`astro/components/search-scope-messages.js` in the same spirit as the version
+banner and the 404 page, and the ⓘ beside it carries the full explanation for
+anyone who wants to know why their old release is not searchable.
+
+A preview says the other thing: *Searching this preview only.*
+
+<Aside type="caution" title="Where the remark is picked">
+Client-side, from a pool bundled into the shared search chunk — not inlined
+into each page. A message baked into the HTML would differ per page and per
+build, and the pages are exactly what the content-addressed store cannot
+deduplicate.
 </Aside>
 
 ## 3. What is searchable

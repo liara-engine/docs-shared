@@ -24,6 +24,7 @@
 
   "exports": {
     ".": "./index.mjs",
+    "./package.json": "./package.json",
     "./api": "./api/loader.mjs",
     "./styles/tokens.css": "./styles/tokens.css",
     "./styles/theme.css": "./styles/theme.css",
@@ -31,6 +32,7 @@
     "./styles/hub.css": "./styles/hub.css",
     "./components/SiteTitle.astro": "./components/SiteTitle.astro",
     "./components/VersionBanner.astro": "./components/VersionBanner.astro",
+    "./components/Search.astro": "./components/Search.astro",
     "./registry.json": "./registry.json"
   },
   "files": [
@@ -38,6 +40,7 @@
     "api",
     "styles",
     "components",
+    "public",
     "registry.json"
   ]
 }

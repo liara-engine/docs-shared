@@ -50,11 +50,13 @@ LEAF_SUFFIXES = frozenset({
 REFERENCING_SUFFIXES = frozenset({'.css', '.js', '.mjs'})
 TEXT_SUFFIXES = frozenset({'.html', '.css', '.js', '.mjs', '.json', '.xml', '.txt'})
 
-# Directories left alone. Pagefind resolves its runtime, its wasm and its
-# index against a single base path computed at load time, so the runtime
-# cannot be moved without the index following it — and the index is
-# per-version by nature. Splitting the bundle would mean patching Pagefind's
-# own path resolution.
+# Directories left alone. Pagefind resolves its runtime, its wasm, its index
+# chunks and its fragments against one base path, so no part of a bundle can
+# be relocated without the rest following it. That is why the site does not
+# keep a bundle per version at all: published versions share a single index
+# at the site root (tools/search-index.py), and the only bundle that ever
+# reaches this pass belongs to a pull request preview, which is transient and
+# removed whole when the preview is.
 SKIP_DIRECTORIES = frozenset({'pagefind'})
 
 
