@@ -384,14 +384,89 @@ pre.lapi-code {
 .lapi table.lapi-index td:first-child { white-space: nowrap; }
 .lapi table.lapi-index td:last-child { width: 1%; }
 
+.lapi-field-path {
+    color: var(--liara-text-tertiary);
+    font-weight: 400;
+}
+
+.lapi-bitfield {
+    color: var(--liara-text-tertiary);
+    font-family: var(--liara-font-mono);
+    font-size: var(--liara-text-xs);
+}
+
 /* ==========================================================================
- * Labelled notes — @pre, @post, @since, @deprecated, @par, aliases
+ * The namespace tree
+ *
+ * A flat list of `liara`, `liara::preview`, `liara::preview::detail` states
+ * the containment three times and shows it none; each row also repeats a
+ * prefix the reader has already read. The tree states it once, in the shape,
+ * and every node names only its own segment.
+ * ========================================================================== */
+
+.lapi ul.lapi-tree {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.lapi ul.lapi-tree ul.lapi-tree {
+    margin-inline-start: var(--liara-space-3);
+    padding-inline-start: var(--liara-space-4);
+    border-inline-start: 1px solid var(--liara-border-default);
+}
+
+.lapi .lapi-tree__item { margin: 0; padding: 0; }
+
+.lapi .lapi-tree__row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: var(--liara-space-2) var(--liara-space-3);
+    padding-block: var(--liara-space-2);
+}
+
+.lapi .lapi-tree__row code {
+    background: none;
+    border: none;
+    padding: 0;
+    font-size: var(--liara-text-sm);
+    font-weight: var(--liara-weight-medium);
+}
+
+/* A namespace with nothing of its own has no page to open. It is still a
+   node — its nesting is the information — so it reads as a heading rather
+   than as a link that failed. */
+.lapi .lapi-tree__name--plain code { color: var(--liara-text-secondary); }
+
+.lapi .lapi-tree__brief {
+    flex: 1 1 12rem;
+    min-width: 0;
+    color: var(--liara-text-secondary);
+    font-size: var(--liara-text-sm);
+}
+
+.lapi .lapi-tree__counts { flex: 0 0 auto; }
+
+/* ==========================================================================
+ * Labelled notes — every section a doc comment can carry
+ *
+ * `@note`, `@warning` and `@attention` used to be Starlight asides and
+ * everything else one of these blocks, which made a single member's
+ * documentation speak two visual languages — and, because Starlight has four
+ * callout kinds against Doxygen's dozen sections, collapsed `@warning` and
+ * `@attention` onto one identical box. One block shape for all of them now;
+ * the role carries the difference, and it carries it three ways at once:
+ * colour, a glyph before the label, and the label itself. Colour alone was
+ * the previous arrangement, and with seven pastel roles on a warm-white page
+ * it was not enough to tell a precondition from a remark at a glance.
  * ========================================================================== */
 
 .lapi-tag {
     --lapi-tag-bg: var(--liara-bg-surface);
     --lapi-tag-fg: var(--liara-text-secondary);
     --lapi-tag-line: var(--liara-border-strong);
+    --lapi-tag-glyph: '•';
 
     display: grid;
     grid-template-columns: minmax(0, max-content) 1fr;
@@ -399,7 +474,8 @@ pre.lapi-code {
     align-items: baseline;
     margin-block: var(--liara-space-3);
     padding: var(--liara-space-2) var(--liara-space-3);
-    border-inline-start: 3px solid var(--lapi-tag-line);
+    border: var(--liara-border-width-default) solid var(--lapi-tag-line);
+    border-inline-start-width: 4px;
     border-radius: 0 var(--liara-radius-sm) var(--liara-radius-sm) 0;
     background: var(--lapi-tag-bg);
 }
@@ -414,42 +490,85 @@ pre.lapi-code {
     white-space: nowrap;
 }
 
+/* The glyph does the work colour cannot: it survives a monochrome print, a
+   colour-blind reader and a pastel that has drifted too close to its
+   neighbour, and it is the first thing scanned in a run of blocks. */
+.lapi-tag__label::before {
+    content: var(--lapi-tag-glyph);
+    display: inline-block;
+    margin-inline-end: 0.4em;
+    font-weight: var(--liara-weight-bold);
+    letter-spacing: 0;
+}
+
 .lapi-tag__body { min-width: 0; font-size: var(--liara-text-sm); }
 .lapi-tag__body > :first-child { margin-block-start: 0; }
 .lapi-tag__body > :last-child { margin-block-end: 0; }
 
-/* What the caller has to hold up their end of. */
+/* What the caller has to hold up their end of: @pre, @post, @invariant.
+   Lavender rather than the brand rose, and that is not a taste decision: a
+   precondition sits next to an @attention on almost every function that has
+   one, and rose against the danger red was the pair a reader could not tell
+   apart at a glance. Lavender against amber and red is unambiguous. */
 .lapi-tag--require {
-    --lapi-tag-bg: var(--liara-brand-primary-soft);
-    --lapi-tag-fg: var(--liara-brand-primary-dark);
-    --lapi-tag-line: var(--liara-brand-primary);
-}
-
-/* A section the project invented — `@par Thread safety:`, or an alias
-   expanding to one. Given a colour of its own precisely because the
-   previous rendering let it dissolve into the paragraph above it. */
-.lapi-tag--custom {
     --lapi-tag-bg: var(--liara-brand-secondary-soft);
     --lapi-tag-fg: var(--liara-brand-secondary-dark);
     --lapi-tag-line: var(--liara-brand-secondary);
+    --lapi-tag-glyph: '◆';
 }
 
-.lapi-tag--info {
+/* A section the project invented — `@par Thread safety:`, or an alias
+   expanding to one. It gets the brand rose, which is the right way round:
+   this is the project's own voice in the middle of a generated page, and it
+   is rare enough that sharing a family with the danger red costs nothing. */
+.lapi-tag--custom {
+    --lapi-tag-bg: var(--liara-brand-primary-soft);
+    --lapi-tag-fg: var(--liara-brand-primary-dark);
+    --lapi-tag-line: var(--liara-brand-primary);
+    --lapi-tag-glyph: '❖';
+}
+
+/* @note and @remark: an aside, not an instruction. */
+.lapi-tag--note {
     --lapi-tag-bg: var(--liara-semantic-info-bg);
     --lapi-tag-fg: var(--liara-semantic-info-fg);
     --lapi-tag-line: var(--liara-semantic-info-border);
+    --lapi-tag-glyph: 'ℹ';
 }
 
+/* @see: the same blue, deliberately quieter — it points elsewhere rather
+   than saying anything about the symbol it sits under. */
+.lapi-tag--info {
+    --lapi-tag-bg: transparent;
+    --lapi-tag-fg: var(--liara-semantic-info-fg);
+    --lapi-tag-line: var(--liara-semantic-info-border);
+    --lapi-tag-glyph: '→';
+}
+
+/* @warning and @bug: true today, and something to work around. */
 .lapi-tag--warning {
     --lapi-tag-bg: var(--liara-semantic-warning-bg);
     --lapi-tag-fg: var(--liara-semantic-warning-fg);
     --lapi-tag-line: var(--liara-semantic-warning-border);
+    --lapi-tag-glyph: '⚠';
 }
 
+/* @attention and @deprecated: the level above, where ignoring it breaks
+   something. */
 .lapi-tag--danger {
     --lapi-tag-bg: var(--liara-semantic-danger-bg);
     --lapi-tag-fg: var(--liara-semantic-danger-fg);
     --lapi-tag-line: var(--liara-semantic-danger-border);
+    --lapi-tag-glyph: '✖';
+}
+
+/* @todo: acknowledged, planned, and not a defect in what is written above
+   it. It wore amber and read as a warning about the symbol. */
+.lapi-tag--todo {
+    --lapi-tag-bg: var(--liara-semantic-success-bg);
+    --lapi-tag-fg: var(--liara-semantic-success-fg);
+    --lapi-tag-line: var(--liara-semantic-success-border);
+    --lapi-tag-glyph: '✓';
 }
 
 /* `@since`, `@author`, `@copyright`: true, useful, and never urgent. */
@@ -457,6 +576,7 @@ pre.lapi-code {
     --lapi-tag-bg: transparent;
     --lapi-tag-fg: var(--liara-text-tertiary);
     --lapi-tag-line: var(--liara-border-default);
+    --lapi-tag-glyph: '·';
 }
 
 @media (max-width: 40rem) {

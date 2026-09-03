@@ -642,3 +642,28 @@ dataAttributes['data-pagefind-scope'] = search.scope;
 		visibility: visible;
 	}
 </style>
+
+<style is:global>
+	@layer starlight.core {
+		#starlight__search .pagefind-ui__result-tags {
+			gap: calc(0.5rem * var(--pagefind-ui-scale));
+		}
+
+		#starlight__search .pagefind-ui__result-tag {
+			padding: 0.1em 0.6em;
+			border: var(--liara-border-width-default) solid var(--liara-border-default);
+			border-radius: var(--liara-radius-pill);
+			background: var(--liara-bg-surface);
+			color: var(--liara-text-secondary);
+			font-family: var(--liara-font-sans);
+			font-size: calc(0.75rem * var(--pagefind-ui-scale));
+		}
+
+		#starlight__search .pagefind-ui__result-tag[data-pagefind-ui-meta='version'] {
+			border-color: var(--liara-brand-primary);
+			background: var(--liara-brand-primary-soft);
+			color: var(--liara-brand-primary-dark);
+			font-family: var(--liara-font-mono);
+		}
+	}
+</style>

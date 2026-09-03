@@ -30,7 +30,7 @@
  * a `dev` build stays deployed and keeps rendering this page for however
  * many releases ship after it.
  */
-import { isPreviewVersion, parseBase, readManifest } from '../index.mjs';
+import { isPreviewVersion, parseBase, readManifest, readRegistry } from '../index.mjs';
 import { VERSION_BANNER_EXPLAIN, VERSION_BANNER_MESSAGES } from './version-banner-messages.js';
 
 const RELEASE_RE = /^\d+\.\d+\.\d+$/;
@@ -48,22 +48,31 @@ const isNotFound = starlightRoute.entry.id === '404' || starlightRoute.entry.id.
 
 const { repo, version } = parseBase(import.meta.env.BASE_URL);
 const manifest = readManifest();
+const registryEntry = (readRegistry().modules ?? []).find((entry) => entry.repo === repo) ?? null;
+const moduleName = manifest?.metadata?.name || registryEntry?.name || repo;
 const latest = manifest?.metadata?.latest ?? null;
 const kind = isNotFound ? null : classify(version, latest);
 ---
+
+<span data-pagefind-meta="module[data-value]" data-value={moduleName}></span>
+<span data-pagefind-meta="version[data-value]" data-value={version}></span>
 
 {kind && (
     <div class={`liara-version-banner liara-version-banner--${kind}`} role="status"
          data-pagefind-ignore
          data-liara-version-banner data-liara-repo={repo} data-liara-version={version}>
-        <span class="liara-version-banner__icon" aria-hidden="true">{kind === 'preview' ? '🧪' : kind === 'dev' ? '🛰️' : '📅'}</span>
-        <span class="liara-version-banner__message" data-liara-vb-message></span>
-        <span class="liara-version-banner__help">
-            <button type="button" class="liara-version-banner__info" aria-label="What does this mean?">ⓘ</button>
-            <span class="liara-version-banner__tooltip" role="tooltip">{VERSION_BANNER_EXPLAIN[kind]}</span>
-        </span>
-        <a class="liara-version-banner__link" data-liara-vb-link href={`/${repo}/latest/`}>Go to the latest version →</a>
-        <button type="button" class="liara-version-banner__dismiss" aria-label="Dismiss this notice">×</button>
+        <p class="liara-version-banner__text">
+            <span class="liara-version-banner__icon" aria-hidden="true">{kind === 'preview' ? '🧪' : kind === 'dev' ? '🛰️' : '📅'}</span>
+            <span class="liara-version-banner__message" data-liara-vb-message></span>
+        </p>
+        <div class="liara-version-banner__actions">
+            <span class="liara-version-banner__help">
+                <button type="button" class="liara-version-banner__info" aria-label="What does this mean?">ⓘ</button>
+                <span class="liara-version-banner__tooltip" role="tooltip">{VERSION_BANNER_EXPLAIN[kind]}</span>
+            </span>
+            <a class="liara-version-banner__link" data-liara-vb-link href={`/${repo}/latest/`}>Go to the latest version →</a>
+            <button type="button" class="liara-version-banner__dismiss" aria-label="Dismiss this notice">×</button>
+        </div>
     </div>
 )}
 
@@ -97,15 +106,23 @@ const kind = isNotFound ? null : classify(version, latest);
 
 <style>
     .liara-version-banner {
-        display: flex;
-        align-items: center;
-        flex-wrap: wrap;
-        gap: var(--liara-space-2) var(--liara-space-3);
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        align-items: start;
+        gap: var(--liara-space-2) var(--liara-space-4);
         padding: var(--liara-space-2) var(--liara-space-5);
         font-family: var(--liara-font-sans);
         font-size: var(--liara-text-sm);
         line-height: var(--liara-leading-snug);
         border-bottom: var(--liara-border-width-default) solid transparent;
+    }
+
+    .liara-version-banner__text {
+        display: flex;
+        align-items: baseline;
+        gap: var(--liara-space-2);
+        min-width: 0;
+        margin: 0;
     }
 
     .liara-version-banner__icon {
@@ -114,9 +131,15 @@ const kind = isNotFound ? null : classify(version, latest);
     }
 
     .liara-version-banner__message {
-        flex: 1 1 auto;
-        min-width: 12rem;
+        min-width: 0;
         color: var(--liara-text-primary);
+    }
+
+    .liara-version-banner__actions {
+        display: flex;
+        align-items: center;
+        flex: none;
+        gap: var(--liara-space-3);
     }
 
     .liara-version-banner__help {
@@ -228,15 +251,26 @@ const kind = isNotFound ? null : classify(version, latest);
         color: var(--liara-semantic-success-fg);
     }
 
-    @media (max-width: 30rem) {
+    @media (max-width: 40rem) {
         .liara-version-banner {
             padding: var(--liara-space-2) var(--liara-space-4);
         }
+        .liara-version-banner {
+            grid-template-columns: minmax(0, 1fr) auto auto;
+        }
+        .liara-version-banner__actions {
+            display: contents;
+        }
+        .liara-version-banner__text  { grid-area: 1 / 1; }
+        .liara-version-banner__help  { grid-area: 1 / 2; }
+        .liara-version-banner__dismiss { grid-area: 1 / 3; }
         .liara-version-banner__link {
-            flex-basis: 100%;
+            grid-area: 2 / 1 / 2 / -1;
+            justify-self: start;
         }
         .liara-version-banner__tooltip {
-            left: 0;
+            left: auto;
+            right: 0;
             transform: none;
             max-width: 16rem;
         }

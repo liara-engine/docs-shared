@@ -123,6 +123,10 @@
     color: var(--liara-text-on-primary);
 }
 
+nav.sidebar details:has(> ul:empty) {
+    display: none;
+}
+
 /* ============================================================================
  * Generated API reference
  *

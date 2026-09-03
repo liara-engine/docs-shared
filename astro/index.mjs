@@ -45,6 +45,7 @@ import mermaid from 'astro-mermaid';
 import { readFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { API_GROUPS } from './api/groups.mjs';
 
 const DEFAULT_SITE = 'https://liara-engine.liara-engine-documentation.workers.dev';
 const HERE = dirname(fileURLToPath(import.meta.url));
@@ -196,7 +197,13 @@ export function liaraDocs(options = {}) {
         },
         ...(hasApi ? [{
             label: 'API reference',
-            items: [{ autogenerate: { directory: SECTIONS.api } }],
+            items: [
+                { label: 'Overview', link: `${SECTIONS.api}/` },
+                ...API_GROUPS.map((group) => ({
+                    label: group.label,
+                    items: [{ autogenerate: { directory: `${SECTIONS.api}/${group.dir}` } }],
+                })),
+            ],
         }] : []),
         ...(options.sidebar ?? []),
     ];
@@ -224,7 +231,10 @@ export function liaraDocs(options = {}) {
             SiteTitle: '@liara/starlight-preset/components/SiteTitle.astro',
             Banner: '@liara/starlight-preset/components/VersionBanner.astro',
             Search: '@liara/starlight-preset/components/Search.astro',
-            ThemeSelect: '@liara/starlight-preset/components/ThemeSelect.astro',
+            ThemeSelect: '@liara/starlight-preset/components/ReadingPreferences.astro',
+            Head: '@liara/starlight-preset/components/Head.astro',
+            PageTitle: '@liara/starlight-preset/components/PageTitle.astro',
+            Sidebar: '@liara/starlight-preset/components/Sidebar.astro',
             // Where the module and version switchers go once the header is
             // too narrow to hold them — see MobileMenuFooter.astro.
             MobileMenuFooter: '@liara/starlight-preset/components/MobileMenuFooter.astro',

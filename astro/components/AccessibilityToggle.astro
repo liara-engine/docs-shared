@@ -1,0 +1,94 @@
+---
+/**
+ * Liara Engine — dyslexia-friendly mode.
+ */
+const STORAGE_KEY = 'liara-a11y-dyslexia';
+---
+
+<button type="button" class="liara-a11y-toggle liara-navbar__action liara-navbar__action--text"
+        data-liara-a11y-toggle aria-pressed="false"
+        aria-label="Dyslexia-friendly text" title="Dyslexia-friendly text">
+    <span aria-hidden="true">Aa</span>
+</button>
+
+<script is:inline define:vars={{ STORAGE_KEY }}>
+    (function () {
+        var enabled = false;
+        try { enabled = localStorage.getItem(STORAGE_KEY) === 'true'; } catch (error) { /* private mode */ }
+        document.querySelectorAll('[data-liara-a11y-toggle]').forEach(function (button) {
+            button.setAttribute('aria-pressed', String(enabled));
+        });
+    })();
+</script>
+
+<style>
+    .liara-a11y-toggle {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 2rem;
+        height: 2rem;
+        padding: 0;
+        appearance: none;
+        border: var(--liara-border-width-default) solid transparent;
+        border-radius: var(--liara-radius-md);
+        background: transparent;
+        color: var(--liara-text-secondary);
+        cursor: pointer;
+        font-family: var(--liara-font-sans);
+        font-size: var(--liara-text-base);
+        font-weight: var(--liara-weight-medium);
+        letter-spacing: -0.02em;
+        line-height: 1;
+    }
+
+    .liara-a11y-toggle:hover {
+        background: var(--liara-bg-elevated);
+        color: var(--liara-text-link);
+    }
+
+    /* On, and saying so: a toggle whose only feedback is the page's own font
+       is unreadable to anyone who cannot tell the two fonts apart yet. */
+    .liara-a11y-toggle[aria-pressed='true'] {
+        border-color: var(--liara-brand-primary);
+        background: var(--liara-brand-primary-soft);
+        color: var(--liara-brand-primary-dark);
+    }
+</style>
+
+<script>
+    const STORAGE_KEY = 'liara-a11y-dyslexia';
+
+    const load = () => {
+        try {
+            return localStorage.getItem(STORAGE_KEY) === 'true';
+        } catch {
+            return false;
+        }
+    };
+
+    const store = (enabled) => {
+        try {
+            localStorage.setItem(STORAGE_KEY, String(enabled));
+        } catch { /* the choice still applies for this load */ }
+    };
+
+    function apply(enabled) {
+        if (enabled) document.documentElement.setAttribute('data-liara-a11y-dyslexia', 'true');
+        else document.documentElement.removeAttribute('data-liara-a11y-dyslexia');
+
+        for (const button of document.querySelectorAll('[data-liara-a11y-toggle]')) {
+            button.setAttribute('aria-pressed', String(enabled));
+        }
+    }
+
+    apply(load());
+
+    document.addEventListener('click', (event) => {
+        const button = (event.target as Element | null)?.closest?.('[data-liara-a11y-toggle]');
+        if (!button) return;
+        const enabled = !load();
+        store(enabled);
+        apply(enabled);
+    });
+</script>

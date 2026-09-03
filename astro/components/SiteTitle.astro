@@ -2,22 +2,20 @@
 /**
  * Liara Engine — the site title, with the module and version switchers
  * beside it.
- *
- * Placed inside Starlight's own header by overriding `SiteTitle` rather than
- * `Header`. Overriding the header would mean reimplementing search, the theme
- * toggle and the mobile menu, or fighting a fixed header height to fit a
- * second bar underneath — which is the shape of problem this whole migration
- * exists to leave behind. `SiteTitle` is a slot Starlight expects to be
- * replaced, so the switchers sit in supported territory.
- *
- * The switchers themselves are in ModuleSwitchers.astro, because the mobile
- * menu needs the same pair — see MobileMenuFooter.astro.
  */
 import Default from '@astrojs/starlight/components/SiteTitle.astro';
 import ModuleSwitchers from './ModuleSwitchers.astro';
 ---
 
 <div class="liara-title">
+    <a class="liara-title__home" href="/" aria-label="Liara Engine documentation hub"
+       title="Documentation hub">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+             stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M3 10.5 12 3l9 7.5" /><path d="M5 9.5V21h14V9.5" />
+        </svg>
+    </a>
+
     <div class="liara-title__name">
         <Default {...Astro.props}><slot /></Default>
     </div>
@@ -33,10 +31,27 @@ import ModuleSwitchers from './ModuleSwitchers.astro';
         min-width: 0;
     }
 
-    /* The one thing here that is allowed to lose the fight for width, which
-       is the point: Starlight's header column is finite, and it used to be
-       the switchers that gave way — a version number cut in half tells the
-       reader nothing, while a shortened title still links home. */
+    .liara-title__home {
+        display: inline-flex;
+        flex: none;
+        align-items: center;
+        justify-content: center;
+        width: 2rem;
+        height: 2rem;
+        border-radius: var(--liara-radius-md, 8px);
+        color: var(--liara-text-secondary);
+    }
+
+    .liara-title__home svg {
+        width: 1.15rem;
+        height: 1.15rem;
+    }
+
+    .liara-title__home:hover {
+        background: var(--liara-bg-elevated);
+        color: var(--liara-text-link);
+    }
+
     .liara-title__name {
         display: flex;
         min-width: 0;
