@@ -15,3 +15,10 @@ dist
 *.swo
 *.DS_Store
 __pycache__
+
+out
+
+astro/astro.config.mjs
+astro/manifest.json
+astro/registry.json
+astro/src/content/docs/
