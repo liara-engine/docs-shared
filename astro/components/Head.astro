@@ -1,0 +1,20 @@
+---
+/**
+ * Liara Engine — the document head, plus the one thing that has to happen
+ * before the first paint.
+ *
+ * A copy of @astrojs/starlight 0.41.10's `components/Head.astro` with an
+ * inline script restoring the dyslexia-friendly mode.
+ */
+const { head } = Astro.locals.starlightRoute;
+---
+
+{head.map(({ tag: Tag, attrs, content }) => <Tag {...attrs} set:html={content} />)}
+
+<script is:inline>
+    try {
+        if (localStorage.getItem('liara-a11y-dyslexia') === 'true') {
+            document.documentElement.setAttribute('data-liara-a11y-dyslexia', 'true');
+        }
+    } catch { /* localStorage unavailable — falls back to the default fonts */ }
+</script>

@@ -1,0 +1,94 @@
+---
+/**
+ * Liara Engine — the sidebar, with a header saying what it is the sidebar of.
+ *
+ * A copy of @astrojs/starlight 0.41.10's `components/Sidebar.astro` with one
+ * block added above the navigation.
+ */
+import MobileMenuFooter from 'virtual:starlight/components/MobileMenuFooter';
+import SidebarPersister from '@astrojs/starlight/components/SidebarPersister.astro';
+import SidebarSublist from '@astrojs/starlight/components/SidebarSublist.astro';
+import { isPreviewVersion, parseBase, readManifest, readRegistry } from '../index.mjs';
+
+const { sidebar } = Astro.locals.starlightRoute;
+
+const base = import.meta.env.BASE_URL;
+const { repo, version } = parseBase(base);
+const manifest = readManifest();
+const registryEntry = (readRegistry().modules ?? []).find((entry) => entry.repo === repo) ?? null;
+const moduleName = manifest?.metadata?.name || registryEntry?.name || repo;
+const latest = manifest?.metadata?.latest ?? null;
+
+const note = isPreviewVersion(version) ? 'preview'
+    : version === 'dev' ? 'in development'
+    : latest && version !== latest ? 'older release'
+    : null;
+---
+
+<div class="liara-sidebar-head">
+    <a class="liara-sidebar-head__module" href={base}>
+        <span class="liara-sidebar-head__name">{moduleName}</span>
+    </a>
+    <p class="liara-sidebar-head__version">
+        <span class="liara-sidebar-head__tag">{version}</span>
+        {note && <span class="liara-sidebar-head__note">{note}</span>}
+    </p>
+</div>
+
+<SidebarPersister>
+	<SidebarSublist sublist={sidebar} />
+</SidebarPersister>
+
+<div class="md:sl-hidden">
+	<MobileMenuFooter />
+</div>
+
+<style>
+    .liara-sidebar-head {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: baseline;
+        gap: var(--liara-space-1) var(--liara-space-2);
+        margin-block-end: var(--liara-space-4);
+        padding-block-end: var(--liara-space-3);
+        border-block-end: var(--liara-border-width-default) solid var(--liara-border-default);
+    }
+
+    .liara-sidebar-head__module {
+        min-width: 0;
+        color: var(--liara-text-primary);
+        font-family: var(--liara-font-sans);
+        font-size: var(--liara-text-base);
+        font-weight: var(--liara-weight-bold);
+        line-height: var(--liara-leading-snug);
+        text-decoration: none;
+    }
+
+    .liara-sidebar-head__module:hover {
+        color: var(--liara-text-link);
+    }
+
+    .liara-sidebar-head__version {
+        display: flex;
+        align-items: baseline;
+        gap: var(--liara-space-2);
+        margin: 0;
+        min-width: 0;
+    }
+
+    .liara-sidebar-head__tag {
+        padding: 0.05em 0.5em;
+        border: var(--liara-border-width-default) solid var(--liara-brand-primary);
+        border-radius: var(--liara-radius-pill);
+        background: var(--liara-brand-primary-soft);
+        color: var(--liara-brand-primary-dark);
+        font-family: var(--liara-font-mono);
+        font-size: var(--liara-text-xs);
+        white-space: nowrap;
+    }
+
+    .liara-sidebar-head__note {
+        color: var(--liara-text-tertiary);
+        font-size: var(--liara-text-xs);
+    }
+</style>

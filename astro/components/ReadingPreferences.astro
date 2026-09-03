@@ -1,0 +1,21 @@
+---
+/**
+ * Liara Engine — the reading preferences, as one control group.
+ */
+import AccessibilityToggle from './AccessibilityToggle.astro';
+import ThemeSelect from './ThemeSelect.astro';
+---
+
+<div class="liara-prefs">
+    <AccessibilityToggle />
+    <ThemeSelect />
+</div>
+
+<style>
+    .liara-prefs {
+        display: flex;
+        align-items: center;
+        gap: var(--liara-space-2);
+        min-width: 0;
+    }
+</style>

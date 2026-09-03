@@ -1,0 +1,147 @@
+---
+/**
+ * Liara Engine — the page title, with the trail that leads to it.
+ *
+ * A copy of @astrojs/starlight 0.41.10's `components/PageTitle.astro` with a
+ * breadcrumb above the heading. `PageTitle` is the slot for it: it renders
+ * inside the content panel, above everything the page says, on every route
+ * that has a title to show.
+ */
+import { parseBase, readManifest, readRegistry } from '../index.mjs';
+import { breadcrumbTrail } from './breadcrumbs.js';
+
+const PAGE_TITLE_ID = '_top';
+
+const { starlightRoute } = Astro.locals;
+const base = import.meta.env.BASE_URL;
+const { repo, version } = parseBase(base);
+
+const manifest = readManifest();
+const registryEntry = (readRegistry().modules ?? []).find((entry) => entry.repo === repo) ?? null;
+const moduleName = manifest?.metadata?.name || registryEntry?.name || repo;
+
+const isSplash = starlightRoute.entry.data.template === 'splash';
+
+const trail = breadcrumbTrail({
+    base,
+    entryId: starlightRoute.entry.id,
+    module: moduleName,
+    version,
+    sidebar: starlightRoute.sidebar,
+    isRoot: isSplash,
+});
+---
+
+<nav class:list={['liara-crumbs', isSplash && 'liara-crumbs--alone']}
+     id={isSplash ? PAGE_TITLE_ID : undefined}
+     aria-label="Breadcrumb" data-pagefind-ignore>
+    <ol class="liara-crumbs__list">
+        {trail.map((crumb) => (
+            <li class="liara-crumbs__item">
+                {crumb.href ? (
+                    <a class="liara-crumbs__link" href={crumb.href}>
+                        {crumb.home && (
+                            <svg class="liara-crumbs__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                 stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <path d="M3 10.5 12 3l9 7.5" /><path d="M5 9.5V21h14V9.5" />
+                            </svg>
+                        )}
+                        <span>{crumb.label}</span>
+                    </a>
+                ) : (
+                    <span class="liara-crumbs__here" aria-current={crumb.current ? 'page' : undefined}>
+                        {crumb.label}
+                    </span>
+                )}
+                {crumb.badge && <span class="liara-crumbs__badge">{crumb.badge}</span>}
+            </li>
+        ))}
+    </ol>
+</nav>
+
+{!isSplash && <h1 id={PAGE_TITLE_ID}>{starlightRoute.entry.data.title}</h1>}
+
+<style>
+    @layer starlight.core {
+        h1 {
+            margin-top: 0.5rem;
+            font-size: var(--sl-text-h1);
+            line-height: var(--sl-line-height-headings);
+            font-weight: 600;
+            color: var(--sl-color-white);
+        }
+    }
+
+    .liara-crumbs {
+        font-family: var(--liara-font-sans);
+        font-size: var(--liara-text-sm);
+        line-height: var(--liara-leading-snug);
+    }
+
+    :global(.content-panel:has(> .sl-container > .liara-crumbs--alone)) {
+        padding-block: 1rem 0;
+    }
+
+    :global(.content-panel:has(> .sl-container > .liara-crumbs--alone) + .content-panel) {
+        padding-top: 0;
+        border-top: 0;
+    }
+
+    .liara-crumbs__list {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: var(--liara-space-1) var(--liara-space-2);
+        margin: 0;
+        padding: 0;
+        list-style: none;
+    }
+
+    .liara-crumbs__item {
+        display: flex;
+        align-items: center;
+        gap: var(--liara-space-2);
+        min-width: 0;
+        padding: 0;
+    }
+
+    .liara-crumbs__item + .liara-crumbs__item::before {
+        content: '/';
+        color: var(--liara-text-tertiary);
+    }
+
+    .liara-crumbs__link {
+        display: inline-flex;
+        align-items: center;
+        gap: var(--liara-space-1);
+        color: var(--liara-text-secondary);
+        text-decoration: none;
+        border-radius: var(--liara-radius-sm);
+    }
+
+    .liara-crumbs__link:hover {
+        color: var(--liara-text-link);
+        text-decoration: underline;
+    }
+
+    .liara-crumbs__here {
+        color: var(--liara-text-tertiary);
+    }
+
+    .liara-crumbs__icon {
+        width: 0.95em;
+        height: 0.95em;
+        flex: none;
+    }
+
+    .liara-crumbs__badge {
+        padding: 0.05em 0.5em;
+        border: var(--liara-border-width-default) solid var(--liara-brand-primary);
+        border-radius: var(--liara-radius-pill);
+        background: var(--liara-brand-primary-soft);
+        color: var(--liara-brand-primary-dark);
+        font-family: var(--liara-font-mono);
+        font-size: var(--liara-text-xs);
+        white-space: nowrap;
+    }
+</style>
