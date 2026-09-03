@@ -1,6 +1,6 @@
 name: rebuild-version
 
-# Rebuilds one published version of one module, on demand.
+# Rebuilds published versions of one module, on demand.
 #
 # The site is a pile of frozen builds: a version directory is written once and
 # then never touched again, which is what makes an old URL keep working. The
@@ -11,7 +11,8 @@ name: rebuild-version
 #
 # The canonical manifest — what `/<module>/latest/` resolves through — is left
 # alone unless the rebuilt version is the one it already calls latest, so
-# rebuilding an old release cannot roll `latest` backwards.
+# rebuilding an old release cannot roll `latest` backwards. With a list, that
+# rule applies per version, exactly as it did one at a time.
 
 on:
   workflow_dispatch:
@@ -22,12 +23,12 @@ on:
         type: string
 
       version:
-        description: 'Version to rebuild: dev, or X.Y.Z (built from the tag vX.Y.Z)'
+        description: 'Versions to rebuild, separated by commas, spaces or newlines: dev, or X.Y.Z (built from the tag vX.Y.Z)'
         required: true
         type: string
 
       ref:
-        description: 'Override the ref to build (default: the default branch for dev, vX.Y.Z otherwise)'
+        description: 'Override the ref to build (default: the default branch for dev, vX.Y.Z otherwise). Applies to every version in the list, so it is only meaningful for one.'
         required: false
         type: string
         default: ''
@@ -51,11 +52,69 @@ on:
         type: boolean
         default: false
 
+      max-parallel:
+        description: 'How many versions to build at once (each ends in a push to liara-docs)'
+        required: false
+        type: string
+        default: '3'
+
 jobs:
+  plan:
+    runs-on: ubuntu-latest
+    outputs:
+      versions: ${{ steps.parse.outputs.versions }}
+      count: ${{ steps.parse.outputs.count }}
+
+    steps:
+      - id: parse
+        env:
+          RAW: ${{ inputs.version }}
+          MODULE: ${{ inputs.module }}
+        run: |
+          set -Eeuo pipefail
+
+          mapfile -t versions < <(
+            printf '%s' "$RAW" | tr ',\r\n' '   ' | tr -s ' ' '\n' \
+              | sed '/^$/d' | awk '!seen[$0]++'
+          )
+
+          if [ "${#versions[@]}" -eq 0 ]; then
+            echo "::error::no version to rebuild: \`version\` was empty once separators were stripped"
+            exit 1
+          fi
+
+          for version in "${versions[@]}"; do
+            if [[ ! "$version" =~ ^(dev|[0-9]+\.[0-9]+\.[0-9]+)$ ]]; then
+              echo "::error::\`$version\` is not a version this workflow can build: expected \`dev\` or \`X.Y.Z\`"
+              exit 1
+            fi
+          done
+
+          if [ "${#versions[@]}" -gt 256 ]; then
+            echo "::error::${#versions[@]} versions requested; a matrix holds at most 256"
+            exit 1
+          fi
+
+          printf 'versions=%s\n' "$(printf '%s\n' "${versions[@]}" | jq -R . | jq -c -s .)" >> "$GITHUB_OUTPUT"
+          printf 'count=%s\n' "${#versions[@]}" >> "$GITHUB_OUTPUT"
+
+          {
+            printf '### Rebuilding %d version(s) of `%s`\n' "${#versions[@]}" "$MODULE"
+            printf -- '- `%s`\n' "${versions[@]}"
+          } >> "$GITHUB_STEP_SUMMARY"
+
   rebuild:
+    needs: plan
+
     permissions:
       contents: read
       packages: read
+
+    strategy:
+      fail-fast: false
+      max-parallel: ${{ fromJSON(inputs.max-parallel) }}
+      matrix:
+        version: ${{ fromJSON(needs.plan.outputs.versions) }}
 
     uses: liara-engine/.github/.github/workflows/reusable-docs.yml@v2
     with:
@@ -64,7 +123,7 @@ jobs:
       source-repository: liara-engine/${{ inputs.module }}
       source-ref: ${{ inputs.ref }}
       repo: ${{ inputs.module }}
-      version: ${{ inputs.version }}
+      version: ${{ matrix.version }}
       update-manifest: ${{ inputs.update-manifest }}
       skip-api: ${{ inputs.skip-api }}
 
