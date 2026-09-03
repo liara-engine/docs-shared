@@ -60,7 +60,7 @@ Four properties drive every workflow below.
 | `deploy-hub.yml` | `hub/**`, `modules-registry.json`, `astro/styles/**` | Builds the hub with Node and deploys it to the site root |
 | `preview.yml` | any pull request | Builds the image *from the PR* and the fixtures with it → `/docs-shared/pr-<n>/` |
 | `preview-cleanup.yml` | pull request closed | Removes the preview and the `pr-<n>` image, collects the store |
-| `rebuild-version.yml` | manual | Rebuilds one version of one module (§4) |
+| `rebuild-version.yml` | manual | Rebuilds one or more versions of one module (§4) |
 | `remove-version.yml` | manual | Retires one version of one module (§5) |
 | `clean-ghcr.yml` | weekly | Prunes old image versions, keeps the last 3 |
 | `release-please.yml` | push to `main` | Maintains the release pull request and cuts the tag |
@@ -172,21 +172,44 @@ The image only. The preview builds its own (§6).
 </TabItem>
 </Tabs>
 
-## 4. Rebuilding a version
+## 4. Rebuilding versions
 
-`rebuild-version.yml` → *Run workflow* → module, version.
+`rebuild-version.yml` → *Run workflow* → module, versions.
 
 `dev` builds the module's default branch; `X.Y.Z` builds the tag `vX.Y.Z`. The
 result replaces what is deployed, at the same URL. The canonical manifest is
 left alone unless the rebuilt version is already the one it calls `latest`, so
 rebuilding an old release cannot roll `latest` backwards.
 
+The `version` field takes a **list** — commas, spaces and newlines all
+separate — because rebuilding one version is rarely what the job actually is:
+
+```text frame="terminal" title="version"
+dev, 1.2.0, 1.1.0, 1.0.0
+```
+
+Each becomes one job of a build matrix in a single run: one dispatch, one page
+to watch, one place to look when something fails. Duplicates are dropped,
+order is kept, and anything that is not `dev` or `X.Y.Z` fails the run before
+a single build starts — a typo would otherwise publish a version directory
+nobody asked for, into a site where directories are never rewritten.
+
+<Aside type="caution" title="Why the matrix is throttled">
+`max-parallel` defaults to **3**. Every build ends in a push to the same
+branch of `liara-docs`; the reusable workflow serialises those, so a wider
+matrix mostly buys runners that wait for a lock. Raise it if you are rebuilding
+a great many versions and the builds themselves are the bottleneck.
+</Aside>
+
 <Aside type="tip">
-This is the workflow to use to bring versions published by the previous
-mdBook/Doxygen toolchain over to Astro: one run per (module, version), each
-independent of the others. Nothing in the old tag needs editing first — a
-`Doxyfile` still pointing at the retired shared theme is handled by the
-builder, see [What the builder overrides](../authoring-a-module/#5-the-api-reference).
+This is also the workflow to use to bring versions published by the previous
+mdBook/Doxygen toolchain over to Astro — now in one run for a whole module.
+Nothing in an old tag needs editing first: a `Doxyfile` still pointing at the
+retired shared theme is handled by the builder, see
+[What the builder overrides](../authoring-a-module/#5-the-api-reference).
+
+`ref` is the one input that does not make sense for a list: it overrides the
+ref for *every* version in it, so use it only when rebuilding one.
 </Aside>
 
 ## 5. Retiring a version

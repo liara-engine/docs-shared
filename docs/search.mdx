@@ -29,12 +29,7 @@ complete bundle: fourteen fixed files, plus one fragment per indexed page.
 | 1 per page | `fragment/*.pf_fragment` | yes |
 
 Eleven of those fourteen are identical in every version — seven of them are
-never fetched at all. Across the thirty version directories the site currently
-serves, that is over 300 files of pure duplication before a single page is
-indexed, in a hosting layer whose hard limit is a **file count**, not a byte
-count.
-
-Worse, it is the wrong shape: the cost grew with the number of versions
+never fetched at all. Worse, it is the wrong shape: the cost grew with the number of versions
 published rather than with the amount of documentation written. Every release
 made search more expensive.
 
@@ -81,8 +76,7 @@ index is built over the site root, the stored URLs already read
 them. A page therefore does not need an index that knows where the page is.
 
 The preset resolves both paths at build time and hands them to the search
-component (`searchScope()` in `astro/index.mjs`), which is also what makes the
-preview case a two-line difference rather than a fork.
+component (`searchScope()` in `astro/index.mjs`).
 
 <Aside type="tip" title="Why Starlight's Search component is vendored">
 `bundlePath` and `baseUrl` are not reachable through Starlight's `pagefind`
@@ -123,6 +117,37 @@ Client-side, from a pool bundled into the shared search chunk — not inlined
 into each page. A message baked into the HTML would differ per page and per
 build, and the pages are exactly what the content-addressed store cannot
 deduplicate.
+</Aside>
+
+### 2.2 Which module, which version
+
+Announcing the scope covers the modal. It does not cover a *result*: a hit
+could be in another module, or in `dev` when you are reading `latest`, and the
+list said neither — so clicking one was a small leap of faith, and landing in
+the wrong version of the right page is exactly the kind of thing nobody
+notices until it has cost them an hour.
+
+Every page therefore carries two Pagefind metadata fields, and the results
+show them as tags:
+
+```html
+<span data-pagefind-meta="module[data-value]" data-value="Liara Core"></span>
+<span data-pagefind-meta="version[data-value]" data-value="dev"></span>
+```
+
+They are emitted by `astro/components/VersionBanner.astro`, which is the
+Banner slot — the first child of the `<main>` that Pagefind indexes, and the
+one element rendered on every page including a splash one. The values come
+from attributes rather than from the `key:value` list Pagefind also accepts,
+because a module name is under no obligation to avoid a comma. The elements
+are empty, so nothing of this reaches an excerpt.
+
+<Aside type="tip" title="Two entries per page, on purpose">
+The banner itself is `data-pagefind-ignore` partly so that an unchanged page
+indexes identically in `dev` and in `latest`. These two fields deliberately
+break that: the whole point is that the two entries are told apart. The index
+covers exactly two versions per module, so the cost is bounded at one extra
+fragment per page.
 </Aside>
 
 ## 3. What is searchable

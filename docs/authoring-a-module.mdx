@@ -331,7 +331,27 @@ work as you would expect.
 
 Add a `Doxyfile` and point `INPUT` at your headers. The builder overrides the
 output settings at run time, so the only things that matter are what to read
-and how to read it:
+and how to read it.
+
+Whatever it finds is filed by kind, into one URL segment and one sidebar
+section apiece:
+
+| Section | Holds | URL |
+| --- | --- | --- |
+| Headers | one page per file | `api/headers/<file>/` |
+| Namespaces | a page per namespace that has symbols of its own | `api/namespaces/<name>/` |
+| Classes and structs | `class`, `struct`, `union`, `interface` | `api/classes/<name>/` |
+| Concepts | C++20 concepts | `api/concepts/<name>/` |
+
+A section with nothing in it does not appear — a C module never shows an empty
+"Namespaces". A namespace whose only contents are *other* namespaces gets no
+page either: it appears in the namespace tree on the section's own index page,
+where its nesting is the whole of what there is to say about it.
+
+The vocabulary follows the language. A C `struct` has **Fields**; a class, or
+a `struct` with member functions, templates or a namespace-qualified name, has
+**Methods** and **Attributes** — so a member never reads as though it were a
+free function or a global.
 
 ```ini title="Doxyfile"
 PROJECT_NAME           = "Liara Interfaces"
@@ -406,10 +426,22 @@ headings — **Parameters**, **Returns**, **Throws** — with the real parameter
 types taken from the declaration and every type name that resolves to a
 documented symbol turned into a link.
 
-`@note`, `@warning` and `@attention` become Starlight callouts. Everything
-else Doxygen calls a section — `@pre`, `@post`, `@invariant`, `@since`,
-`@see`, `@remark`, `@deprecated`, `@todo`, `@bug`, `@par` — becomes a labelled
-block where you wrote it, coloured by what it promises.
+Everything else Doxygen calls a section — `@note`, `@warning`, `@attention`,
+`@pre`, `@post`, `@invariant`, `@since`, `@see`, `@remark`, `@deprecated`,
+`@todo`, `@bug`, `@par` — becomes a labelled block where you wrote it, with a
+colour and a glyph for what it promises: pink for a contract you have to hold
+up, blue for an aside, amber and red for the two levels of "careful", green
+for a `@todo`, grey for bookkeeping.
+
+<Aside type="note" title="Why not Starlight's callouts?">
+`@note`, `@warning` and `@attention` used to be rendered as Starlight asides,
+which are a good deal larger than these blocks. Two things came of it: one
+symbol's documentation spoke two visual languages, a `@pre` sitting three
+lines above an `@attention` that looked nothing like it; and since Starlight
+has four callout types against Doxygen's dozen sections, `@warning` and
+`@attention` both landed on `caution` and became indistinguishable. Asides are
+still asides in *your prose* — this is only about generated pages.
+</Aside>
 
 <Aside type="tip" title="Project-specific sections">
 Two spellings, one result. `@par Thread safety:` is Doxygen's own and needs no
