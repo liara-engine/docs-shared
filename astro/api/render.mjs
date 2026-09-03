@@ -22,9 +22,11 @@
  */
 
 import {
-    COMPOUND_KIND_LABELS, MEMBER_KIND_LABELS, escapeHtml, signatureOf,
-    stripOuterParagraph,
+    ANONYMOUS_TYPE_LABEL, COMPOUND_KIND_LABELS, MEMBER_KIND_LABELS, escapeHtml,
+    signatureOf, stripAnonymousNames, stripOuterParagraph,
 } from './doxygen.mjs';
+
+const PLAIN_LABELS = { kind: (kind) => MEMBER_KIND_LABELS[kind] ?? kind };
 
 /* -------------------------------------------------------------- primitives */
 
@@ -90,7 +92,7 @@ export function table(className, headers, rows, ids = []) {
 /* ----------------------------------------------------------------- pieces */
 
 export function signatureBlock(member, highlight) {
-    return `<div class="lapi-signature">${highlight(signatureOf(member))}</div>`;
+    return `<div class="lapi-signature">${highlight(stripAnonymousNames(signatureOf(member)))}</div>`;
 }
 
 export function parameterTable(member) {
@@ -198,15 +200,54 @@ export function includeLine(compound) {
  * cross-reference still lands on the field it names.
  */
 export function fieldTable(members) {
-    const rows = members.map((member) => [
-        `<code class="lapi-param-name">${escapeHtml(member.name)}</code>`
-        // A module that extracts private members says so on every row that
-        // is one, rather than presenting them as part of the interface.
-        + flagChips(member.flags.filter((flag) => flag === 'private' || flag === 'protected')),
-        member.type ? `<span class="lapi-type">${member.type}${escapeHtml(member.args)}</span>` : '',
-        cell([member.brief, member.detailed].filter(Boolean).join(' ')),
-    ]);
-    return table('lapi-fields', ['Field', 'Type', 'Description'], rows, members.map((m) => m.slug));
+    const rows = [];
+    const ids = [];
+
+    /**
+     * A field's own row, then — where its type is an anonymous aggregate —
+     * the rows of what is inside it, indented and named by the path a caller
+     * would actually write. `status.bits.is_active` is the whole point: the
+     * members of an unnamed union have no page of their own (there is no
+     * name to give one), so if they are not here they are nowhere.
+     */
+    const emit = (member, path = [], depth = 0) => {
+        const prefix = path.length > 0
+            ? `<span class="lapi-field-path">${escapeHtml(path.join('.'))}.</span>`
+            : '';
+        rows.push([
+            `<code class="lapi-param-name">${prefix}${escapeHtml(member.name)}</code>`
+            // A module that extracts private members says so on every row that
+            // is one, rather than presenting them as part of the interface.
+            + flagChips(member.flags.filter((flag) => flag === 'private' || flag === 'protected')),
+            fieldType(member),
+            cell([member.brief, member.detailed].filter(Boolean).join(' ')),
+        ]);
+        // Only the top level owns an anchor: a cross-reference names a field
+        // of the aggregate, and the nested rows are reached through it.
+        ids.push(depth === 0 ? member.slug : '');
+
+        for (const inner of member.anonymousType?.members ?? []) {
+            emit(inner, [...path, member.name], depth + 1);
+        }
+    };
+
+    for (const member of members) emit(member);
+    return table('lapi-fields', ['Field', 'Type', 'Description'], rows, ids);
+}
+
+/** A field's type, with any invented name for an anonymous aggregate
+ *  replaced by what the source actually said. */
+function fieldType(member) {
+    const width = member.bitfield
+        ? `<span class="lapi-bitfield"> :${escapeHtml(member.bitfield.trim())}</span>`
+        : '';
+    if (member.anonymousType) {
+        return `<span class="lapi-type">${escapeHtml(member.anonymousType.kind)} `
+            + `${escapeHtml(ANONYMOUS_TYPE_LABEL)}</span>${width}`;
+    }
+    if (!member.type) return width;
+    return `<span class="lapi-type">${stripAnonymousNames(member.type)}`
+        + `${escapeHtml(member.args)}</span>${width}`;
 }
 
 /**
@@ -228,11 +269,32 @@ export function aggregateDeclaration(compound, highlight) {
     if (fields.length === 0 || fields.some((member) => member.kind !== 'variable')) return '';
     if (!['struct', 'union'].includes(compound.kind)) return '';
 
-    const body = fields
-        .map((field) => `    ${field.typeText} ${field.name}${field.args};`)
-        .join('\n');
     const name = compound.name.split('::').pop();
-    return `<div class="lapi-signature">${highlight(`${compound.kind} ${name} {\n${body}\n};`)}</div>`;
+    return `<div class="lapi-signature">${
+        highlight(`${compound.kind} ${name} {\n${aggregateBody(fields)}\n};`)}</div>`;
+}
+
+/**
+ * The fields of an aggregate as source, one per line.
+ *
+ * A field whose type is an anonymous aggregate is written out the way it was
+ * declared — the nested `union { … } status;` — rather than with the name
+ * Doxygen invented for it. That name is not a type anybody can write down:
+ * `union liara::preview::HardwareOverlay::@2301540030241…` was what this
+ * declaration used to say, and it is worse than useless in a block whose
+ * whole purpose is to be readable as C++.
+ */
+function aggregateBody(fields, indent = '    ') {
+    return fields.map((field) => {
+        const width = field.bitfield ? ` :${field.bitfield.trim()}` : '';
+        const inner = field.anonymousType;
+        if (!inner) {
+            return `${indent}${stripAnonymousNames(field.typeText)} ${field.name}${field.args}${width};`;
+        }
+        return `${indent}${inner.kind} {\n`
+            + `${aggregateBody(inner.members, `${indent}    `)}\n`
+            + `${indent}} ${field.name}${field.args}${width};`;
+    }).join('\n');
 }
 
 /* ------------------------------------------------------------ member cards */
@@ -244,8 +306,8 @@ export function aggregateDeclaration(compound, highlight) {
  * looks for `h2`/`h3` elements with an id and would otherwise scroll to a
  * heading it cannot find.
  */
-export function memberCard(member, { sourceUrl, highlight }) {
-    const label = MEMBER_KIND_LABELS[member.kind] ?? member.kind;
+export function memberCard(member, { sourceUrl, highlight, labels = PLAIN_LABELS }) {
+    const label = labels.kind(member.kind);
     const prose = [member.brief, member.detailed].filter(Boolean).join('\n');
 
     const body = [
@@ -267,6 +329,37 @@ export function memberCard(member, { sourceUrl, highlight }) {
         + `</h3>${body}</article>`;
 }
 
+/* --------------------------------------------------------- namespace tree */
+
+/**
+ * The namespaces, nested the way they are in the code.
+ *
+ * A flat table of `liara`, `liara::preview`, `liara::preview::detail` states
+ * the same containment three times and shows it none. The tree states it
+ * once, in the shape, and each level names only its own segment — which is
+ * also how a reader thinks about `preview` when they are already inside
+ * `liara`. A node without a page is still a node: it is the namespace whose
+ * only contents are other namespaces, and its nesting is exactly what a
+ * reader came here for.
+ *
+ * @param {Array<{label, href, brief, counts, children}>} nodes
+ */
+export function namespaceTree(nodes) {
+    if (!nodes || nodes.length === 0) return '';
+
+    const item = (node) => {
+        const name = node.href
+            ? `<a class="lapi-tree__name" href="${escapeHtml(node.href)}"><code>${escapeHtml(node.label)}</code></a>`
+            : `<span class="lapi-tree__name lapi-tree__name--plain"><code>${escapeHtml(node.label)}</code></span>`;
+        const brief = node.brief ? `<span class="lapi-tree__brief">${escapeHtml(node.brief)}</span>` : '';
+        const counts = node.counts ? `<span class="lapi-tree__counts">${node.counts}</span>` : '';
+        return `<li class="lapi-tree__item"><div class="lapi-tree__row">${name}${brief}${counts}</div>`
+            + `${namespaceTree(node.children)}</li>`;
+    };
+
+    return `<ul class="lapi-tree">${nodes.map(item).join('')}</ul>`;
+}
+
 /* -------------------------------------------------------------- synopsis */
 
 /**
@@ -281,7 +374,12 @@ export function memberCard(member, { sourceUrl, highlight }) {
 export function synopsisTable(entries) {
     const rows = entries.map((entry) => [
         badge(entry.kind, entry.label),
-        `<a href="${escapeHtml(entry.href)}"><code>${escapeHtml(entry.name)}</code></a>`
+        // A namespace with nothing of its own has no page to link to; it is
+        // still listed, because a header that declares everything inside one
+        // would otherwise say nothing at all about what it contains.
+        (entry.href
+            ? `<a href="${escapeHtml(entry.href)}"><code>${escapeHtml(entry.name)}</code></a>`
+            : `<code>${escapeHtml(entry.name)}</code>`)
         + (entry.suffix ? `<span class="lapi-synopsis__suffix">${escapeHtml(entry.suffix)}</span>` : ''),
         cell(entry.brief),
     ]);
@@ -307,12 +405,13 @@ export function shortArguments(member) {
  * opening the disclosure — without costing anything to a reader who is not
  * looking for them.
  */
-export function undocumentedBlock(members) {
+export function undocumentedBlock(members, labels = PLAIN_LABELS) {
     if (members.length === 0) return '';
     const rows = members.map((member) => [
-        badge(member.kind, MEMBER_KIND_LABELS[member.kind] ?? member.kind),
+        badge(member.kind, labels.kind(member.kind)),
         `<code>${escapeHtml(member.name)}</code>`,
-        `<code class="lapi-undocumented__signature">${escapeHtml(signatureOf(member).replace(/\s+/g, ' '))}</code>`,
+        `<code class="lapi-undocumented__signature">${
+            escapeHtml(stripAnonymousNames(signatureOf(member)).replace(/\s+/g, ' '))}</code>`,
     ]);
     const count = members.length === 1 ? '1 symbol' : `${members.length} symbols`;
     return `<details class="lapi-undocumented">`

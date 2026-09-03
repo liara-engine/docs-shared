@@ -149,6 +149,52 @@ export function isAnonymousName(name) {
 }
 
 /**
+ * The invented name of an anonymous aggregate, wherever it is *used*.
+ *
+ * Filtering the compound out of the reference is not enough: a field
+ * declared with an anonymous type carries that type's made-up name in its
+ * own `<type>`, so `union { … } status;` reached the page as `union
+ * liara::preview::HardwareOverlay::@230154003024112270314207107333133077034074350056
+ * status;`. The pattern is a qualified name whose last segments are `@`
+ * followed by digits — nothing a C or C++ name can contain, so this cannot
+ * match a real type.
+ */
+const ANONYMOUS_TYPE_NAME = /(?:[A-Za-z_]\w*::)*@\d+(?:::@\d+)*/g;
+
+/** What an anonymous aggregate is called when there is nothing to expand it
+ *  into — a table cell, a one-line signature. `{ … }` is what the source
+ *  said, minus the body. */
+export const ANONYMOUS_TYPE_LABEL = '{ … }';
+
+/**
+ * Replaces every invented aggregate name in a type with `{ … }`.
+ *
+ * Safe on rendered HTML as well as on plain text: the pattern matches only
+ * identifier characters, `:` and `@`, so it can never straddle a tag.
+ */
+export function stripAnonymousNames(text) {
+    return String(text ?? '').replace(ANONYMOUS_TYPE_NAME, ANONYMOUS_TYPE_LABEL);
+}
+
+/**
+ * The key an anonymous compound is filed under, so the aggregate that uses
+ * it can find it again.
+ *
+ * Doxygen names one `liara::preview::HardwareOverlay::[union].status` — the
+ * enclosing *named* compound, then a bracketed kind, then the dotted path of
+ * the members leading to it. It is the only link back: the field's `<type>`
+ * holds the invented `@…` name and no refid, so the two have to be matched
+ * on the parent and the path.
+ *
+ * @returns {{parent: string, path: string[]}|null}
+ */
+export function anonymousOwner(name) {
+    const match = /^(.*)::\[(?:struct|union|class|interface|enum)\]\.(.+)$/.exec(String(name ?? ''));
+    if (!match) return null;
+    return { parent: match[1], path: match[2].split('.') };
+}
+
+/**
  * A readable name for an unnamed enum, derived from its enumerators.
  *
  * `LIARA_ABI_VERSION_MAJOR`, `…_MINOR` and `…_PATCH` share the prefix
@@ -397,27 +443,36 @@ function codeLineText(node) {
 
 /* ------------------------------------------------------------ sections */
 
-/** Doxygen sections that map onto one of Starlight's four callouts. The
- *  label is spelled out because the XML carries no `<title>` for these —
- *  falling back to the kind put a lowercase "note" above the note. */
-const SIMPLESECT_ASIDES = {
-    note: { aside: 'note', label: 'Note' },
-    warning: { aside: 'caution', label: 'Warning' },
-    attention: { aside: 'caution', label: 'Attention' },
-};
-
 /**
- * Doxygen sections rendered as a labelled block.
+ * Doxygen sections, every one of them rendered as a labelled block.
+ *
+ * `@note`, `@warning` and `@attention` used to be emitted as Starlight
+ * asides instead, on the theory that they are the three Doxygen sections
+ * with an obvious callout equivalent. In practice it made one page speak two
+ * visual languages: a `@pre` was a compact ruled block and the `@attention`
+ * three lines below it was a full-width boxed callout, and since Starlight
+ * has four aside types and Doxygen a dozen sections, `@warning` and
+ * `@attention` also collapsed onto the same `caution` box and stopped being
+ * distinguishable at all. One grammar for all of them, with the role — and
+ * the glyph styles/api.css puts before the label — carrying the difference.
  *
  * `role` picks the colour: `require` for the contract a caller has to
- * honour, `info` for a pointer elsewhere, `meta` for bookkeeping about the
- * symbol rather than about its behaviour.
+ * honour, `note` for an aside, `warning` and `danger` for the two levels of
+ * "careful", `todo` for work that is acknowledged and outstanding, `info`
+ * for a pointer elsewhere, `meta` for bookkeeping about the symbol rather
+ * than about its behaviour.
+ *
+ * The label is spelled out because the XML carries no `<title>` for these —
+ * falling back to the kind put a lowercase "note" above the note.
  */
 const SIMPLESECT_TAGS = {
+    note: { label: 'Note', role: 'note' },
+    warning: { label: 'Warning', role: 'warning' },
+    attention: { label: 'Attention', role: 'danger' },
     pre: { label: 'Precondition', role: 'require' },
     post: { label: 'Postcondition', role: 'require' },
     invariant: { label: 'Invariant', role: 'require' },
-    remark: { label: 'Remark', role: 'info' },
+    remark: { label: 'Remark', role: 'note' },
     see: { label: 'See also', role: 'info' },
     since: { label: 'Since', role: 'meta' },
     version: { label: 'Version', role: 'meta' },
@@ -428,11 +483,13 @@ const SIMPLESECT_TAGS = {
 };
 
 /** `@deprecated`, `@todo` and `@bug` reach the XML as cross-reference
- *  sections, identified by the list they belong to rather than by a kind. */
+ *  sections, identified by the list they belong to rather than by a kind.
+ *  A `@todo` is green: it is a plan, not a defect, and the amber it used to
+ *  wear read as a warning about the symbol it sits under. */
 const XREF_ROLES = {
     deprecated: 'danger',
-    bug: 'danger',
-    todo: 'warning',
+    bug: 'warning',
+    todo: 'todo',
     test: 'info',
 };
 
@@ -462,13 +519,6 @@ function renderSimpleSect(node, context) {
     if (!body.trim()) return '';
 
     const title = textOf(firstElement(node, 'title')).trim();
-
-    const aside = SIMPLESECT_ASIDES[kind];
-    if (aside) {
-        return `<aside class="starlight-aside starlight-aside--${aside.aside}">`
-            + `<p class="starlight-aside__title">${escapeHtml(title || aside.label)}</p>`
-            + `<section class="starlight-aside__content">${body}</section></aside>`;
-    }
 
     // `@par Thread safety:` is how a project adds a section of its own, so
     // it carries its own title and gets the colour reserved for them.
@@ -657,6 +707,11 @@ function parseMember(memberdef, context, compound) {
         typeText: textOf(firstElement(memberdef, 'type')).trim(),
         definition: textOf(firstElement(memberdef, 'definition')).trim(),
         args: textOf(firstElement(memberdef, 'argsstring')).trim(),
+        // The width of a bitfield, which Doxygen keeps out of both `type` and
+        // `argsstring`. In a struct laid out to match a hardware register the
+        // widths *are* the documentation, so a declaration that dropped them
+        // would be describing a different type.
+        bitfield: textOf(firstElement(memberdef, 'bitfield')).trim(),
         initializer: textOf(firstElement(memberdef, 'initializer')).trim(),
         brief: renderDescription(firstElement(memberdef, 'briefdescription'), context),
         detailed: renderDescription(detailed, context),
@@ -791,11 +846,16 @@ export function parseCompound(path, context = {}) {
         // header that declares everything inside a namespace has no members
         // at all, and without these its page would be prose and nothing else.
         innerClasses: [
-            ...elements(node, 'innerclass'),
-            ...elements(node, 'innernamespace'),
-        ].map((inner) => ({
+            ...elements(node, 'innerclass').map((inner) => ({ inner, kind: 'class' })),
+            ...elements(node, 'innernamespace').map((inner) => ({ inner, kind: 'namespace' })),
+        ].map(({ inner, kind }) => ({
             refid: attr(inner, 'refid'),
             prot: attr(inner, 'prot'),
+            // Whether this is a type or a namespace, which the two element
+            // names are the only record of once they have been merged. The
+            // section index counts them apart: "3 types" and "1 namespace"
+            // are different facts about a namespace.
+            kind,
             name: textOf(inner).trim(),
         })).filter((inner) => !isAnonymousName(inner.name)),
         baseClasses: elements(node, 'basecompoundref').map((base) => ({

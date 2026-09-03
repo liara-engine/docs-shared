@@ -23,8 +23,8 @@
  */
 
 import {
-    MEMBER_LABELS, MEMBER_ORDER, escapeHtml, parseCompound, signatureOf,
-    slugify, xmlFilesIn,
+    MEMBER_LABELS, MEMBER_ORDER, anonymousOwner, escapeHtml, parseCompound,
+    signatureOf, slugify, xmlFilesIn,
 } from './doxygen.mjs';
 import {
     createCompoundFilter, isPublishedMember, isWorthPublishing,
@@ -32,10 +32,12 @@ import {
 } from './filter.mjs';
 import {
     aggregateDeclaration, compoundHeader, enumTable, exceptionTable, fieldTable,
-    includeLine, memberCard, parameterTable, returnsBlock, shortArguments,
-    signatureBlock, sourceLink, synopsisTable, table, templateParamTable,
-    undocumentedBlock, COMPOUND_KIND_LABELS, MEMBER_KIND_LABELS,
+    includeLine, memberCard, namespaceTree, parameterTable, returnsBlock,
+    shortArguments, signatureBlock, sourceLink, synopsisTable, table,
+    templateParamTable, undocumentedBlock, COMPOUND_KIND_LABELS,
+    MEMBER_KIND_LABELS,
 } from './render.mjs';
+import { groupForCompound, groupForMember } from './groups.mjs';
 import { join } from 'node:path';
 import { plainHighlight } from './highlight.mjs';
 
@@ -43,9 +45,10 @@ import { plainHighlight } from './highlight.mjs';
  *  are Doxygen bookkeeping and are skipped. */
 const DOCUMENTED_KINDS = new Set(['file', 'struct', 'union', 'class', 'namespace', 'interface', 'concept']);
 
-/** Section headings on a page that documents a type rather than a header:
- *  a struct's variables are its fields, and calling them "Variables" is the
- *  kind of small wrongness that makes a generated page feel machine-made. */
+/** Section headings on a page that documents an aggregate rather than a
+ *  header: a struct's variables are its fields, and calling them "Variables"
+ *  is the kind of small wrongness that makes a generated page feel
+ *  machine-made. */
 const TYPE_MEMBER_LABELS = {
     variable: 'Fields',
     function: 'Member functions',
@@ -53,11 +56,66 @@ const TYPE_MEMBER_LABELS = {
     enum: 'Member enumerations',
 };
 
+const TYPE_MEMBER_KIND_LABELS = {
+    variable: 'field',
+};
+
+/**
+ * The same, for a type that is a class rather than a record.
+ *
+ * `function` and `variable` are what the XML calls them, and they are also
+ * what a free function and a global variable are called — which is exactly
+ * the distinction a reader of a C++ surface needs and was not getting. A
+ * member is a method and an attribute, in the vocabulary the language and
+ * Doxygen's own output both use, so the badge on the card says so too.
+ */
+const CLASS_MEMBER_LABELS = {
+    variable: 'Attributes',
+    function: 'Methods',
+    friend: 'Friends',
+    typedef: 'Member typedefs',
+    enum: 'Member enumerations',
+};
+
+const CLASS_MEMBER_KIND_LABELS = {
+    variable: 'attribute',
+    function: 'method',
+};
+
 const TYPE_KINDS = new Set(['struct', 'union', 'class', 'interface']);
 
-function sectionLabel(kind, compoundKind) {
-    if (TYPE_KINDS.has(compoundKind) && TYPE_MEMBER_LABELS[kind]) return TYPE_MEMBER_LABELS[kind];
-    return MEMBER_LABELS[kind] ?? `${kind.charAt(0).toUpperCase()}${kind.slice(1)}s`;
+/**
+ * Whether an aggregate is a class rather than a C record.
+ *
+ * Doxygen is no help: it reports `language="C++"` for a `.h` full of plain C
+ * unless the module sets `OPTIMIZE_OUTPUT_FOR_C`, so the language attribute
+ * cannot be trusted to tell the two apart. What can be trusted is the shape.
+ * `class` and `interface` do not exist in C; neither do member functions,
+ * templates, or a name qualified by a namespace. A C `struct` matches none
+ * of those and keeps its fields.
+ */
+function isClassLike(compound) {
+    if (compound.kind === 'class' || compound.kind === 'interface') return true;
+    if (!TYPE_KINDS.has(compound.kind)) return false;
+    return compound.name.includes('::')
+        || (compound.templateParams?.length ?? 0) > 0
+        || compound.members.some((member) => member.kind === 'function' || member.kind === 'friend');
+}
+
+/** The two label sets a compound's members are described with: the heading
+ *  over a group of them, and the badge on one of them. */
+function labelsFor(compound) {
+    const classLike = isClassLike(compound);
+    const aggregate = TYPE_KINDS.has(compound.kind);
+    const sections = classLike ? CLASS_MEMBER_LABELS : aggregate ? TYPE_MEMBER_LABELS : null;
+    const kinds = classLike ? CLASS_MEMBER_KIND_LABELS : aggregate ? TYPE_MEMBER_KIND_LABELS : null;
+
+    return {
+        section: (kind) => sections?.[kind]
+            ?? MEMBER_LABELS[kind]
+            ?? `${kind.charAt(0).toUpperCase()}${kind.slice(1)}s`,
+        kind: (kind) => kinds?.[kind] ?? MEMBER_KIND_LABELS[kind] ?? kind,
+    };
 }
 
 /** Every member kind present, the ones worth leading with first. */
@@ -130,7 +188,7 @@ function compoundUrl(compound, apiBase) {
  *  its compound's page otherwise. */
 function memberUrl(compound, member, { split, apiBase }) {
     return split === 'symbol' && compound.kind === 'file'
-        ? `${apiBase}/${member.slug}/`
+        ? `${apiBase}/${member.pageSlug}/`
         : `${compoundUrl(compound, apiBase)}#${member.slug}`;
 }
 
@@ -198,15 +256,15 @@ function innerClassEntries(compound, { apiBase, resolveCompound }) {
             kind: target.kind,
             label: COMPOUND_KIND_LABELS[target.kind] ?? target.kind,
             name: target.name,
-            href: `${apiBase}/${target.slug}/`,
+            href: target.hasPage ? `${apiBase}/${target.slug}/` : null,
             brief: target.brief,
         }));
 }
 
-function memberEntries(members) {
+function memberEntries(members, labels) {
     return members.map((member) => ({
         kind: member.kind,
-        label: MEMBER_KIND_LABELS[member.kind] ?? member.kind,
+        label: labels.kind(member.kind),
         name: member.name,
         suffix: shortArguments(member),
         href: `#${member.slug}`,
@@ -219,6 +277,7 @@ const SYNOPSIS_MINIMUM = 3;
 
 function fileSplitPage(compound, settings) {
     const { sourceUrl, highlight } = settings;
+    const labels = labelsFor(compound);
 
     // A field of a struct is listed whether or not anybody described it:
     // the layout is the documentation, and a layout with a hole in it is
@@ -243,7 +302,7 @@ function fileSplitPage(compound, settings) {
     // that declares everything inside a namespace has no members, and
     // without the synopsis its page would say nothing about its contents.
     const elsewhere = innerClassEntries(compound, settings);
-    const synopsis = [...elsewhere, ...memberEntries(shown)];
+    const synopsis = [...elsewhere, ...memberEntries(shown, labels)];
     const fieldsOnly = shown.length > 0 && shown.every(tabled);
     if ((elsewhere.length > 0 || synopsis.length >= SYNOPSIS_MINIMUM) && !fieldsOnly) {
         headings.push({ depth: 2, slug: 'synopsis', text: 'Synopsis' });
@@ -252,7 +311,7 @@ function fileSplitPage(compound, settings) {
 
     for (const kind of orderedKinds(shown)) {
         const group = shown.filter((member) => member.kind === kind);
-        const label = sectionLabel(kind, compound.kind);
+        const label = labels.section(kind);
         const groupSlug = slugify(label);
 
         headings.push({ depth: 2, slug: groupSlug, text: label });
@@ -265,11 +324,11 @@ function fileSplitPage(compound, settings) {
 
         for (const member of group) {
             headings.push({ depth: 3, slug: member.slug, text: member.name });
-            parts.push(memberCard(member, settings));
+            parts.push(memberCard(member, { ...settings, labels }));
         }
     }
 
-    parts.push(undocumentedBlock(undocumented));
+    parts.push(undocumentedBlock(undocumented, labels));
 
     return {
         slug: compound.slug,
@@ -298,14 +357,17 @@ function symbolSplitPages(compound, settings) {
     // not get a page of its own: five `*_desc` structs each declaring `abi`
     // would otherwise produce five pages all claiming the slug `abi`, with
     // four of them silently lost.
-    if (compound.kind !== 'file') return [fileSplitPage(compound, settings)];
+    // `hasPage` still decides for anything that is not a header — a namespace
+    // holding nothing of its own has no page under either split.
+    if (compound.kind !== 'file') return compound.hasPage ? [fileSplitPage(compound, settings)] : [];
+    const labels = labelsFor(compound);
 
     return compound.members.filter((member) => member.documented).map((member) => {
         const headings = [];
         const parts = [
             `<div class="lapi-meta">${
                 `<span class="lapi-badge lapi-badge--${escapeHtml(member.kind)}">`
-                + `${escapeHtml(MEMBER_KIND_LABELS[member.kind] ?? member.kind)}</span>`
+                + `${escapeHtml(labels.kind(member.kind))}</span>`
             }<span class="lapi-meta__path"><code>${escapeHtml(compound.name)}</code></span></div>`,
             signatureBlock(member, highlight),
             member.brief ? `<div class="lapi-lead">${member.brief}</div>` : '',
@@ -326,7 +388,7 @@ function symbolSplitPages(compound, settings) {
         parts.push(sourceLink(member.location, sourceUrl));
 
         return {
-            slug: member.slug,
+            slug: member.pageSlug,
             title: member.name,
             description: textSummary(member.brief) || `${member.kind} declared in ${compound.name}.`,
             html: parts.filter(Boolean).join('\n'),
@@ -414,12 +476,17 @@ export function buildApiPages(xmlDir, options = {}) {
     const exclusionReason = createCompoundFilter({ exclude });
 
     const compounds = [];
+    const anonymous = [];
     for (const file of xmlFilesIn(xmlDir)) {
         const compound = parseCompound(join(xmlDir, file), context);
         if (!compound || !DOCUMENTED_KINDS.has(compound.kind)) continue;
 
         const reason = exclusionReason(compound);
-        if (reason) { onSkip(compound.name, reason); continue; }
+        if (reason) {
+            if (reason === 'anonymous') anonymous.push(compound);
+            else onSkip(compound.name, reason);
+            continue;
+        }
 
         compound.members = compound.members.filter(isPublishedMember);
         compounds.push(compound);
@@ -436,6 +503,10 @@ export function buildApiPages(xmlDir, options = {}) {
     // Anchors are allocated once the members are final, so one never carries
     // a `-function` suffix earned by a symbol that was filtered out.
     for (const compound of published) assignMemberSlugs(compound);
+    for (const compound of published) assignPageSlugs(compound, split);
+
+    const anonymousIndex = indexAnonymousTypes(anonymous);
+    for (const compound of published) expandAnonymousTypes(compound, anonymousIndex);
 
     const byName = new Map(published.map((compound) => [compound.name, compound]));
     const settings = {
@@ -451,7 +522,7 @@ export function buildApiPages(xmlDir, options = {}) {
     const pages = [];
     for (const compound of published) {
         if (split === 'symbol') pages.push(...symbolSplitPages(compound, settings));
-        else pages.push(fileSplitPage(compound, settings));
+        else if (compound.hasPage) pages.push(fileSplitPage(compound, settings));
     }
 
     pages.sort((a, b) => a.title.localeCompare(b.title));
@@ -475,13 +546,109 @@ function assignMemberSlugs(compound) {
     }
 }
 
+/* ------------------------------------------------------------- page layout */
+
+/**
+ * Files a compound — and, under the symbol split, each of its members —
+ * under the group whose section of the sidebar it belongs in.
+ *
+ * The group is a real URL segment (`api/classes/ringbuffer/`), not a label
+ * applied afterwards, because that is what makes Starlight's autogenerated
+ * sidebar produce one titled section per kind instead of one alphabetical
+ * run of everything there is. See api/groups.mjs.
+ *
+ * `hasPage` is decided here too, for the one case where a compound is worth
+ * knowing about and not worth opening: a namespace holding no symbols of its
+ * own. `liara` exists only to contain `liara::preview`, and its page was a
+ * heading, a one-line brief and a table with a single row in it. It now
+ * appears in the namespace tree on the section index, where the nesting is
+ * the information, and has no page at all.
+ */
+function assignPageSlugs(compound, split) {
+    compound.group = groupForCompound(compound.kind);
+    compound.slug = `${compound.group}/${compound.slug}`;
+
+    for (const member of compound.members) {
+        member.pageSlug = `${groupForMember(member.kind)}/${member.slug}`;
+    }
+
+    compound.hasPage = compound.kind === 'namespace'
+        ? compound.members.length > 0
+        : !(split === 'symbol' && compound.kind === 'file');
+}
+
+/* ------------------------------------------------------- anonymous members */
+
+/**
+ * Indexes the anonymous aggregates by what declares them.
+ *
+ * Doxygen names one after the nearest *named* compound and the dotted path
+ * of the members leading to it — `HardwareOverlay::[union].status`,
+ * `HardwareOverlay::[struct].status.bits` — and that name is the only link
+ * back to the field using it: the field's own `<type>` carries the invented
+ * `@…` name and no refid at all.
+ */
+function indexAnonymousTypes(compounds) {
+    const index = new Map();
+    for (const compound of compounds) {
+        const owner = anonymousOwner(compound.name);
+        if (!owner) continue;
+        index.set(`${owner.parent} ${owner.path.join('.')}`, compound);
+    }
+    return index;
+}
+
+/** How deep an anonymous aggregate may nest before its declaration stops
+ *  being worth reading inline. Three levels is already unusual C++. */
+const ANONYMOUS_MAX_DEPTH = 4;
+
+/**
+ * Attaches the body of every anonymous aggregate to the field that has one.
+ *
+ * Without this a field declared with one is a dead end twice over: its
+ * declaration prints the invented name — the
+ * `union liara::preview::HardwareOverlay::@2301540030241…` a reader was
+ * being shown — and the members it actually holds live on a page that was,
+ * correctly, never generated. With it, `union { … } status` carries its own
+ * fields and render.mjs writes them out beneath it.
+ *
+ * @param {object} compound The aggregate being expanded, mutated in place.
+ * @param {Map}    index    From indexAnonymousTypes.
+ * @param {string[]} path   Member names from the named compound down to here.
+ */
+function expandAnonymousTypes(compound, index, path = [], depth = 0) {
+    if (depth > ANONYMOUS_MAX_DEPTH) return;
+    const root = compound.anonymousRoot ?? compound.name;
+
+    for (const member of compound.members) {
+        const here = [...path, member.name];
+        const inner = index.get(`${root} ${here.join('.')}`);
+        if (!inner) continue;
+
+        inner.anonymousRoot = root;
+        inner.members = inner.members.filter(isPublishedMember);
+        assignMemberSlugs(inner);
+        expandAnonymousTypes(inner, index, here, depth + 1);
+
+        member.anonymousType = { kind: inner.kind, members: inner.members };
+    }
+}
+
 /* ------------------------------------------------------------- index page */
 
-/** How the compounds are grouped on the section index, in reading order. */
+/**
+ * How the compounds are grouped on the section index, in reading order.
+ *
+ * The same division as the sidebar's — see api/groups.mjs — because they are
+ * two views of one structure and a reader who learns the shape from either
+ * should recognise it in the other. Namespaces are the exception: a flat
+ * table of them says nothing a sidebar does not already say, while the
+ * nesting is most of what a namespace *is*, so they get a tree instead.
+ */
 const INDEX_GROUPS = [
     { title: 'Headers', kinds: ['file'] },
-    { title: 'Data structures', kinds: ['struct', 'union', 'class', 'interface'] },
-    { title: 'Namespaces', kinds: ['namespace'] },
+    { title: 'Namespaces', kinds: ['namespace'], layout: 'tree' },
+    { title: 'Classes and structs', kinds: ['struct', 'union', 'class', 'interface'] },
     { title: 'Concepts', kinds: ['concept'] },
 ];
 
@@ -501,6 +668,11 @@ function indexPage(compounds, { apiBase, pageSlugs }) {
         const slug = slugify(group.title);
         headings.push({ depth: 2, slug, text: group.title });
         parts.push(`<h2 id="${slug}">${escapeHtml(group.title)}</h2>`);
+
+        if (group.layout === 'tree') {
+            parts.push(namespaceTree(namespaceNodes(members, { apiBase, pageSlugs })));
+            continue;
+        }
 
         // Under the symbol split a header has no page of its own — its
         // symbols each got one — but it is still worth listing: it is how a
@@ -525,20 +697,59 @@ function indexPage(compounds, { apiBase, pageSlugs }) {
     };
 }
 
+/**
+ * The namespaces, as a tree of nodes ready to render.
+ *
+ * Built from the qualified names rather than from Doxygen's `innernamespace`
+ * links, because a namespace that was filtered out — `detail`, or one whose
+ * only content was excluded — must not take its children with it: the tree
+ * grows an unlabelled level for it instead, so `a::detail::Thing` still
+ * appears under `a`. Each node carries the last segment of its name, since
+ * repeating the full path at every level is what made the flat list useless.
+ */
+function namespaceNodes(namespaces, { apiBase, pageSlugs }) {
+    const root = { children: new Map() };
+
+    for (const compound of namespaces) {
+        let node = root;
+        for (const segment of compound.name.split('::')) {
+            if (!node.children.has(segment)) {
+                node.children.set(segment, { label: segment, children: new Map() });
+            }
+            node = node.children.get(segment);
+        }
+        node.compound = compound;
+        node.href = pageSlugs.has(compound.slug) ? `${apiBase}/${compound.slug}/` : null;
+    }
+
+    const collect = (node) => [...node.children.values()].map((child) => ({
+        label: child.label,
+        href: child.href ?? null,
+        brief: child.compound ? textSummary(child.compound.brief, 110) : '',
+        counts: child.compound ? contentCounts(child.compound) : '',
+        children: collect(child),
+    }));
+
+    return collect(root);
+}
+
 /** `3 functions · 1 enum` — what is inside a compound, before opening it. */
 function contentCounts(compound) {
     const isType = TYPE_KINDS.has(compound.kind);
+    const labels = labelsFor(compound);
     const documented = compound.members.filter((member) => member.documented
         || (isType && member.kind === 'variable'));
-    const counts = orderedKinds(documented).map((kind) => {
-        const total = documented.filter((member) => member.kind === kind).length;
-        const label = isType && kind === 'variable' ? 'field' : (MEMBER_KIND_LABELS[kind] ?? kind);
-        return `<span class="lapi-count">${total}&nbsp;${escapeHtml(total === 1 ? label : `${label}s`)}</span>`;
-    });
-    if (compound.innerClasses.length > 0) {
-        const total = compound.innerClasses.length;
-        counts.unshift(`<span class="lapi-count">${total}&nbsp;${total === 1 ? 'type' : 'types'}</span>`);
-    }
+
+    const count = (total, singular) => `<span class="lapi-count">${total}&nbsp;`
+        + `${escapeHtml(total === 1 ? singular : `${singular}s`)}</span>`;
+
+    const counts = orderedKinds(documented).map((kind) => count(
+        documented.filter((member) => member.kind === kind).length, labels.kind(kind),
+    ));
+    const inner = compound.innerClasses.filter((entry) => entry.kind !== 'namespace').length;
+    const nested = compound.innerClasses.length - inner;
+    if (nested > 0) counts.unshift(count(nested, 'namespace'));
+    if (inner > 0) counts.unshift(count(inner, 'type'));
     return counts.join('');
 }
 
