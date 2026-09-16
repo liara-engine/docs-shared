@@ -30,7 +30,7 @@ const PRESENTATION = {
     },
     core: {
         title: 'Core',
-        description: 'ECS, math, asset management, logger, settings, application loop.',
+        description: 'ECS, math, logger, settings, and the event bus.',
         icon: ICONS.core,
     },
     renderer: {
