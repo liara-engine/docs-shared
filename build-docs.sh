@@ -68,6 +68,7 @@ cp -a "${SRC_ABOUT}/." "${DEST_ABOUT}/" || log "no about/ content"
 cp -a "${SRC}/README.md" "${DEST_ABOUT}/README.md" || log "no README.md content"
 cp -a "${SRC}/CHANGELOG.md" "${DEST_ABOUT}/CHANGELOG.md" || log "no CHANGELOG.md content"
 cp -a "${SRC}/LICENSE" "${DEST_ABOUT}/LICENSE.md" || log "no LICENSE content"
+cp -a "${SRC}/CODE_OF_CONDUCT.md" "${DEST_ABOUT}/CODE_OF_CONDUCT.md" || log "no CODE_OF_CONDUCT.md content"
 cp -a "${SRC_GUIDES}/." "${DEST_GUIDES}/" || log "no docs/ content"
 
 LIARA_DOCS_API=false
