@@ -212,6 +212,14 @@ retired shared theme is handled by the builder, see
 ref for *every* version in it, so use it only when rebuilding one.
 </Aside>
 
+<Aside type="caution" title="Before v0.1, sweep the v1 manifests">
+A rebuild reads the manifest from the tag, and an old tag keeps whatever it was
+cut with. Manifest v1 is read until **v0.1** and not after
+([Authoring](../authoring-a-module/#21-migrating-from-v1-to-v2)), so a tag
+still on v1 can no longer be rebuilt after that. Rebuild what you still care
+about while both formats work.
+</Aside>
+
 ## 5. Retiring a version
 
 `remove-version.yml` → *Run workflow* → module, version, and a one-sentence

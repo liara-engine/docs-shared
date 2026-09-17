@@ -398,6 +398,11 @@ redeployed, not at the next build. And a build without network access cannot
 validate.
 </Aside>
 
+`module-manifest.schema.json` — the v1 module manifest — is deprecated. It is
+accepted until **v0.1**, the milestone the meta repository tags `v1.0.0`, and
+not after; `module-manifest-v2.schema.json` is what a manifest points at now
+([Authoring](../authoring-a-module/#21-migrating-from-v1-to-v2)).
+
 ## 7. The site tools
 
 Everything in `tools/` operates on a *deployed site* rather than on a build.

@@ -46,12 +46,18 @@ per page with `sidebar.order` in the front matter.
 ## 2. The manifest <Badge text="required" variant="danger" />
 
 `manifest.json` drives the version selector, the compatibility badges, and the
-`/<repo>/latest/` redirect. Two schema versions are supported side by side;
+`/<repo>/latest/` redirect. Two schema versions are still read side by side;
 the navbar detects which one it is reading from the presence of
 `manifest_version`.
 
+<Aside type="caution" title="v1 is deprecated">
+The v1 manifest is deprecated. It is still read, but support for it ends at
+**v0.1** — the milestone the meta repository tags `v1.0.0` — and a module
+still on v1 stops building then. Migrating is four edits: §2.1.
+</Aside>
+
 <Tabs syncKey="manifest">
-<TabItem label="v2 — recommended">
+<TabItem label="v2 — current">
 
 Validated against `module-manifest-v2.schema.json`. Strict —
 `additionalProperties` is off everywhere.
@@ -99,10 +105,12 @@ Other fields worth knowing:
   registry, which become informational once a module ships a v2 manifest.
 
 </TabItem>
-<TabItem label="v1 — still supported">
+<TabItem label="v1 — deprecated">
 
 Validated against `module-manifest.schema.json`. No `manifest_version` or
 `kind`; the module's ABI role comes from `modules-registry.json` instead.
+Documented here because modules and published tags still carry it, not because
+it is a choice — see §2.1.
 
 ```json title="manifest.json"
 {
@@ -128,16 +136,66 @@ Only major-level precision — or minor-level, for a `0.x` ABI — is meaningful
 Declaring `"0.2.0"` means every `0.2.x` release is compatible. Declaring
 `"0.2.1"` additionally marks `0.2.0` as degraded rather than compatible.
 
-<Aside type="note">
-v1 is fully supported and there is no deadline to migrate. New modules should
-still use v2 — it is stricter, it carries `kind`, and it can annotate a
-version.
+<Aside type="danger" title="v1 has a deadline">
+v1 is read until **v0.1** (`liara` tagged `v1.0.0`) and not after. Until then
+nothing breaks and a v1 manifest keeps building; after it, a build that finds
+one fails. New modules write v2 — it is stricter, it carries `kind`, and it
+can annotate a version — and existing ones have §2.1.
 </Aside>
 
 </TabItem>
 </Tabs>
 
 In both versions, every key in `versions` must be `dev` or an `x.y.z` string.
+
+### 2.1 Migrating from v1 to v2
+
+Four edits, none of which touches a published URL — a deployed version keeps
+the manifest it was built with until someone rebuilds it.
+
+| v1                               | v2                                                                  |
+|----------------------------------|---------------------------------------------------------------------|
+| `…/module-manifest.schema.json`  | `…/module-manifest-v2.schema.json`                                  |
+| —                                | `"manifest_version": 2`                                             |
+| —                                | `"kind"`, which supersedes the registry's `is_abi` and `meta` flags |
+| —                                | `metadata.repo`, the GitHub repository name                         |
+| `"abi_compatibility": ["1.0.0"]` | `"abi": "1.0.0"`, or an array for several anchors                   |
+
+`kind` is the only one that needs a decision; the **v2** tab above lists the
+three values and what each does to `versions`. A `contract` manifest then drops
+`abi` — its own versions *are* the ABI — and so does an `infrastructure` one,
+which has no ABI relation at all; a `module` or `host` manifest must carry it
+on every version.
+
+```json title="manifest.json" {2,3,4,8,12,13}
+{
+  "$schema": "https://liara-engine.github.io/liara/schemas/module-manifest-v2.schema.json",
+  "manifest_version": 2,
+  "kind": "module",
+  "metadata": {
+    "name": "Liara Core",
+    "description": "The engine's core module.",
+    "repo": "liara-core",
+    "latest": "1.0.0"
+  },
+  "versions": {
+    "dev":   { "abi": "dev" },
+    "1.0.0": { "abi": "1.0.0" }
+  }
+}
+```
+
+The highlighted lines are the ones that changed. Nothing else in the module is
+affected — the pages, the `Doxyfile` and the CI caller stay as they are, and
+the next build publishes from the new manifest.
+
+<Aside type="caution" title="Old tags do not migrate themselves">
+`rebuild-version.yml` reads the manifest from the tag it is rebuilding, so an
+old tag keeps its v1 manifest forever. Rebuild whatever you still want
+refreshed — an old release that should pick up a theme change, say — while
+both formats are read
+([CI and deployment](../ci-and-deployment/#4-rebuilding-versions)).
+</Aside>
 
 ## 3. The prose guide
 
@@ -536,7 +594,8 @@ can search the pages you just wrote — see [Search](../search/).
 
 <Steps>
 
-1. Add `manifest.json` with `metadata.latest` and at least a `dev` version.
+1. Add a v2 `manifest.json` — `manifest_version`, `kind`, `metadata.repo`,
+   `metadata.latest`, and at least a `dev` version.
 
 2. Add `docs/index.md` — one page is enough to start.
 
