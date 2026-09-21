@@ -5,15 +5,12 @@
     {
       "key": "meta-repo",
       "name": "Liara Engine",
-      "repo": "liara",
-      "only_mdbook": true,
-      "meta": true
+      "repo": "liara"
     },
     {
       "key": "interfaces",
       "name": "Interfaces",
-      "repo": "liara-interfaces",
-      "is_abi": true
+      "repo": "liara-interfaces"
     },
     {
       "key": "core",
@@ -28,9 +25,12 @@
     {
       "key": "docs-shared",
       "name": "Shared Documentation",
-      "repo": "docs-shared",
-      "only_mdbook": true,
-      "meta": true
+      "repo": "docs-shared"
+    },
+    {
+      "key": "platform",
+      "name": "Platform",
+      "repo": "liara-platform"
     }
   ]
 }
