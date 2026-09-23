@@ -19,6 +19,8 @@ const ICONS = {
     editor: '<path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>',
     physics: '<circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8"/>',
     platform: '<path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/>',
+    assets: '<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>',
+    audio: '<path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/>',
 };
 
 /** Presentation for the modules that have a real repository and their own
@@ -65,6 +67,8 @@ export const EXTRA_CARDS = [
 ];
 
 export const PLANNED_CARDS = [
+    { title: 'Assets', description: 'Asset management and import pipeline. Planned for the v0.3.x cycle.', icon: ICONS.assets },
+    { title: 'Audio', description: 'Audio playback and spatialization. Planned for the v0.5.x cycle.', icon: ICONS.audio },
     { title: 'Editor', description: 'Visual scene editor. Planned for the v1.x cycle.', icon: ICONS.editor },
     { title: 'Physics', description: 'Collision and rigid body dynamics. Planned for the v1.x cycle.', icon: ICONS.physics },
 ];
