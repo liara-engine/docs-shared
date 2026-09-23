@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.1.0](https://github.com/liara-engine/docs-shared/compare/v1.0.0...v1.1.0) (2026-09-23)
+
+
+### Features
+
+* add assets and audio modules with descriptions and icons to planned cards ([59ebef7](https://github.com/liara-engine/docs-shared/commit/59ebef745562e3547e71b9a997b208e2a34d4c7b))
+* add platform module with description and icon to hub modules ([3d70ba8](https://github.com/liara-engine/docs-shared/commit/3d70ba836f917457906d5b0051cdb26ff7564744))
+* update version labels in index and clean up modules-registry.json ([3cbcb9b](https://github.com/liara-engine/docs-shared/commit/3cbcb9be6deef76341e522893db0fe14cb92a7dd))
+
 ## [1.0.0](https://github.com/liara-engine/docs-shared/compare/v0.2.0...v1.0.0) (2026-09-17)
 
 
