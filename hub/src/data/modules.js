@@ -18,6 +18,7 @@ const ICONS = {
     renderer: '<rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/>',
     editor: '<path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>',
     physics: '<circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8"/>',
+    platform: '<path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/>',
 };
 
 /** Presentation for the modules that have a real repository and their own
@@ -37,6 +38,11 @@ const PRESENTATION = {
         title: 'Renderer',
         description: 'The reference Vulkan implementation. Produces pixels from render packets.',
         icon: ICONS.renderer,
+    },
+    platform: {
+        title: 'Platform',
+        description: 'The cross-platform abstraction layer. Provides a consistent API across different operating systems.',
+        icon: ICONS.platform,
     },
 };
 
