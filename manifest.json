@@ -15,6 +15,7 @@
     "0.1.0": {},
     "0.1.1": {},
     "0.2.0": { "note": "Dockerfile moved" },
-    "1.0.0": { "note": "Total rework with Astro for html generation" }
+    "1.0.0": { "note": "Total rework with Astro for html generation" },
+    "1.1.0": {}
   }
 }
